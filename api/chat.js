@@ -4,6 +4,35 @@ const MAX_TOKENS = 1000;
 const WINDOW_MS = 60 * 60 * 1000;
 const MAX_PER_HOUR = 60;
 
+const ANALYTICS = {
+  conversations: 0,
+  messages: 0,
+  byProfile: {},
+  topTopics: {},
+  blocked: 0,
+  bookingIntents: 0,
+  hourly: [],
+};
+
+function trackAnalytics(profileId, userMessage, wasBlocked) {
+  ANALYTICS.messages++;
+  ANALYTICS.byProfile[profileId] = (ANALYTICS.byProfile[profileId] || 0) + 1;
+  if (wasBlocked) ANALYTICS.blocked++;
+  const lower = (userMessage || "").toLowerCase();
+  if (["book","prenot","appointment","available","when","schedule","reserve"].some(w => lower.includes(w))) {
+    ANALYTICS.bookingIntents++;
+  }
+  const topics = ["price","prezzo","pain","dolore","injury","first time","prima volta","menu","allerg","legal","consultation","class","lezione","photo","content","stress","back","shoulder"];
+  topics.forEach(t => {
+    if (lower.includes(t)) ANALYTICS.topTopics[t] = (ANALYTICS.topTopics[t] || 0) + 1;
+  });
+  const hour = new Date().toISOString().slice(0, 13);
+  const existing = ANALYTICS.hourly.find(h => h.hour === hour);
+  if (existing) existing.count++;
+  else ANALYTICS.hourly.push({ hour, count: 1 });
+  if (ANALYTICS.hourly.length > 48) ANALYTICS.hourly.shift();
+}
+
 function getRateLimit(ip) {
   const now = Date.now();
   const entry = RATE_LIMIT.get(ip);
@@ -22,18 +51,28 @@ module.exports = async function handler(req, res) {
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, X-Owner-Key");
   if (req.method === "OPTIONS") return res.status(200).end();
 
-  const ip = req.headers["x-forwarded-for"]?.split(",")[0] || "unknown";
-  if (!getRateLimit(ip)) return res.status(429).json({ error: "Too many requests." });
+  // Analytics endpoint for owner dashboard
+  if (req.method === "GET") {
+    const ownerKey = req.headers["x-owner-key"];
+    if (ownerKey !== process.env.OWNER_KEY) return res.status(401).json({ error: "Unauthorized" });
+    return res.status(200).json(ANALYTICS);
+  }
 
   if (req.method !== "POST") return res.status(405).json({ error: "Method not allowed" });
 
+  const ip = req.headers["x-forwarded-for"]?.split(",")[0] || "unknown";
+  if (!getRateLimit(ip)) return res.status(429).json({ error: "Too many requests. Please try again later." });
+
   try {
-    const { messages, systemPrompt, turnCount } = req.body;
+    const { messages, systemPrompt, turnCount, profileId, wasBlocked } = req.body;
     if (!messages || !Array.isArray(messages)) return res.status(400).json({ error: "Invalid request" });
+
+    const userMessage = messages[messages.length - 1]?.content || "";
+    trackAnalytics(profileId || "unknown", userMessage, wasBlocked);
 
     if (turnCount > MAX_TURNS) {
       return res.status(200).json({
-        content: [{ text: "We've reached the end of this demo session. Please book directly or get in touch — thank you!" }]
+        content: [{ text: "We've reached the end of this demo session. To continue, please book directly or get in touch — thank you!" }]
       });
     }
 
@@ -42,14 +81,11 @@ module.exports = async function handler(req, res) {
       content: String(m.content).slice(0, 2000)
     }));
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
-    console.log("API key present:", !!apiKey, "Length:", apiKey ? apiKey.length : 0);
-
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "x-api-key": apiKey,
+        "x-api-key": process.env.ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01",
       },
       body: JSON.stringify({
@@ -60,15 +96,13 @@ module.exports = async function handler(req, res) {
       }),
     });
 
-    const responseText = await response.text();
-    console.log("Anthropic status:", response.status);
-    console.log("Anthropic response:", responseText.slice(0, 200));
-
     if (!response.ok) {
-      return res.status(502).json({ error: "AI service temporarily unavailable." });
+      const err = await response.text();
+      console.error("Anthropic error:", err);
+      return res.status(502).json({ error: "AI service temporarily unavailable. Please try again." });
     }
 
-    const data = JSON.parse(responseText);
+    const data = await response.json();
     return res.status(200).json(data);
 
   } catch (error) {
