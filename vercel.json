@@ -1,0 +1,11 @@
+{
+  "rewrites": [
+    { "source": "/api/chat", "destination": "/api/chat.js" },
+    { "source": "/bruno", "destination": "/bruno.html" },
+    { "source": "/marco", "destination": "/marco.html" },
+    { "source": "/nour", "destination": "/nour.html" },
+    { "source": "/sofia", "destination": "/sofia.html" },
+    { "source": "/alex", "destination": "/alex.html" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}
