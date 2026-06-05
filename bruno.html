@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bruno Aversa — Brave by Bruno</title>
+  <meta name="description" content="Massage Therapist · Performer · Creator. London · Milan · Worldwide."/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,400&family=Jost:wght@300;400;500;600&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0c0a08;color:#e8dcc8;font-family:'Cormorant Garamond',Georgia,serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:28px 16px 60px}
+    ::-webkit-scrollbar{width:3px}::-webkit-scrollbar-thumb{background:rgba(201,169,110,0.2);border-radius:2px}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+    .card{width:100%;max-width:400px;animation:fadeUp 0.5s ease forwards}
+
+    /* UTILS */
+    .sl{font-size:9px;font-family:'Jost',sans-serif;font-weight:500;letter-spacing:0.14em;text-transform:uppercase;color:rgba(201,169,110,0.38);margin-bottom:10px}
+    .divider{height:1px;background:rgba(201,169,110,0.1);margin:20px 0}
+
+    /* LINKS */
+    .lb{display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(201,169,110,0.12);border-radius:12px;cursor:pointer;text-decoration:none;transition:all 0.2s;color:#e8dcc8;margin-bottom:8px}
+    .lb:hover{background:rgba(201,169,110,0.08);border-color:rgba(201,169,110,0.28);transform:translateY(-1px)}
+    .lb.gold{background:linear-gradient(135deg,#c9a96e,#8c5e14);border:none;color:#0c0a08}
+    .lb.gold:hover{opacity:0.88;transform:translateY(-1px)}
+    .li{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;background:rgba(201,169,110,0.1)}
+    .lb.gold .li{background:rgba(0,0,0,0.15)}
+    .lt{font-size:13px;font-family:'Jost',sans-serif;font-weight:500;margin-bottom:1px}
+    .ls{font-size:10px;font-family:'Jost',sans-serif;font-weight:300;opacity:0.5}
+    .la{margin-left:auto;opacity:0.3;font-size:12px;flex-shrink:0}
+
+    /* STATS */
+    .stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+    .stat{background:rgba(255,255,255,0.025);border:1px solid rgba(201,169,110,0.1);border-radius:10px;padding:11px 6px;text-align:center}
+    .sn{font-size:19px;font-weight:300;color:#c9a96e;line-height:1;margin-bottom:2px}
+    .sk{font-size:8px;font-family:'Jost',sans-serif;color:rgba(232,220,200,0.3);letter-spacing:0.08em;text-transform:uppercase}
+
+    /* MEDIA */
+    .mg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:16px}
+    .mi{aspect-ratio:1;border-radius:9px;overflow:hidden;background:rgba(201,169,110,0.04);border:1px solid rgba(201,169,110,0.1);display:flex;align-items:center;justify-content:center;transition:all 0.2s}
+    .mi:hover{border-color:rgba(201,169,110,0.28);transform:scale(1.02)}
+    .mi img{width:100%;height:100%;object-fit:cover}
+    .mp{text-align:center}
+    .mp div:first-child{font-size:16px;margin-bottom:2px}
+    .mp div:last-child{font-size:7px;font-family:'Jost',sans-serif;color:rgba(201,169,110,0.22)}
+
+    /* QR */
+    .qr-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+    .qr-box{background:rgba(255,255,255,0.025);border:1px solid rgba(201,169,110,0.1);border-radius:11px;padding:12px 6px;text-align:center}
+    .qt{font-size:10px;font-family:'Jost',sans-serif;font-weight:500;color:#c9a96e;margin-bottom:1px}
+    .qs{font-size:7px;font-family:'Jost',sans-serif;color:rgba(232,220,200,0.25);margin-bottom:8px;letter-spacing:0.04em}
+    .qr-box canvas,.qr-box img{border-radius:5px!important;border:2px solid rgba(232,220,200,0.9)!important;max-width:100%!important}
+
+    /* CONCIERGE CTA */
+    .cc{display:block;background:rgba(201,169,110,0.05);border:1px dashed rgba(201,169,110,0.2);border-radius:12px;padding:14px;text-align:center;margin-bottom:16px;text-decoration:none;transition:all 0.2s}
+    .cc:hover{background:rgba(201,169,110,0.09)}
+
+    /* TAGS */
+    .tag{display:inline-flex;align-items:center;padding:3px 9px;background:rgba(201,169,110,0.07);border:1px solid rgba(201,169,110,0.14);border-radius:20px;font-size:9px;font-family:'Jost',sans-serif;color:rgba(201,169,110,0.5);margin:2px}
+
+    /* SECTION CARD */
+    .sc{background:rgba(255,255,255,0.02);border:1px solid rgba(201,169,110,0.1);border-radius:14px;padding:16px;margin-bottom:16px}
+    .sc-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .sc-avatar{width:44px;height:44px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(201,169,110,0.3);flex-shrink:0;background:rgba(201,169,110,0.1);display:flex;align-items:center;justify-content:center;font-size:18px}
+    .sc-avatar img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+    .sc-name{font-size:14px;font-family:'Jost',sans-serif;font-weight:500;color:#e8dcc8;margin-bottom:1px}
+    .sc-sub{font-size:10px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(201,169,110,0.5)}
+
+    /* ── FLOATING BUBBLE ── */
+    @keyframes bubblePop{0%{opacity:0;transform:scale(0.6) translateY(20px)}70%{transform:scale(1.04) translateY(-2px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+    @keyframes cardSlide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+    @keyframes typeDot{0%,80%,100%{opacity:.2;transform:translateY(0)}40%{opacity:1;transform:translateY(-4px)}}
+    @keyframes glowPulse{0%,100%{box-shadow:0 0 0 0 rgba(201,169,110,0.35)}50%{box-shadow:0 0 0 8px rgba(201,169,110,0)}}
+    @keyframes notifBounce{0%{transform:scale(0)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+    @keyframes shimmerWave{0%{background-position:200% center}100%{background-position:-200% center}}
+
+    #bubble-btn{
+      position:fixed;bottom:22px;right:18px;z-index:9999;
+      width:56px;height:56px;border-radius:50%;border:none;cursor:pointer;
+      background:linear-gradient(135deg,#c9a96e,#7a4f0e);
+      box-shadow:0 4px 20px rgba(201,169,110,0.4),0 2px 8px rgba(0,0,0,0.4);
+      display:flex;align-items:center;justify-content:center;
+      font-size:22px;transition:transform 0.2s,box-shadow 0.2s;
+      animation:bubblePop 0.6s cubic-bezier(0.34,1.56,0.64,1) 2.5s both, glowPulse 3s ease-in-out 4s infinite;
+    }
+    #bubble-btn:hover{transform:scale(1.08);box-shadow:0 6px 28px rgba(201,169,110,0.55),0 3px 10px rgba(0,0,0,0.4)}
+    #bubble-btn:active{transform:scale(0.95)}
+
+    #bubble-notif{
+      position:absolute;top:-3px;right:-3px;
+      width:16px;height:16px;border-radius:50%;
+      background:#e85454;border:2px solid #0c0a08;
+      font-size:8px;font-family:'Jost',sans-serif;font-weight:700;color:#fff;
+      display:flex;align-items:center;justify-content:center;
+      animation:notifBounce 0.4s cubic-bezier(0.34,1.56,0.64,1) 3.2s both;
+    }
+
+    #bubble-hint{
+      position:fixed;bottom:90px;right:18px;z-index:9998;
+      max-width:200px;
+      background:linear-gradient(135deg,rgba(20,16,10,0.97),rgba(28,22,12,0.97));
+      border:1px solid rgba(201,169,110,0.28);border-radius:14px 14px 4px 14px;
+      padding:10px 13px;
+      font-size:12px;font-family:'Jost',sans-serif;font-weight:300;
+      color:#e8dcc8;line-height:1.55;
+      box-shadow:0 8px 32px rgba(0,0,0,0.5);
+      opacity:0;pointer-events:none;
+      transition:opacity 0.3s,transform 0.3s;
+      transform:translateY(6px);
+    }
+    #bubble-hint.visible{opacity:1;pointer-events:auto;transform:translateY(0)}
+    #bubble-hint::after{content:'';position:absolute;bottom:-7px;right:18px;width:0;height:0;border-left:7px solid transparent;border-right:7px solid transparent;border-top:7px solid rgba(201,169,110,0.28)}
+
+    #bubble-panel{
+      position:fixed;bottom:0;left:0;right:0;z-index:9997;
+      background:linear-gradient(180deg,rgba(10,8,5,0.0) 0%,rgba(10,8,5,0.98) 60px);
+      padding:0 12px 88px;
+      max-height:100dvh;overflow-y:auto;
+      opacity:0;pointer-events:none;
+      transition:opacity 0.35s ease;
+      display:flex;flex-direction:column;justify-content:flex-end;
+    }
+    #bubble-panel.open{opacity:1;pointer-events:auto}
+
+    .bp-card{
+      width:100%;max-width:400px;margin:0 auto;
+      background:rgba(14,11,7,0.98);
+      border:1px solid rgba(201,169,110,0.22);
+      border-radius:20px;padding:18px;
+      animation:cardSlide 0.3s ease forwards;
+      box-shadow:0 -8px 40px rgba(0,0,0,0.6);
+      backdrop-filter:blur(20px);
+    }
+
+    .bp-header{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+    .bp-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#c9a96e,#7a4f0e);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;border:1.5px solid rgba(201,169,110,0.4)}
+    .bp-name{font-size:13px;font-family:'Jost',sans-serif;font-weight:500;color:#e8dcc8}
+    .bp-status{font-size:9px;font-family:'Jost',sans-serif;color:rgba(120,180,100,0.8);display:flex;align-items:center;gap:4px;margin-top:1px}
+    .bp-close{margin-left:auto;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;color:rgba(232,220,200,0.4);transition:all 0.2s;flex-shrink:0}
+    .bp-close:hover{background:rgba(255,255,255,0.1);color:#e8dcc8}
+
+    .bp-msg{
+      background:rgba(255,255,255,0.04);border:1px solid rgba(201,169,110,0.1);
+      border-radius:12px 12px 12px 4px;padding:11px 14px;margin-bottom:12px;
+      font-size:14px;font-family:'Cormorant Garamond',serif;line-height:1.65;
+      color:rgba(232,220,200,0.9);
+    }
+
+    .bp-typing{display:flex;gap:5px;align-items:center;padding:4px 2px}
+    .bp-typing span{width:6px;height:6px;border-radius:50%;background:#c9a96e;animation:typeDot 1.2s infinite}
+    .bp-typing span:nth-child(2){animation-delay:0.18s}
+    .bp-typing span:nth-child(3){animation-delay:0.36s}
+
+    .bp-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+    .bp-pill{
+      padding:6px 12px;border-radius:20px;cursor:pointer;font-size:11px;
+      font-family:'Jost',sans-serif;font-weight:400;
+      background:rgba(201,169,110,0.07);border:1px solid rgba(201,169,110,0.2);
+      color:rgba(232,220,200,0.75);transition:all 0.18s;white-space:nowrap;
+    }
+    .bp-pill:hover{background:rgba(201,169,110,0.16);border-color:rgba(201,169,110,0.4);color:#e8dcc8;transform:translateY(-1px)}
+
+    .bp-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+    .bp-action{
+      padding:10px 8px;border-radius:11px;cursor:pointer;text-align:center;
+      font-size:11px;font-family:'Jost',sans-serif;font-weight:500;
+      border:1px solid rgba(201,169,110,0.18);background:rgba(201,169,110,0.06);
+      color:rgba(232,220,200,0.7);transition:all 0.18s;text-decoration:none;
+      display:flex;flex-direction:column;align-items:center;gap:4px;
+    }
+    .bp-action:hover{background:rgba(201,169,110,0.13);border-color:rgba(201,169,110,0.35);color:#e8dcc8;transform:translateY(-1px)}
+    .bp-action.primary{background:linear-gradient(135deg,#c9a96e,#7a4f0e);border:none;color:#0c0a08;font-weight:600}
+    .bp-action.primary:hover{opacity:0.88;transform:translateY(-1px)}
+    .bp-action-icon{font-size:16px}
+    .bp-action-label{font-size:10px;letter-spacing:0.04em}
+
+    .bp-share{
+      border-top:1px solid rgba(201,169,110,0.08);padding-top:10px;
+      display:flex;align-items:center;gap:8px;
+    }
+    .bp-share-label{font-size:9px;font-family:'Jost',sans-serif;color:rgba(201,169,110,0.3);letter-spacing:0.1em;text-transform:uppercase;white-space:nowrap}
+    .bp-share-url{
+      flex:1;font-size:10px;font-family:'Jost',sans-serif;color:rgba(232,220,200,0.4);
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+      background:rgba(255,255,255,0.03);border:1px solid rgba(201,169,110,0.1);
+      border-radius:7px;padding:5px 8px;cursor:pointer;transition:all 0.15s;
+    }
+    .bp-share-url:hover{color:#e8dcc8;border-color:rgba(201,169,110,0.25)}
+    .bp-copy-btn{
+      padding:5px 10px;border-radius:7px;cursor:pointer;font-size:10px;
+      font-family:'Jost',sans-serif;font-weight:500;
+      background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.22);
+      color:#c9a96e;transition:all 0.15s;white-space:nowrap;
+    }
+    .bp-copy-btn:hover{background:rgba(201,169,110,0.2)}
+
+    .bp-qr-section{margin-top:12px;text-align:center;display:none}
+    .bp-qr-section.show{display:block;animation:cardSlide 0.25s ease forwards}
+    .bp-qr-section canvas,.bp-qr-section img{border-radius:8px!important;border:2px solid rgba(232,220,200,0.85)!important;max-width:140px!important}
+    .bp-qr-label{font-size:9px;font-family:'Jost',sans-serif;color:rgba(201,169,110,0.35);letter-spacing:0.08em;text-transform:uppercase;margin-top:6px}
+
+    #bubble-overlay{position:fixed;inset:0;z-index:9996;background:rgba(0,0,0,0);pointer-events:none;transition:background 0.35s}
+    #bubble-overlay.open{background:rgba(0,0,0,0.55);pointer-events:auto}
+  </style>
+</head>
+<body>
+<div class="card">
+
+  <!-- ── 1. PRESENTATION ── -->
+  <div style="text-align:center;margin-bottom:18px">
+    <div style="font-size:9px;font-family:'Jost',sans-serif;letter-spacing:0.2em;text-transform:uppercase;color:rgba(201,169,110,0.3);margin-bottom:16px">✦ Brave by Bruno</div>
+
+    <!-- Avatar -->
+    <img src="/avatar.jpg"
+      style="width:90px;height:90px;border-radius:50%;object-fit:cover;border:2px solid rgba(201,169,110,0.35);display:block;margin:0 auto 12px"/>
+
+    <div style="font-size:24px;font-weight:500;letter-spacing:0.03em;color:#e8dcc8;margin-bottom:3px">Bruno Aversa</div>
+    <div style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.1em;text-transform:uppercase;color:rgba(201,169,110,0.5);margin-bottom:5px">Massage Therapist · Performer · Creator</div>
+    <div style="font-size:11px;font-family:'Jost',sans-serif;color:rgba(232,220,200,0.28);margin-bottom:12px">📍 London · Milan · Worldwide</div>
+    <div style="font-size:14px;font-style:italic;color:rgba(232,220,200,0.45);line-height:1.7;margin-bottom:14px">"Art · Movement · Elevated Experiences"</div>
+
+    <!-- Tags -->
+    <div style="margin-bottom:16px">
+      <span class="tag">🇬🇧 EN</span><span class="tag">🇮🇹 IT</span><span class="tag">🇪🇸 ES</span>
+      <span class="tag">💆 Massage L4</span><span class="tag">🎭 Performer</span><span class="tag">✦ Creator</span>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stat-row">
+    <div class="stat"><div class="sn">15K</div><div class="sk">Followers</div></div>
+    <div class="stat"><div class="sn">5.0</div><div class="sk">Fresha ★</div></div>
+    <div class="stat"><div class="sn">20+</div><div class="sk">Yrs athlete</div></div>
+  </div>
+
+  <!-- ── 2. FAST LINKS ── -->
+  <div class="sl">Fast Links</div>
+  <a href="https://www.fresha.com/p/brave-fitness-and-therapies-3938765" target="_blank" class="lb gold">
+    <div class="li">📅</div>
+    <div style="flex:1"><div class="lt">Book a Session</div><div class="ls">Brave Fitness & Therapies · Fresha</div></div>
+    <div class="la">→</div>
+  </a>
+  <a href="https://concierge-ai-gamma.vercel.app" target="_blank" class="lb">
+    <div class="li">🤖</div>
+    <div style="flex:1"><div class="lt">AI Concierge</div><div class="ls">Ask anything · Available 24/7</div></div>
+    <div class="la">→</div>
+  </a>
+  <a href="https://bravebybruno.com" target="_blank" class="lb">
+    <div class="li">🌐</div>
+    <div style="flex:1"><div class="lt">bravebybruno.com</div><div class="ls">The ecosystem · Join now</div></div>
+    <div class="la">→</div>
+  </a>
+
+  <!-- ── 3. QR CODES ── -->
+  <div class="divider"></div>
+  <div class="sl">Scan & Connect</div>
+  <div class="qr-grid">
+    <div class="qr-box">
+      <div class="qt">Book Now</div><div class="qs">Fresha</div>
+      <div id="qr1"></div>
+    </div>
+    <div class="qr-box">
+      <div class="qt">Concierge</div><div class="qs">AI Chat 24/7</div>
+      <div id="qr2"></div>
+    </div>
+    <div class="qr-box">
+      <div class="qt">Follow</div><div class="qs">@bravebybruno</div>
+      <div id="qr3"></div>
+    </div>
+  </div>
+
+  <!-- ── 4. WORK WITH ME ── -->
+  <div class="divider"></div>
+  <div class="sl">Work With Me</div>
+  <a href="https://linktr.ee/bravebybruno" target="_blank" class="lb">
+    <div class="li">✨</div>
+    <div style="flex:1"><div class="lt">Work With Me</div><div class="ls">Collabs, partnerships & bookings</div></div>
+    <div class="la">→</div>
+  </a>
+  <a href="https://glnk.io/0m8pv/feverxbravebybruno" target="_blank" class="lb">
+    <div class="li">🎪</div>
+    <div style="flex:1"><div class="lt">Elevated Experiences</div><div class="ls">Fever · Live events & performances</div></div>
+    <div class="la">→</div>
+  </a>
+  <a href="mailto:hello@bravebybruno.com" class="lb">
+    <div class="li">✉️</div>
+    <div style="flex:1"><div class="lt">hello@bravebybruno.com</div><div class="ls">Exclusive collabs & enquiries</div></div>
+    <div class="la">→</div>
+  </a>
+
+  <!-- ── 5. MAIN PROFILE — BRAVE BY BRUNO ── -->
+  <div class="divider"></div>
+  <div class="sc">
+    <div class="sc-header">
+      <div class="sc-avatar">
+        <img src="/avatar.jpg" style="width:100%;height:100%;border-radius:50%;object-fit:cover"/>
+      </div>
+      <div>
+        <div class="sc-name">@bravebybruno <span style="font-size:9px;color:rgba(100,160,220,0.7)">✓ Verified</span></div>
+        <div class="sc-sub">Performer & Creator · 15K followers</div>
+      </div>
+    </div>
+    <div style="font-size:12px;font-style:italic;color:rgba(232,220,200,0.4);line-height:1.6;margin-bottom:12px">London · Milan · Sorrento | Worldwide<br/>Art · Movement · Elevated Experiences</div>
+    <div class="sl" style="margin-bottom:8px">Creative Portfolio</div>
+    <div class="mg">
+      <!-- Add real photos here: replace .mp divs with <img src="your-photo.jpg"/> -->
+      <div class="mi"><div class="mp"><div>🎭</div><div>DANCE</div></div></div>
+      <div class="mi"><div class="mp"><div>🎬</div><div>REEL</div></div></div>
+      <div class="mi"><div class="mp"><div>✦</div><div>COLLAB</div></div></div>
+    </div>
+    <a href="https://www.instagram.com/bravebybruno" target="_blank" class="lb" style="margin-bottom:0">
+      <div class="li">📸</div>
+      <div style="flex:1"><div class="lt">Follow @bravebybruno</div><div class="ls">Instagram · Public figure</div></div>
+      <div class="la">→</div>
+    </a>
+  </div>
+
+  <!-- ── 6. MASSAGE PROFILE — BRAVE THERAPIES ── -->
+  <div class="sc">
+    <div class="sc-header">
+      <div class="sc-avatar" style="background:linear-gradient(135deg,#c9a96e,#8b6914)">
+        <img src="/Logo-therapies.jpg" style="width:100%;height:100%;border-radius:50%;object-fit:cover"/>
+      </div>
+      <div>
+        <div class="sc-name">@brave_therapies</div>
+        <div class="sc-sub">Massage · Wellness · Health Coach</div>
+      </div>
+    </div>
+    <div style="font-size:12px;font-style:italic;color:rgba(232,220,200,0.4);line-height:1.6;margin-bottom:12px">"Your body is your best friend — take care of it."<br/>E14, London · Studio · Home · Online</div>
+    <div class="sl" style="margin-bottom:8px">Treatment Portfolio</div>
+    <div class="mg">
+      <div class="mi"><div class="mp"><div>💆</div><div>MASSAGE</div></div></div>
+      <div class="mi"><div class="mp"><div>🏃</div><div>TRAINING</div></div></div>
+      <div class="mi"><div class="mp"><div>🧘</div><div>WELLNESS</div></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+      <a href="https://www.fresha.com/p/brave-fitness-and-therapies-3938765" target="_blank" class="lb gold" style="margin-bottom:0">
+        <div class="li">📅</div>
+        <div style="flex:1"><div class="lt" style="font-size:12px">Book Now</div></div>
+        <div class="la">→</div>
+      </a>
+      <a href="https://www.instagram.com/brave_therapies" target="_blank" class="lb" style="margin-bottom:0">
+        <div class="li">📸</div>
+        <div style="flex:1"><div class="lt" style="font-size:12px">Instagram</div></div>
+        <div class="la">→</div>
+      </a>
+    </div>
+  </div>
+
+  <!-- ── AI CONCIERGE ── -->
+  <a href="https://concierge-ai-gamma.vercel.app" target="_blank" class="cc">
+    <div style="font-size:20px;margin-bottom:5px">🤖</div>
+    <div style="font-size:13px;font-family:'Jost',sans-serif;font-weight:500;color:#c9a96e;margin-bottom:2px">Chat with Bruno's AI Concierge</div>
+    <div style="font-size:10px;font-family:'Jost',sans-serif;color:rgba(232,220,200,0.35)">Ask about treatments, prices & bookings · 24/7</div>
+  </a>
+
+  <!-- FOOTER -->
+  <div style="text-align:center">
+    <div style="font-size:8px;font-family:'Jost',sans-serif;color:rgba(201,169,110,0.22);letter-spacing:0.08em">
+      Powered by Concierge AI · Brave by Bruno · Built by Bruno Aversa
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ── FLOATING BUBBLE ── -->
+<div id="bubble-overlay" onclick="closeBubble()"></div>
+
+<!-- Trigger button -->
+<button id="bubble-btn" onclick="toggleBubble()" aria-label="Chat with Bruno">
+  ✦
+  <div id="bubble-notif">1</div>
+</button>
+
+<!-- Hint tooltip -->
+<div id="bubble-hint">
+  <span id="hint-text">Knowledge is power — get to know me & what I do ✦</span>
+</div>
+
+<!-- Main panel -->
+<div id="bubble-panel">
+  <div class="bp-card">
+
+    <!-- Header -->
+    <div class="bp-header">
+      <div class="bp-avatar">✦</div>
+      <div>
+        <div class="bp-name">Bruno's Assistant</div>
+        <div class="bp-status">
+          <div style="width:5px;height:5px;border-radius:50%;background:#7aba6a;animation:pulse 2s infinite"></div>
+          Available now · 24/7
+        </div>
+      </div>
+      <div class="bp-close" onclick="closeBubble()">×</div>
+    </div>
+
+    <!-- Message -->
+    <div class="bp-msg" id="bp-message">
+      <div class="bp-typing" id="bp-typing">
+        <span></span><span></span><span></span>
+      </div>
+      <div id="bp-text" style="display:none">
+        Hi 👋 I'm Bruno's concierge — I know everything about his services, treatments, prices and how to book. What would you like to know?
+      </div>
+    </div>
+
+    <!-- Quick pills -->
+    <div class="bp-pills" id="bp-pills" style="display:none">
+      <div class="bp-pill" onclick="openConcierge('What treatments do you offer and what are the prices?')">💆 Treatments & prices</div>
+      <div class="bp-pill" onclick="openConcierge('I have back pain, what do you recommend?')">🩺 Back pain help</div>
+      <div class="bp-pill" onclick="openConcierge('Where are you based and how do I book?')">📍 Location & booking</div>
+      <div class="bp-pill" onclick="openConcierge('Tell me about Bruno — his background and experience')">🎭 About Bruno</div>
+      <div class="bp-pill" onclick="openConcierge('Do you offer any packages or discounts?')">🎁 Packages & offers</div>
+      <div class="bp-pill" onclick="openConcierge('I have never had a professional massage before, where do I start?')">✨ First time?</div>
+    </div>
+
+    <!-- Action grid -->
+    <div class="bp-actions" id="bp-actions" style="display:none">
+      <a href="https://concierge-ai-gamma.vercel.app/bruno" target="_blank" class="bp-action primary">
+        <div class="bp-action-icon">💬</div>
+        <div class="bp-action-label">Ask me anything</div>
+      </a>
+      <a href="https://www.fresha.com/p/brave-fitness-and-therapies-3938765" target="_blank" class="bp-action">
+        <div class="bp-action-icon">📅</div>
+        <div class="bp-action-label">Book a session</div>
+      </a>
+      <div class="bp-action" onclick="toggleQR()">
+        <div class="bp-action-icon">⬛</div>
+        <div class="bp-action-label">Get QR code</div>
+      </div>
+      <div class="bp-action" onclick="shareLink()">
+        <div class="bp-action-icon">🔗</div>
+        <div class="bp-action-label">Share this page</div>
+      </div>
+    </div>
+
+    <!-- Share bar -->
+    <div class="bp-share" id="bp-share" style="display:none">
+      <span class="bp-share-label">Link</span>
+      <div class="bp-share-url" onclick="copyLink()" id="bp-url-display">concierge-ai-gamma.vercel.app/bruno</div>
+      <button class="bp-copy-btn" onclick="copyLink()" id="bp-copy-btn">Copy</button>
+    </div>
+
+    <!-- QR section -->
+    <div class="bp-qr-section" id="bp-qr-section">
+      <div id="bp-qr-canvas"></div>
+      <div class="bp-qr-label">Scan to open Bruno's page</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const qo = (url) => ({
+  text: url, width: 76, height: 76,
+  colorDark: "#0c0a08", colorLight: "#e8dcc8",
+  correctLevel: QRCode.CorrectLevel.M
+});
+new QRCode(document.getElementById("qr1"), qo("https://www.fresha.com/p/brave-fitness-and-therapies-3938765"));
+new QRCode(document.getElementById("qr2"), qo("https://concierge-ai-gamma.vercel.app"));
+new QRCode(document.getElementById("qr3"), qo("https://www.instagram.com/bravebybruno"));
+
+// ── BUBBLE LOGIC ──
+const PAGE_URL = window.location.href || 'https://concierge-ai-gamma.vercel.app/bruno';
+const CONCIERGE_URL = 'https://concierge-ai-gamma.vercel.app?demo=bruno';
+let panelOpen = false;
+let qrGenerated = false;
+let hintTimer, hideHintTimer;
+
+// Show hint after 2.8s, hide after 5s
+hintTimer = setTimeout(() => {
+  const hint = document.getElementById('bubble-hint');
+  hint.classList.add('visible');
+  hideHintTimer = setTimeout(() => hint.classList.remove('visible'), 5000);
+}, 2800);
+
+function toggleBubble() {
+  if (panelOpen) { closeBubble(); return; }
+  openBubble();
+}
+
+function openBubble() {
+  panelOpen = true;
+  clearTimeout(hintTimer); clearTimeout(hideHintTimer);
+  document.getElementById('bubble-hint').classList.remove('visible');
+  document.getElementById('bubble-notif').style.display = 'none';
+  document.getElementById('bubble-panel').classList.add('open');
+  document.getElementById('bubble-overlay').classList.add('open');
+  document.getElementById('bubble-btn').innerHTML = '×<div id="bubble-notif" style="display:none"></div>';
+
+  // Simulate typing then reveal message
+  setTimeout(() => {
+    document.getElementById('bp-typing').style.display = 'none';
+    document.getElementById('bp-text').style.display = 'block';
+    setTimeout(() => {
+      document.getElementById('bp-pills').style.display = 'flex';
+      document.getElementById('bp-actions').style.display = 'grid';
+      document.getElementById('bp-share').style.display = 'flex';
+    }, 300);
+  }, 1400);
+}
+
+function closeBubble() {
+  panelOpen = false;
+  document.getElementById('bubble-panel').classList.remove('open');
+  document.getElementById('bubble-overlay').classList.remove('open');
+  document.getElementById('bubble-btn').innerHTML = '✦<div id="bubble-notif" style="display:none"></div>';
+}
+
+function openConcierge(msg) {
+  const base = 'https://concierge-ai-gamma.vercel.app/bruno';
+  const url = msg ? base + '?q=' + encodeURIComponent(msg) : base;
+  window.open(url, '_blank');
+}
+
+function toggleQR() {
+  const section = document.getElementById('bp-qr-section');
+  const isShow = section.classList.contains('show');
+  if (isShow) { section.classList.remove('show'); return; }
+  section.classList.add('show');
+  if (!qrGenerated) {
+    new QRCode(document.getElementById('bp-qr-canvas'), {
+      text: PAGE_URL, width: 140, height: 140,
+      colorDark: '#1a1209', colorLight: '#f0e8d8',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    qrGenerated = true;
+  }
+}
+
+function copyLink() {
+  const url = PAGE_URL;
+  navigator.clipboard.writeText(url).then(() => {
+    const btn = document.getElementById('bp-copy-btn');
+    if (btn) { btn.textContent = 'Copied ✓'; btn.style.color = '#7aba6a'; setTimeout(() => { btn.textContent = 'Copy'; btn.style.color = ''; }, 2000); }
+  }).catch(() => {
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = url; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+  });
+}
+
+function shareLink() {
+  if (navigator.share) {
+    navigator.share({ title: 'Bruno Aversa — Brave by Bruno', text: 'Massage Therapist · Performer · Creator', url: PAGE_URL });
+  } else { copyLink(); }
+}
+</script>
+</body>
+</html>
