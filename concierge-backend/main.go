@@ -65,12 +65,31 @@ func main() {
 	r.POST("/profile", handleSaveProfile)
 	r.GET("/profile/:slug", handleGetProfile)
 	r.GET("/check-slug/:slug", handleCheckSlug)
+	r.GET("/debug-env", handleDebugEnv)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
 	fmt.Printf("Concierge AI backend running on port %s\n", port)
 	r.Run(":" + port)
+}
+
+func handleDebugEnv(c *gin.Context) {
+	url := os.Getenv("SUPABASE_URL")
+	key := os.Getenv("SUPABASE_KEY")
+	c.JSON(200, gin.H{
+		"supabase_url_set":    url != "",
+		"supabase_url_prefix": safePrefix(url, 20),
+		"supabase_key_set":    key != "",
+		"supabase_key_len":    len(key),
+	})
+}
+
+func safePrefix(s string, n int) string {
+	if len(s) < n {
+		return s
+	}
+	return s[:n]
 }
 
 func scoreLead(messages []Message) string {
@@ -185,7 +204,7 @@ func sendHotLeadEmail(name, email, profileID string) {
 func handleSaveProfile(c *gin.Context) {
 	var p db.Profile
 	if err := c.ShouldBindJSON(&p); err != nil {
-		c.JSON(400, gin.H{"error": "Invalid request"})
+		c.JSON(400, gin.H{"error": "Invalid JSON: " + err.Error()})
 		return
 	}
 	if p.Slug == "" {
@@ -195,8 +214,7 @@ func handleSaveProfile(c *gin.Context) {
 	p.ID = uuid.New().String()
 	p.CreatedAt = time.Now()
 	if err := db.SaveProfile(p); err != nil {
-		fmt.Printf("Warning: could not save profile: %v\n", err)
-		c.JSON(500, gin.H{"error": "Could not save profile"})
+		c.JSON(500, gin.H{"error": "Could not save profile", "detail": err.Error()})
 		return
 	}
 	c.JSON(200, gin.H{"status": "ok", "slug": p.Slug})
