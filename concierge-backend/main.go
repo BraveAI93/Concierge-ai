@@ -2,6 +2,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -66,6 +68,14 @@ func main() {
 	r.GET("/profile/:slug", handleGetProfile)
 	r.GET("/check-slug/:slug", handleCheckSlug)
 	r.GET("/debug-env", handleDebugEnv)
+	r.POST("/consent", handleSaveConsent)
+	r.POST("/auth/signup", handleSignup)
+	r.POST("/auth/login", handleLogin)
+	r.GET("/owner/profile", handleGetOwnerProfile)
+	r.PUT("/owner/profile", handleUpdateOwnerProfile)
+	r.GET("/owner/leads", handleGetOwnerLeads)
+	r.GET("/owner/conversations", handleGetOwnerConversations)
+	r.GET("/admin/stats", handleAdminStats)
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
@@ -311,4 +321,255 @@ func callAnthropic(messages []Message, systemPrompt string) (string, error) {
 		return "", fmt.Errorf("empty response")
 	}
 	return anthropicResp.Content[0].Text, nil
+}
+
+func handleSaveConsent(c *gin.Context) {
+	var req struct {
+		ProfileID    string   `json:"profile_id"`
+		SessionID    string   `json:"session_id"`
+		ClientName   string   `json:"client_name"`
+		ClientEmail  string   `json:"client_email"`
+		FormsAgreed  []string `json:"forms_agreed"`
+		Answers      string   `json:"answers"`
+		SignatureDate string  `json:"signature_date"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request"})
+		return
+	}
+	formsJSON, _ := json.Marshal(req.FormsAgreed)
+	consent := db.Consent{
+		ID:            uuid.New().String(),
+		ProfileID:     req.ProfileID,
+		SessionID:     req.SessionID,
+		ClientName:    req.ClientName,
+		ClientEmail:   req.ClientEmail,
+		FormsAgreed:   string(formsJSON),
+		Answers:       req.Answers,
+		SignatureDate: req.SignatureDate,
+		CreatedAt:     time.Now(),
+	}
+	if err := db.SaveConsent(consent); err != nil {
+		c.JSON(500, gin.H{"error": "Could not save consent", "detail": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"status": "ok", "id": consent.ID})
+}
+
+// ─── AUTH ──────────────────────────────────────────────
+
+func hashPassword(password, salt string) string {
+	h := sha256.Sum256([]byte(password + salt + os.Getenv("AUTH_SALT_SECRET")))
+	return hex.EncodeToString(h[:])
+}
+
+func generateToken() string {
+	return uuid.New().String() + uuid.New().String()
+}
+
+func handleSignup(c *gin.Context) {
+	var req struct {
+		Slug     string `json:"slug"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request"})
+		return
+	}
+	if req.Slug == "" || req.Email == "" || len(req.Password) < 6 {
+		c.JSON(400, gin.H{"error": "Slug, email and password (6+ chars) required"})
+		return
+	}
+	p, err := db.GetProfile(req.Slug)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Profile not found — complete onboarding first"})
+		return
+	}
+	salt := uuid.New().String()
+	hashed := hashPassword(req.Password, salt)
+	p.Email = req.Email
+	p.PasswordHash = hashed
+	p.PasswordSalt = salt
+	if err := db.UpdateProfile(*p); err != nil {
+		c.JSON(500, gin.H{"error": "Could not save account", "detail": err.Error()})
+		return
+	}
+	token := generateToken()
+	if err := db.SaveSession(db.Session{Token: token, Slug: p.Slug, CreatedAt: time.Now()}); err != nil {
+		c.JSON(500, gin.H{"error": "Could not create session"})
+		return
+	}
+	go sendWelcomeEmail(p.Name, req.Email, p.Slug)
+	c.JSON(200, gin.H{"status": "ok", "token": token, "slug": p.Slug})
+}
+
+func sendWelcomeEmail(name, email, slug string) {
+	apiKey := os.Getenv("RESEND_API_KEY")
+	if apiKey == "" || email == "" {
+		return
+	}
+	publicURL := fmt.Sprintf("https://concierge-ai-gamma.vercel.app/%s", slug)
+	dashboardHint := "https://concierge-ai-gamma.vercel.app (tap 'My Profile Login')"
+	html := fmt.Sprintf(`
+		<h2>Welcome to Concierge AI, %s! 🎉</h2>
+		<p>Your AI concierge is live. Here's everything you need:</p>
+		<p><strong>Your public link (share this with clients):</strong><br>
+		<a href="%s">%s</a></p>
+		<p><strong>Your dashboard (manage your profile, see leads):</strong><br>
+		%s<br>
+		Login with this email and the password you chose during setup.</p>
+		<p>Save this email — it has everything you need to find your way back.</p>
+		<p>— Concierge AI</p>
+	`, name, publicURL, publicURL, dashboardHint)
+	body := map[string]interface{}{
+		"from":    "Concierge AI <onboarding@resend.dev>",
+		"to":      []string{email},
+		"subject": "Your Concierge AI is live — save this email",
+		"html":    html,
+	}
+	b, _ := json.Marshal(body)
+	req, _ := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewBuffer(b))
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{Timeout: 10 * time.Second}
+	client.Do(req)
+}
+
+func handleLogin(c *gin.Context) {
+	var req struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request"})
+		return
+	}
+	p, err := db.GetProfileByEmail(req.Email)
+	if err != nil {
+		c.JSON(401, gin.H{"error": "Invalid email or password"})
+		return
+	}
+	hashed := hashPassword(req.Password, p.PasswordSalt)
+	if hashed != p.PasswordHash || p.PasswordHash == "" {
+		c.JSON(401, gin.H{"error": "Invalid email or password"})
+		return
+	}
+	token := generateToken()
+	if err := db.SaveSession(db.Session{Token: token, Slug: p.Slug, CreatedAt: time.Now()}); err != nil {
+		c.JSON(500, gin.H{"error": "Could not create session"})
+		return
+	}
+	c.JSON(200, gin.H{"status": "ok", "token": token, "slug": p.Slug})
+}
+
+func authenticateToken(c *gin.Context) (string, bool) {
+	token := c.GetHeader("Authorization")
+	token = strings.TrimPrefix(token, "Bearer ")
+	if token == "" {
+		return "", false
+	}
+	slug, err := db.GetSessionSlug(token)
+	if err != nil {
+		return "", false
+	}
+	return slug, true
+}
+
+func handleGetOwnerProfile(c *gin.Context) {
+	slug, ok := authenticateToken(c)
+	if !ok {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	p, err := db.GetProfile(slug)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Profile not found"})
+		return
+	}
+	p.PasswordHash = ""
+	p.PasswordSalt = ""
+	c.JSON(200, p)
+}
+
+func handleUpdateOwnerProfile(c *gin.Context) {
+	slug, ok := authenticateToken(c)
+	if !ok {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	var updates db.Profile
+	if err := c.ShouldBindJSON(&updates); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid request"})
+		return
+	}
+	existing, err := db.GetProfile(slug)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Profile not found"})
+		return
+	}
+	// Preserve identity & auth fields — only allow content fields to update
+	updates.ID = existing.ID
+	updates.Slug = existing.Slug
+	updates.Email = existing.Email
+	updates.PasswordHash = existing.PasswordHash
+	updates.PasswordSalt = existing.PasswordSalt
+	updates.CreatedAt = existing.CreatedAt
+	if err := db.UpdateProfile(updates); err != nil {
+		c.JSON(500, gin.H{"error": "Could not update profile", "detail": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"status": "ok"})
+}
+
+func handleGetOwnerLeads(c *gin.Context) {
+	slug, ok := authenticateToken(c)
+	if !ok {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	leads, err := db.GetLeadsByProfile(slug)
+	if err != nil {
+		c.JSON(200, gin.H{"leads": []interface{}{}})
+		return
+	}
+	c.JSON(200, gin.H{"leads": leads})
+}
+
+func handleGetOwnerConversations(c *gin.Context) {
+	slug, ok := authenticateToken(c)
+	if !ok {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	convs, err := db.GetConversationsByProfile(slug)
+	if err != nil {
+		c.JSON(200, gin.H{"conversations": []interface{}{}, "count": 0})
+		return
+	}
+	c.JSON(200, gin.H{"conversations": convs, "count": len(convs)})
+}
+
+// ─── ADMIN (Bruno only) ────────────────────────────────
+
+func handleAdminStats(c *gin.Context) {
+	adminKey := c.GetHeader("X-Admin-Key")
+	validKey := os.Getenv("ADMIN_KEY")
+	if validKey == "" || adminKey != validKey {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	totalUsers := queryCount("profiles")
+	totalConversations := queryCount("conversations")
+	totalMessages := queryCount("messages")
+	totalLeads := queryCount("leads")
+	// Rough cost estimate: ~£0.003 per message (Claude Sonnet avg cost)
+	estCostGBP := float64(totalMessages) * 0.003
+	c.JSON(200, gin.H{
+		"total_users":         totalUsers,
+		"total_conversations": totalConversations,
+		"total_messages":      totalMessages,
+		"total_leads":         totalLeads,
+		"estimated_cost_gbp":  fmt.Sprintf("%.2f", estCostGBP),
+	})
 }
