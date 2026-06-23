@@ -965,20 +965,18 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile}){
       fetch(`${BACKEND_URL}/owner/profile`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():null),
       fetch(`${BACKEND_URL}/owner/leads`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():{leads:[]}),
       fetch(`${BACKEND_URL}/owner/conversations`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():{count:0}),
-      fetch(`${BACKEND_URL}/auth/google/status`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():{connected:false}),
-      fetch(`${BACKEND_URL}/owner/booking-requests`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():{requests:[]}),
+      fetch(`${BACKEND_URL}/owner/bookings`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():{bookings:[]}),
       fetch(`${BACKEND_URL}/owner/notes`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():{notes:[]}),
-      fetch(`${BACKEND_URL}/owner/news`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():{news:null,date:''}),
-    ]).then(([p,l,c,cal,br,nt,nw])=>{
+      fetch(`${BACKEND_URL}/owner/news`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():{items:null,date:''}),
+    ]).then(([p,l,c,br,nt,nw])=>{
       setProfile(p);
       setLeads(l.leads||[]);
       setConvCount(c.count||0);
-      setCalConnected(cal.connected||false);
-      setBookingRequests(br.requests||[]);
+      setBookingRequests(br.bookings||[]);
       setNotes(nt.notes||[]);
       if(p) setDigestFreq(p.digest_frequency||'none');
-      if(nw.news){
-        try{setNews(JSON.parse(nw.news));setNewsDate(nw.date);}catch(e){setNews([]);}
+      if(nw.items){
+        try{setNews(JSON.parse(nw.items));setNewsDate(nw.date);}catch(e){setNews([]);}
       }
       setLoading(false);
     }).catch(()=>setLoading(false));
@@ -1021,7 +1019,7 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile}){
 
   const respondBooking=async(id)=>{
     const body={status:respondStatus,owner_reply:respondReply,counter_slot:respondCounter};
-    await fetch(`${BACKEND_URL}/owner/booking-requests/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(body)});
+    await fetch(`${BACKEND_URL}/owner/bookings/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(body)});
     setBookingRequests(brs=>brs.map(b=>b.id===id?{...b,...body}:b));
     setRespondingId(null);setRespondReply('');setRespondCounter('');setRespondStatus('accepted');
   };
@@ -1036,7 +1034,7 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile}){
   };
 
   const saveEditNote=async(id)=>{
-    await fetch(`${BACKEND_URL}/owner/notes/${id}`,{method:'PUT',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({content:editNoteContent})});
+    await fetch(`${BACKEND_URL}/owner/notes/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({content:editNoteContent})});
     setNotes(ns=>ns.map(n=>n.id===id?{...n,content:editNoteContent}:n));
     setEditNoteId(null);
   };
@@ -1054,25 +1052,27 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile}){
 
   const generateNewsNow=async()=>{
     setNewsLoading(true);
-    // Trigger cron for this profile specifically — for now call the endpoint manually
-    // Since cron requires admin key, we call Anthropic directly from frontend for immediate generation
     try{
       const pd=JSON.parse(profile?.profile_data||'{}');
       const services=(pd.services||[]).filter(s=>s.name).map(s=>s.name).join(', ');
-      const r=await fetch('https://api.anthropic.com/v1/messages',{
+      const r=await fetch(`${BACKEND_URL}/chat`,{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({
-          model:'claude-sonnet-4-6',max_tokens:600,
-          system:'You are a market intelligence assistant. Respond only with valid JSON array, no markdown.',
+          profile_id:slug,
+          session_id:`news-gen-${Date.now()}`,
+          system_prompt:'You are a market intelligence assistant. Respond only with valid JSON array, no markdown.',
           messages:[{role:'user',content:`Generate 3 short news items relevant to a ${profile?.profession||'professional'} based in ${profile?.location||'London'} who offers: ${services}. Return JSON array: [{"title":"...","summary":"...","relevance":"..."}]`}]
         })
       });
       const d=await r.json();
-      const text=d.content?.[0]?.text||'[]';
+      const text=d.reply||'[]';
       const parsed=JSON.parse(text.replace(/```json|```/g,'').trim());
       setNews(parsed);
-      setNewsDate(new Date().toISOString().slice(0,10));
+      const today=new Date().toISOString().slice(0,10);
+      setNewsDate(today);
+      await fetch(`${BACKEND_URL}/owner/news`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
+        body:JSON.stringify({items:JSON.stringify(parsed),date:today})});
     }catch(e){setNews([]);}
     setNewsLoading(false);
   };
@@ -2164,7 +2164,7 @@ function generateBusinessPage(data, lang) {
   ${booking?`<a href="${booking}" target="_blank" class="link-btn primary"><div class="link-icon">📅</div><div><div class="link-title">Book a Session</div><div class="link-sub">Check availability & book online</div></div></a>`:''}
   <div class="link-btn" onclick="openBubble()" style="cursor:pointer"><div class="link-icon">💬</div><div><div class="link-title">Chat with me</div><div class="link-sub">Ask me anything · Available 24/7</div></div></div>
   ${calendar?`<a href="${calendar}" target="_blank" class="link-btn"><div class="link-icon">🗓️</div><div><div class="link-title">Check my availability</div><div class="link-sub">View calendar</div></div></a>`:''}
-  ${whatsapp?`<a href="https://wa.me/${whatsapp.replace(/[^0-9]/g,'')}" target="_blank" class="link-btn"><div class="link-icon">💚</div><div><div class="link-title">WhatsApp me</div><div class="link-sub">${whatsapp}</div></div></a>`:''}
+  ${whatsapp&&whatsapp.replace(/[^0-9]/g,'').length>=7?`<a href="https://wa.me/${whatsapp.replace(/[^0-9]/g,'').replace(/^0+/,'')}" target="_blank" class="link-btn"><div class="link-icon">💚</div><div><div class="link-title">WhatsApp me</div><div class="link-sub">${whatsapp}</div></div></a>`:''}
   ${phone?`<a href="tel:${phone.replace(/[^0-9+]/g,'')}" class="link-btn"><div class="link-icon">📞</div><div><div class="link-title">Call me</div><div class="link-sub">${phone}</div></div></a>`:''}
   ${email?`<a href="mailto:${email}" class="link-btn"><div class="link-icon">✉️</div><div><div class="link-title">Email me</div><div class="link-sub">${email}</div></div></a>`:''}
   ${instagram?`<a href="https://instagram.com/${instagram.replace('@','')}" target="_blank" class="link-btn"><div class="link-icon">📸</div><div><div class="link-title">@${instagram.replace('@','')}</div><div class="link-sub">Follow on Instagram</div></div></a>`:''}
@@ -2491,6 +2491,7 @@ function App(){
       alert(`Profile save failed — please screenshot this:\n${saveMsg||'Unknown error'}\nSlug: ${slug}\nBackend: ${BACKEND_URL}`);
     }
     // If they filled in email/password, create their owner account automatically
+    let signupSucceeded=false;
     if(saveOk && data.ownerEmail && data.ownerPassword && data.ownerPassword.length>=6){
       try{
         const signupResp=await fetch(`${BACKEND_URL}/auth/signup`,{method:'POST',headers:{'Content-Type':'application/json'},
@@ -2499,6 +2500,9 @@ function App(){
         if(signupResp.ok){
           localStorage.setItem('cai_owner_token', signupResult.token);
           localStorage.setItem('cai_owner_slug', signupResult.slug);
+          setOwnerToken(signupResult.token);
+          setOwnerSlug(signupResult.slug);
+          signupSucceeded=true;
         }
       }catch(e){/* silent — they can still sign up later from the dashboard */}
     }
@@ -2506,7 +2510,7 @@ function App(){
     setPrompt(sp);
     setProfId(slug);
     setOnboardData(data);
-    setView('preview');
+    setView(signupSucceeded?'owner-dashboard':'preview');
   }}/>;
   if(view==='chat'&&prof)return <Chat profile={prof} systemPrompt={prompt} profileId={profId} onBack={back} lang={lang}/>;
   return null;

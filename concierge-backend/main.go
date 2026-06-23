@@ -432,6 +432,10 @@ func sendWelcomeEmail(name, email, slug string) {
 	if apiKey == "" || email == "" {
 		return
 	}
+	fromEmail := os.Getenv("RESEND_FROM_EMAIL")
+	if fromEmail == "" {
+		fromEmail = "onboarding@resend.dev"
+	}
 	publicURL := fmt.Sprintf("https://concierge-ai-gamma.vercel.app/%s", slug)
 	dashboardHint := "https://concierge-ai-gamma.vercel.app (tap 'My Profile Login')"
 	html := fmt.Sprintf(`
@@ -446,7 +450,7 @@ func sendWelcomeEmail(name, email, slug string) {
 		<p>— Concierge AI</p>
 	`, name, publicURL, publicURL, dashboardHint)
 	body := map[string]interface{}{
-		"from":    "Concierge AI <onboarding@resend.dev>",
+		"from":    "Concierge AI <" + fromEmail + ">",
 		"to":      []string{email},
 		"subject": "Your Concierge AI is live — save this email",
 		"html":    html,
@@ -456,7 +460,16 @@ func sendWelcomeEmail(name, email, slug string) {
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{Timeout: 10 * time.Second}
-	client.Do(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Warning: Resend request failed: %v\n", err)
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		rb, _ := io.ReadAll(resp.Body)
+		fmt.Printf("Warning: Resend returned %d for %s: %s\n", resp.StatusCode, email, string(rb))
+	}
 }
 
 func handleLogin(c *gin.Context) {
