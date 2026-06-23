@@ -1647,6 +1647,8 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile}){
       if(p) setDigestFreq(p.digest_frequency||'none');
       if(nw.items){
         try{setNews(JSON.parse(nw.items));setNewsDate(nw.date);}catch(e){setNews([]);}
+      } else if(p){
+        generateNewsNow(p);
       }
       setLoading(false);
     }).catch(()=>setLoading(false));
@@ -1720,10 +1722,11 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile}){
     setDigestSaving(false);
   };
 
-  const generateNewsNow=async()=>{
+  const generateNewsNow=async(profileOverride)=>{
     setNewsLoading(true);
     try{
-      const pd=JSON.parse(profile?.profile_data||'{}');
+      const activeProfile=profileOverride||profile;
+      const pd=JSON.parse(activeProfile?.profile_data||'{}');
       const services=(pd.services||[]).filter(s=>s.name).map(s=>s.name).join(', ');
       const r=await fetch(`${BACKEND_URL}/chat`,{
         method:'POST',
@@ -1732,7 +1735,7 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile}){
           profile_id:slug,
           session_id:`news-gen-${Date.now()}`,
           system_prompt:'You are a market intelligence assistant. Respond only with valid JSON array, no markdown.',
-          messages:[{role:'user',content:`Generate 3 short news items relevant to a ${profile?.profession||'professional'} based in ${profile?.location||'London'} who offers: ${services}. Return JSON array: [{"title":"...","summary":"...","relevance":"..."}]`}]
+          messages:[{role:'user',content:`Generate 3 short news items relevant to a ${activeProfile?.profession||'professional'} based in ${activeProfile?.location||'London'} who offers: ${services}. Return JSON array: [{"title":"...","summary":"...","relevance":"..."}]`}]
         })
       });
       const d=await r.json();
