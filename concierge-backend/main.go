@@ -441,6 +441,11 @@ func handleSignup(c *gin.Context) {
 }
 
 func sendWelcomeEmail(name, email, slug string) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Warning: sendWelcomeEmail panic: %v\n", r)
+		}
+	}()
 	apiKey := os.Getenv("RESEND_API_KEY")
 	if apiKey == "" || email == "" {
 		return
@@ -802,13 +807,18 @@ func handleGetNews(c *gin.Context) {
 	}
 	news, err := db.GetLatestNews(slug)
 	if err != nil {
-		c.JSON(404, gin.H{"error": "No news found"})
+		c.JSON(200, gin.H{"items": nil, "date": ""})
 		return
 	}
 	c.JSON(200, news)
 }
 
 func handleSaveNews(c *gin.Context) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Warning: handleSaveNews panic: %v\n", r)
+		}
+	}()
 	slug, ok := authenticateToken(c)
 	if !ok {
 		c.JSON(401, gin.H{"error": "Unauthorized"})
