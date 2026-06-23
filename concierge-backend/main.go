@@ -220,8 +220,12 @@ func sendHotLeadEmail(name, email, profileID string) {
 	if apiKey == "" || ownerEmail == "" {
 		return
 	}
+	fromEmail := os.Getenv("RESEND_FROM_EMAIL")
+	if fromEmail == "" {
+		fromEmail = "onboarding@resend.dev"
+	}
 	body := map[string]interface{}{
-		"from":    "Concierge AI <onboarding@resend.dev>",
+		"from":    "Concierge AI <" + fromEmail + ">",
 		"to":      []string{ownerEmail},
 		"subject": "Hot lead from your Concierge!",
 		"html":    fmt.Sprintf("<h2>New hot lead!</h2><p><b>Name:</b> %s</p><p><b>Email:</b> %s</p><p><b>Profile:</b> %s</p>", name, email, profileID),
@@ -231,7 +235,16 @@ func sendHotLeadEmail(name, email, profileID string) {
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{Timeout: 10 * time.Second}
-	client.Do(req)
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Warning: Resend hot-lead email failed: %v\n", err)
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		rb, _ := io.ReadAll(resp.Body)
+		fmt.Printf("Warning: Resend returned %d for hot-lead to %s: %s\n", resp.StatusCode, ownerEmail, string(rb))
+	}
 }
 
 func handleSaveProfile(c *gin.Context) {
