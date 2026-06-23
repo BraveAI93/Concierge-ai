@@ -78,9 +78,46 @@
     .stat-label{font-size:10px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.4);letter-spacing:0.1em;text-transform:uppercase}
     .export-btn{padding:8px 16px;background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.25);border-radius:8px;cursor:pointer;font-size:11px;font-family:'Jost',sans-serif;font-weight:500;color:#c9a96e;letter-spacing:0.06em;text-transform:uppercase;transition:all 0.2s}
     .export-btn:hover{background:rgba(201,169,110,0.18)}
+
+    /* ── INTRO SEQUENCE ── */
+    #intro-screen{position:fixed;inset:0;z-index:9999;background:#000;display:flex;align-items:center;justify-content:center;flex-direction:column;pointer-events:all;transition:opacity 0.9s ease}
+    #intro-canvas{position:absolute;inset:0;width:100%;height:100%}
+    #intro-content{position:relative;z-index:2;text-align:center;user-select:none}
+    #intro-brand{font-size:clamp(10px,1.3vw,13px);font-family:'Jost',sans-serif;letter-spacing:0.45em;text-transform:uppercase;color:rgba(201,169,110,0.85);opacity:0;margin-bottom:10px;animation:iOpIn 1s ease 0.7s forwards}
+    #intro-presents{font-size:clamp(13px,2vw,18px);font-family:'Cormorant Garamond',serif;font-style:italic;color:rgba(232,220,200,0.65);opacity:0;margin-bottom:18px;animation:iOpIn 0.7s ease 1.5s forwards}
+    #intro-title{font-size:clamp(48px,9vw,96px);font-family:'Cormorant Garamond',serif;font-weight:300;letter-spacing:0.06em;background:linear-gradient(135deg,#c9a96e 0%,#f5e8b0 45%,#c9a96e 70%,#e8c060 100%);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;opacity:0;transform:scale(0.75) translateY(20px);filter:blur(14px);animation:iTitleEx 1s cubic-bezier(0.16,1.2,0.3,1) 2.1s forwards}
+    #intro-subtitle{font-size:clamp(9px,1.1vw,11px);font-family:'Jost',sans-serif;letter-spacing:0.28em;text-transform:uppercase;color:rgba(201,169,110,0.45);opacity:0;margin-top:16px;animation:iOpIn 0.6s ease 3.1s forwards}
+    #intro-skip{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);font-size:10px;font-family:'Jost',sans-serif;color:rgba(201,169,110,0.3);letter-spacing:0.14em;text-transform:uppercase;cursor:pointer;padding:6px 16px;border:1px solid rgba(201,169,110,0.15);border-radius:20px;opacity:0;animation:iOpIn 0.5s ease 2.8s forwards;z-index:3;background:transparent}
+    #intro-skip:hover{color:rgba(201,169,110,0.7);border-color:rgba(201,169,110,0.35)}
+    #gold-burst{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(201,169,110,0.65) 0%,rgba(201,169,110,0.2) 35%,transparent 68%);opacity:0;animation:iGoldB 0.7s ease 2.05s forwards;z-index:1;pointer-events:none}
+    #gold-burst-2{position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(255,248,180,0.4) 0%,transparent 52%);opacity:0;animation:iGoldB2 1.4s ease 2.1s forwards;z-index:1;pointer-events:none}
+    @keyframes iOpIn{to{opacity:1}}
+    @keyframes iTitleEx{0%{opacity:0;transform:scale(0.75) translateY(20px);filter:blur(14px)}60%{opacity:1;transform:scale(1.04) translateY(-4px);filter:blur(0)}100%{opacity:1;transform:scale(1) translateY(0);filter:blur(0)}}
+    @keyframes iGoldB{0%{opacity:0;transform:scale(0.3)}40%{opacity:1;transform:scale(1.1)}100%{opacity:0;transform:scale(2)}}
+    @keyframes iGoldB2{0%{opacity:0;transform:scale(0.4)}20%{opacity:0.8;transform:scale(1)}100%{opacity:0;transform:scale(1.5)}}
+    /* Landing page — hidden until intro completes */
+    #landing{opacity:0}
+    body.intro-done #landing{animation:landingIn 1s ease forwards}
+    @keyframes landingIn{from{opacity:0}to{opacity:1}}
+    /* Sparkle canvas */
+    #sparkle-canvas{position:absolute;inset:0;pointer-events:none;z-index:1}
   </style>
 </head>
 <body>
+
+<!-- INTRO SEQUENCE -->
+<div id="intro-screen" aria-hidden="true">
+  <canvas id="intro-canvas"></canvas>
+  <div id="gold-burst"></div>
+  <div id="gold-burst-2"></div>
+  <div id="intro-content">
+    <div id="intro-brand">Brave by Bruno</div>
+    <div id="intro-presents">presents</div>
+    <div id="intro-title">The Concierge</div>
+    <div id="intro-subtitle">AI · 24/7 · Your voice.</div>
+  </div>
+  <div id="intro-skip" onclick="window._skipIntro&&window._skipIntro()">Skip ›</div>
+</div>
 
 <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle light/dark mode">🌙</button>
 <!-- LANDING -->
@@ -448,6 +485,250 @@ function setLang(lang) {
   set('hiw-2', t.hiw2);
   set('hiw-3', t.hiw3);
   set('hiw-4', t.hiw4);
+}
+</script>
+
+<script>
+// ── INTRO + SPARKLE SYSTEM ─────────────────────────────────────────────
+(function(){
+  var introEl = document.getElementById('intro-screen');
+  var isRoot = !window.location.pathname.replace(/^\//,'').replace(/\.html$/,'');
+
+  function finishIntro(){
+    document.body.classList.add('intro-done');
+    initHeroSparkles();
+  }
+
+  function doSkip(){
+    if(!introEl) return;
+    introEl.style.opacity = '0';
+    setTimeout(function(){ introEl.remove(); finishIntro(); }, 900);
+  }
+  window._skipIntro = doSkip;
+
+  // On non-root pages (profile pages) skip instantly
+  if(!isRoot || !introEl){
+    if(introEl) introEl.remove();
+    finishIntro();
+    return;
+  }
+
+  // Skip if already seen this session
+  if(sessionStorage.getItem('cai_intro_v2')){
+    introEl.remove();
+    finishIntro();
+    return;
+  }
+  sessionStorage.setItem('cai_intro_v2','1');
+
+  // ── STAR FIELD ───────────────────────────────
+  var ic = document.getElementById('intro-canvas');
+  if(!ic){ introEl.remove(); finishIntro(); return; }
+  var ctx = ic.getContext('2d');
+
+  function resize(){
+    ic.width = window.innerWidth;
+    ic.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  var numStars = Math.min(220, Math.floor(ic.width * ic.height / 5500));
+  var stars = [];
+  for(var i=0;i<numStars;i++){
+    stars.push({
+      x: Math.random()*ic.width,
+      y: Math.random()*ic.height,
+      r: Math.random()*1.35+0.15,
+      base: Math.random()*0.5+0.12,
+      tw: Math.random()*Math.PI*2,
+      spd: Math.random()*0.022+0.004
+    });
+  }
+
+  // ── GOLD EXPLOSION PARTICLES ─────────────────
+  var golds = [];
+  var goldSpawned = false;
+
+  function spawnExplosion(){
+    var cx=ic.width/2, cy=ic.height/2;
+    for(var i=0;i<110;i++){
+      var ang=Math.random()*Math.PI*2;
+      var spd=Math.random()*10+1.5;
+      golds.push({
+        x:cx, y:cy,
+        vx:Math.cos(ang)*spd,
+        vy:Math.sin(ang)*spd-1,
+        r: Math.random()*2.4+0.35,
+        o: 0.95,
+        decay: Math.random()*0.011+0.005,
+        warm: Math.random()<0.65
+      });
+    }
+  }
+
+  var t0=Date.now(), rafId;
+
+  function draw(){
+    var el=Date.now()-t0;
+    ctx.fillStyle='rgba(0,0,0,0.13)';
+    ctx.fillRect(0,0,ic.width,ic.height);
+
+    // Stars
+    for(var i=0;i<stars.length;i++){
+      var s=stars[i];
+      s.tw+=s.spd;
+      var a=s.base*(0.5+0.5*Math.sin(s.tw));
+      ctx.beginPath();
+      ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle='rgba(255,246,210,'+a+')';
+      ctx.fill();
+    }
+
+    // Spawn gold at 2.05s
+    if(el>2050&&!goldSpawned){ goldSpawned=true; spawnExplosion(); }
+
+    // Gold sparkle particles
+    for(var i=golds.length-1;i>=0;i--){
+      var p=golds[i];
+      p.x+=p.vx; p.y+=p.vy;
+      p.vy+=0.035; p.vx*=0.985;
+      p.o-=p.decay;
+      if(p.o<=0){ golds.splice(i,1); continue; }
+      var sz=p.r*3;
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.globalAlpha=p.o;
+      ctx.fillStyle=p.warm?'#c9a96e':'#f5e090';
+      ctx.beginPath();
+      ctx.moveTo(0,-sz);
+      ctx.lineTo(sz*0.3,-sz*0.3);
+      ctx.lineTo(sz,0);
+      ctx.lineTo(sz*0.3,sz*0.3);
+      ctx.lineTo(0,sz);
+      ctx.lineTo(-sz*0.3,sz*0.3);
+      ctx.lineTo(-sz,0);
+      ctx.lineTo(-sz*0.3,-sz*0.3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    rafId=requestAnimationFrame(draw);
+    if(el>5600){ cancelAnimationFrame(rafId); }
+  }
+  draw();
+
+  // Fade out after 4.1s
+  var fadeTimer=setTimeout(function(){
+    introEl.style.opacity='0';
+    setTimeout(function(){
+      cancelAnimationFrame(rafId);
+      introEl.remove();
+      finishIntro();
+    },900);
+  },4100);
+
+  // Click anywhere to skip
+  introEl.addEventListener('click',function(){
+    clearTimeout(fadeTimer);
+    cancelAnimationFrame(rafId);
+    doSkip();
+  },{once:true});
+
+  // Hard failsafe
+  setTimeout(function(){
+    if(!document.body.classList.contains('intro-done')){
+      if(introEl) introEl.remove();
+      finishIntro();
+      var l=document.getElementById('landing');
+      if(l) l.style.opacity='1';
+    }
+  },7000);
+})();
+
+// ── HERO SPARKLES ──────────────────────────────────────────────────────
+function initHeroSparkles(){
+  var landing=document.getElementById('landing');
+  if(!landing) return;
+  var heroDiv=landing.querySelector('div');
+  if(!heroDiv) return;
+
+  var cs=getComputedStyle(heroDiv);
+  if(cs.position==='static') heroDiv.style.position='relative';
+
+  var sc=document.createElement('canvas');
+  sc.id='sparkle-canvas';
+  heroDiv.appendChild(sc);
+
+  function resizeSC(){
+    sc.width=heroDiv.offsetWidth||window.innerWidth;
+    sc.height=heroDiv.offsetHeight||400;
+  }
+  resizeSC();
+  window.addEventListener('resize',function(){ setTimeout(resizeSC,120); });
+
+  var sctx=sc.getContext('2d');
+  var sparks=[];
+  var sfc=0;
+  var active=true;
+
+  function spawnSpark(){
+    var h1=document.getElementById('hero-h1');
+    if(!h1) return;
+    var hr=h1.getBoundingClientRect();
+    var dr=heroDiv.getBoundingClientRect();
+    var pad=90;
+    sparks.push({
+      x: hr.left-dr.left + Math.random()*(hr.width+pad*2)-pad,
+      y: hr.top-dr.top + Math.random()*(hr.height+pad)-pad*0.4,
+      r: Math.random()*1.7+0.3,
+      o: 0, ph:0, t:0,
+      hold: Math.floor(Math.random()*60+28)
+    });
+  }
+
+  function animS(){
+    if(!active) return;
+    sctx.clearRect(0,0,sc.width,sc.height);
+    sfc++;
+    if(sfc%12===0&&sparks.length<20) spawnSpark();
+
+    for(var i=sparks.length-1;i>=0;i--){
+      var s=sparks[i];
+      s.t++;
+      if(s.ph===0){ s.o+=0.07; if(s.o>=0.82){s.o=0.82;s.ph=1;} }
+      else if(s.ph===1){ if(s.t>s.hold) s.ph=2; }
+      else{ s.o-=0.045; if(s.o<=0){sparks.splice(i,1);continue;} }
+
+      sctx.save();
+      sctx.translate(s.x,s.y);
+      sctx.globalAlpha=s.o;
+      var sz=s.r*3.8;
+      sctx.strokeStyle='#c9a96e';
+      sctx.lineWidth=0.65;
+      sctx.beginPath();
+      // 4-ray sparkle cross
+      sctx.moveTo(-sz,0); sctx.lineTo(sz,0);
+      sctx.moveTo(0,-sz); sctx.lineTo(0,sz);
+      sctx.moveTo(-sz*.55,-sz*.55); sctx.lineTo(sz*.55,sz*.55);
+      sctx.moveTo(sz*.55,-sz*.55); sctx.lineTo(-sz*.55,sz*.55);
+      sctx.stroke();
+      sctx.beginPath();
+      sctx.arc(0,0,s.r*.5,0,Math.PI*2);
+      sctx.fillStyle='rgba(248,224,140,'+s.o+')';
+      sctx.fill();
+      sctx.restore();
+    }
+    requestAnimationFrame(animS);
+  }
+  animS();
+
+  // Pause sparkles when landing is hidden (in chat/demo mode)
+  var obs=new MutationObserver(function(){
+    active=landing.style.display!=='none';
+  });
+  obs.observe(landing,{attributes:true,attributeFilter:['style']});
 }
 </script>
 
@@ -2054,11 +2335,11 @@ function generateBusinessPage(data, lang) {
   function getVideoEmbed(url){
     if(!url) return '';
     const ytShort = url.match(/youtube\.com\/shorts\/([a-zA-Z0-9_-]+)/);
-    if(ytShort) return `<iframe src="https://www.youtube.com/embed/${ytShort[1]}" frameborder="0" allowfullscreen style="width:100%;max-width:280px;aspect-ratio:9/16;border-radius:12px;display:block;margin:0 auto"></iframe>`;
+    if(ytShort) return `<iframe src="https://www.youtube.com/embed/${ytShort[1]}?autoplay=1&mute=1&loop=1&playlist=${ytShort[1]}&playsinline=1" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="width:100%;max-width:280px;aspect-ratio:9/16;border-radius:12px;display:block;margin:0 auto"></iframe>`;
     const yt = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-    if(yt) return `<iframe src="https://www.youtube.com/embed/${yt[1]}" frameborder="0" allowfullscreen style="width:100%;aspect-ratio:16/9;border-radius:12px"></iframe>`;
+    if(yt) return `<iframe src="https://www.youtube.com/embed/${yt[1]}?autoplay=1&mute=1&loop=1&playlist=${yt[1]}&playsinline=1" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="width:100%;aspect-ratio:16/9;border-radius:12px"></iframe>`;
     const vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-    if(vm) return `<iframe src="https://player.vimeo.com/video/${vm[1]}" frameborder="0" allowfullscreen style="width:100%;aspect-ratio:16/9;border-radius:12px"></iframe>`;
+    if(vm) return `<iframe src="https://player.vimeo.com/video/${vm[1]}?autoplay=1&muted=1&loop=1&background=1" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="width:100%;aspect-ratio:16/9;border-radius:12px"></iframe>`;
     return '';
   }
   const videoEmbed = getVideoEmbed(video);
