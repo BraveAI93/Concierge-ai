@@ -797,7 +797,7 @@ func handleDeleteNote(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "ok"})
 }
 
-// ─── A3: NEWS ──────────────────────────────────────────
+// ─── A3: NEWS — GET returns 200 with empty payload when no rows exist ──────────────────────────────────────────
 
 func handleGetNews(c *gin.Context) {
 	slug, ok := authenticateToken(c)
