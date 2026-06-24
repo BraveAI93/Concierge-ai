@@ -173,7 +173,7 @@
     .hero-brand-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(40px,7.5vw,70px);font-weight:600;letter-spacing:0.08em;line-height:1;display:inline;position:relative}
     .hbt-the{color:rgba(232,220,200,0.95);text-shadow:0 1px 0 rgba(201,169,110,0.3),0 2px 8px rgba(0,0,0,0.9)}
     .hbt-con{color:#e8c97a;text-shadow:0 1px 0 rgba(201,169,110,0.6),0 2px 0 rgba(140,95,22,0.45),0 4px 18px rgba(0,0,0,0.95),0 0 28px rgba(201,169,110,0.25)}
-    .hbt-star-o{color:#E8C97A;display:inline-block;font-size:0.52em;line-height:1;vertical-align:0.15em;opacity:0.82}
+    .hbt-star-o{color:#FFD700;display:inline-block;font-size:0.52em;line-height:1;vertical-align:0.15em;opacity:0.9}
     .hbt-i-wrap{position:relative;display:inline-block}
     .hbt-i-flare{position:absolute;left:50%;top:-0.05em;transform:translateX(-50%);pointer-events:none;z-index:2;font-size:0.28em;line-height:1;color:#C9A96E;text-shadow:0 0 4px rgba(201,169,110,0.8),0 0 10px rgba(201,169,110,0.4);animation:starPulse 2.4s ease-in-out infinite}
     /* Section dark veil for readability against stars */
@@ -181,6 +181,38 @@
     .section-veil::before{content:'';position:absolute;inset:-16px -24px;background:rgba(12,10,8,0.6);pointer-events:none;z-index:0;border-radius:16px}
     .section-veil>*{position:relative;z-index:1}
     #gnav-back:hover,#gnav-close:hover{background:rgba(201,169,110,0.15);border-color:rgba(201,169,110,0.6);color:#e8c97a}
+
+    /* ── LIGHT MODE ── */
+    body.light-mode{background:#F5EDD8!important}
+    body.light-mode #star-canvas,body.light-mode #shoot-canvas{opacity:0;pointer-events:none}
+    body.light-mode .hero-brand-label{color:rgba(140,95,20,0.55)!important}
+    body.light-mode .hbt-the{color:#3d2613!important;text-shadow:none!important}
+    body.light-mode .hbt-con{color:#8c5e14!important;text-shadow:0 1px 0 rgba(140,95,20,0.3)!important}
+    body.light-mode .hbt-star-o{color:#FFD700!important}
+    body.light-mode #hero-h1{color:#2c1f0e!important;text-shadow:none!important}
+    body.light-mode #hero-h1 span{color:#8c5e14!important;text-shadow:none!important}
+    body.light-mode #hero-sub{color:rgba(44,31,14,0.8)!important}
+    body.light-mode #trust-1,body.light-mode #trust-2,body.light-mode #trust-3{color:rgba(140,95,20,0.9)!important}
+    body.light-mode #privacy-note{color:rgba(44,31,14,0.65)!important}
+    body.light-mode #demo-label{color:rgba(140,95,20,0.5)!important}
+    body.light-mode .dc{background:rgba(255,252,242,0.95)!important;border-color:rgba(201,169,110,0.3)!important;box-shadow:0 2px 14px rgba(140,95,20,0.1)!important}
+    body.light-mode .dc div:not([style*="font-size:24px"]){color:#2c1f0e!important}
+    body.light-mode #own-link{background:linear-gradient(135deg,rgba(140,95,20,0.18),rgba(140,95,20,0.08))!important;border-color:rgba(140,95,20,0.5)!important;color:#7a4f0e!important}
+    body.light-mode #auth-btn{color:rgba(140,95,20,0.75)!important;border-color:rgba(140,95,20,0.3)!important}
+
+    /* ── THEME TOGGLE ── */
+    #theme-toggle{position:fixed;top:14px;right:14px;z-index:10000;width:32px;height:32px;border-radius:50%;border:1px solid rgba(201,169,110,0.28);background:rgba(201,169,110,0.08);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all 0.2s;color:rgba(201,169,110,0.75);line-height:1}
+    #theme-toggle:hover{background:rgba(201,169,110,0.18);border-color:rgba(201,169,110,0.5)}
+    body.light-mode #theme-toggle{background:rgba(140,95,20,0.1);border-color:rgba(140,95,20,0.3);color:rgba(140,95,20,0.8)}
+
+    /* ── LANGUAGE POPUP ── */
+    #lang-popup{position:fixed;inset:0;z-index:20000;background:rgba(8,6,4,0.88);backdrop-filter:blur(18px);display:flex;align-items:center;justify-content:center;padding:16px;animation:fadeUp 0.3s ease forwards}
+    .lang-popup-card{background:rgba(18,14,8,0.96);border:1px solid rgba(201,169,110,0.22);border-radius:18px;padding:36px 28px;text-align:center;max-width:360px;width:100%;box-shadow:0 24px 64px rgba(0,0,0,0.7)}
+    .lang-opt{display:flex;align-items:center;gap:14px;padding:11px 16px;border-radius:11px;cursor:pointer;transition:background 0.18s;border:1px solid transparent;margin-bottom:6px}
+    .lang-opt:hover{background:rgba(201,169,110,0.1);border-color:rgba(201,169,110,0.2)}
+    .lang-opt-flag{font-size:22px;line-height:1;flex-shrink:0}
+    .lang-opt-name{font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;font-weight:400;color:rgba(232,220,200,0.9);text-align:left}
+    .lang-opt-sub{font-family:'Jost',sans-serif;font-size:10px;font-weight:300;color:rgba(232,220,200,0.35);letter-spacing:0.08em;margin-left:auto}
   </style>
 </head>
 <body>
@@ -188,7 +220,41 @@
 <canvas id="shoot-canvas" aria-hidden="true"></canvas>
 <canvas id="transition-canvas" aria-hidden="true"></canvas>
 
-<!-- Demo Video Modal -->
+<!-- Theme toggle -->
+<button id="theme-toggle" onclick="toggleLightMode()" title="Toggle light/dark mode">☀</button>
+
+<!-- Language selection popup (first visit) -->
+<div id="lang-popup" style="display:none">
+  <div class="lang-popup-card">
+    <div style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.28em;text-transform:uppercase;color:rgba(201,169,110,0.45);margin-bottom:6px">Welcome</div>
+    <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-weight:400;color:rgba(232,220,200,0.95);margin-bottom:24px">Choose your language</div>
+    <div onclick="pickLang('en')" class="lang-opt">
+      <span class="lang-opt-flag">🇬🇧</span>
+      <span class="lang-opt-name">English</span>
+      <span class="lang-opt-sub">EN</span>
+    </div>
+    <div onclick="pickLang('it')" class="lang-opt">
+      <span class="lang-opt-flag">🇮🇹</span>
+      <span class="lang-opt-name">Italiano</span>
+      <span class="lang-opt-sub">IT</span>
+    </div>
+    <div onclick="pickLang('es')" class="lang-opt">
+      <span class="lang-opt-flag">🇪🇸</span>
+      <span class="lang-opt-name">Español</span>
+      <span class="lang-opt-sub">ES</span>
+    </div>
+    <div onclick="pickLang('pt')" class="lang-opt">
+      <span class="lang-opt-flag">🇧🇷</span>
+      <span class="lang-opt-name">Português</span>
+      <span class="lang-opt-sub">PT</span>
+    </div>
+    <div onclick="pickLang('fr')" class="lang-opt">
+      <span class="lang-opt-flag">🇫🇷</span>
+      <span class="lang-opt-name">Français</span>
+      <span class="lang-opt-sub">FR</span>
+    </div>
+  </div>
+</div>
 
 <!-- INTRO SEQUENCE -->
 <div id="intro-screen" aria-hidden="true">
@@ -215,15 +281,15 @@
         <div style="width:5px;height:5px;border-radius:50%;background:#7a9e6e;animation:pulse 2s infinite"></div>Live Demo
       </div>
     </div>
-    <div class="section-veil" style="display:inline-block">
+    <div style="display:inline-block">
       <div style="position:relative;display:inline-block">
         <h1 id="hero-h1" style="font-size:clamp(34px,6vw,58px);font-weight:300;color:#e8dcc8;line-height:1.1;margin-bottom:12px;text-shadow:0 1px 0 rgba(201,169,110,0.35),0 2px 0 rgba(201,169,110,0.2),0 3px 0 rgba(201,169,110,0.1),0 4px 20px rgba(0,0,0,0.8)">Your clients deserve<br/><span style="color:#c9a96e;text-shadow:0 1px 0 rgba(201,169,110,0.5),0 2px 0 rgba(201,169,110,0.3),0 3px 0 rgba(201,169,110,0.15),0 4px 20px rgba(0,0,0,0.9),0 0 30px rgba(201,169,110,0.15)">instant answers.</span></h1>
         <canvas id="hero-particles" style="position:absolute;inset:-30px -20px;pointer-events:none;z-index:2"></canvas>
       </div>
-      <p id="hero-sub" style="font-size:15px;font-style:italic;color:rgba(232,220,200,0.9);font-weight:400;max-width:420px;margin:0 auto 12px;line-height:1.7;background:rgba(0,0,0,0.4);border-radius:8px;padding:8px 16px">An AI concierge that responds on your behalf — in your tone, with your services, your prices, your rules. 24/7.</p>
+      <p id="hero-sub" style="font-size:15px;font-style:italic;color:rgba(232,220,200,0.9);font-weight:400;max-width:420px;margin:0 auto 12px;line-height:1.7">An AI concierge that responds on your behalf — in your tone, with your services, your prices, your rules. 24/7.</p>
     </div>
     <!-- Trust line -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px;flex-wrap:wrap;background:rgba(0,0,0,0.4);border-radius:10px;padding:6px 16px">
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px;flex-wrap:wrap">
       <span id="trust-1" style="font-size:11px;font-family:'Jost',sans-serif;font-weight:400;color:rgba(201,169,110,0.9);letter-spacing:0.06em">&#10003; Transparent AI concierge</span>
       <span style="color:rgba(201,169,110,0.3)">&#183;</span>
       <span id="trust-2" style="font-size:11px;font-family:'Jost',sans-serif;font-weight:400;color:rgba(201,169,110,0.9);letter-spacing:0.06em">&#10003; Human review available</span>
@@ -231,7 +297,7 @@
       <span id="trust-3" style="font-size:11px;font-family:'Jost',sans-serif;font-weight:400;color:rgba(201,169,110,0.9);letter-spacing:0.06em">&#10003; Built for solo professionals</span>
     </div>
     <!-- Privacy note -->
-    <div style="font-size:11px;font-family:'Jost',sans-serif;font-weight:400;color:rgba(232,220,200,0.9);max-width:400px;margin:0 auto 10px;line-height:1.6;font-style:italic;background:rgba(0,0,0,0.4);border-radius:8px;padding:4px 14px">
+    <div style="font-size:11px;font-family:'Jost',sans-serif;font-weight:400;color:rgba(232,220,200,0.9);max-width:400px;margin:0 auto 10px;line-height:1.6;font-style:italic">
       <span id="privacy-note">Sensitive medical, legal or personal matters are always reviewed by the professional.</span>
     </div>
     <!-- Pricing teaser -->
@@ -281,13 +347,11 @@
   </div>
 
   <div style="display:flex;gap:16px;align-items:center;justify-content:center;margin-bottom:40px;flex-wrap:wrap">
-    <button onclick="window.loadDemo('onboard')" class="cta-create star-btn" id="own-link">
+    <button onclick="window.loadDemo('onboard')" class="cta-create star-btn" id="own-link" style="padding:14px 36px;font-size:14px;font-weight:600;letter-spacing:0.12em">
       <span id="own-link-text">Create yours</span><span class="cta-arrow"> →</span>
     </button>
     <span style="color:rgba(255,255,255,0.1);font-size:12px">·</span>
-    <span onclick="window.goToOwnerArea && window.goToOwnerArea()" style="font-size:12px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(201,169,110,0.32);cursor:pointer;letter-spacing:0.06em;text-decoration:underline;text-underline-offset:3px" id="my-profile-link">My Profile Login</span>
-    <span style="color:rgba(255,255,255,0.1);font-size:12px">·</span>
-    <span onclick="window.loadOwner()" style="font-size:12px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(201,169,110,0.32);cursor:pointer;letter-spacing:0.06em;text-decoration:underline;text-underline-offset:3px" id="owner-link">Owner Dashboard</span>
+    <button onclick="window.goToOwnerArea&&window.goToOwnerArea()" id="auth-btn" style="padding:8px 20px;border-radius:20px;border:1px solid rgba(201,169,110,0.28);background:transparent;color:rgba(201,169,110,0.55);font-size:12px;font-family:'Jost',sans-serif;cursor:pointer;font-weight:400;letter-spacing:0.06em;transition:all 0.2s">Login</button>
   </div>
 
   <!-- BEFORE / AFTER -->
@@ -521,7 +585,6 @@ function setLang(lang) {
   const t = T[lang] || T.en;
   document.getElementById('demo-label').textContent = t.demoLabel;
   var ownLinkText = document.getElementById('own-link-text'); if(ownLinkText) ownLinkText.textContent = t.ownLink.replace('→ ','').replace(' →','');
-  document.getElementById('owner-link').textContent = t.ownerLink;
   document.getElementById('d-bruno-t').textContent = t.therapist;
   document.getElementById('d-marco-t').textContent = t.lawyer;
   document.getElementById('d-nour-t').textContent = t.chef;
@@ -553,6 +616,40 @@ function setLang(lang) {
   set('hiw-3', t.hiw3);
   set('hiw-4', t.hiw4);
 }
+
+// ── AUTH BUTTON ──
+function updateAuthBtn() {
+  var btn = document.getElementById('auth-btn');
+  if (!btn) return;
+  btn.textContent = localStorage.getItem('cai_owner_token') ? 'My Dashboard' : 'Login';
+}
+updateAuthBtn();
+window.updateAuthBtn = updateAuthBtn;
+
+// ── LIGHT MODE TOGGLE ──
+function toggleLightMode() {
+  var isLight = document.body.classList.toggle('light-mode');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+  document.getElementById('theme-toggle').textContent = isLight ? '🌙' : '☀';
+}
+(function initTheme() {
+  if (localStorage.getItem('theme') === 'light') {
+    document.body.classList.add('light-mode');
+    document.getElementById('theme-toggle').textContent = '🌙';
+  }
+})();
+
+// ── LANGUAGE POPUP (first visit) ──
+function pickLang(lang) {
+  setLang(lang);
+  localStorage.setItem('lang_selected', lang);
+  document.getElementById('lang-popup').style.display = 'none';
+}
+(function initLangPopup() {
+  if (!localStorage.getItem('lang_selected')) {
+    document.getElementById('lang-popup').style.display = 'flex';
+  }
+})();
 </script>
 
 <script>
