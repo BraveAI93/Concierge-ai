@@ -105,16 +105,17 @@
     #intro-screen{position:fixed;inset:0;z-index:9999;background:#0c0a08;pointer-events:all}
     #intro-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
     #intro-text-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:2}
-    #intro-brand-text{font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.28em;text-transform:uppercase;color:#E8DCC8;opacity:0;text-align:center;margin-bottom:2.5em;transition:opacity 0.6s ease}
+    #intro-brand-text{font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.32em;text-transform:uppercase;color:rgba(232,220,200,0.82);opacity:0;text-align:center;margin-bottom:2.5em;transition:opacity 0.6s ease;text-shadow:0 0 10px rgba(201,169,110,0.45),0 0 24px rgba(201,169,110,0.2),0 1px 0 rgba(201,169,110,0.3)}
     #intro-title-wrap{display:flex;align-items:baseline;justify-content:center;opacity:0;transition:opacity 0.3s ease;position:relative}
-    #intro-title-wrap .lt-the{color:#E8DCC8}
+    #intro-title-wrap .lt-the{color:rgba(232,220,200,0.92)}
     #intro-title-wrap .lt-con{color:#C9A96E}
-    .intro-letter{display:inline-block;opacity:0;transform:translateY(18px);transition:opacity 0.18s ease,transform 0.18s ease;text-shadow:0 1px 0 rgba(201,169,110,0.5),0 2px 0 rgba(201,169,110,0.3),0 3px 0 rgba(201,169,110,0.15),0 4px 12px rgba(0,0,0,0.9)}
+    .intro-letter{display:inline-block;opacity:0;transform:translateY(18px);transition:opacity 0.18s ease,transform 0.18s ease;text-shadow:2px 0 1px rgba(255,252,200,0.5),-1px 0 0 rgba(80,50,8,0.6),0 1px 0 rgba(201,169,110,0.45),0 2px 0 rgba(130,88,18,0.3),0 3px 0 rgba(70,44,8,0.2),0 4px 14px rgba(0,0,0,0.95),0 0 18px rgba(201,169,110,0.15)}
+    .intro-letter.lt-the{text-shadow:1px 0 2px rgba(255,252,220,0.18),-1px 0 0 rgba(50,32,8,0.35),0 1px 0 rgba(201,169,110,0.25),0 2px 0 rgba(140,95,25,0.15),0 3px 10px rgba(0,0,0,0.88)}
     .intro-letter-reveal{opacity:1!important;transform:translateY(0)!important}
     #brave-star-idot{position:absolute;border-radius:50%;background:#C9A96E;transform:translate(-50%,-50%);animation:bravePulse 1.8s ease-in-out infinite;box-shadow:0 0 8px 4px rgba(201,169,110,0.9),0 0 24px 10px rgba(201,169,110,0.4);pointer-events:none}
-    /* Landing page — hidden until intro completes */
+    /* Landing page — hidden until intro completes, dark-to-dark */
     #landing{opacity:0}
-    body.intro-done #landing{animation:landingIn 1s ease forwards}
+    body.intro-done #landing{animation:landingIn 1.4s ease forwards}
     @keyframes landingIn{from{opacity:0}to{opacity:1}}
     /* Sparkle canvas */
     #sparkle-canvas{position:absolute;inset:0;pointer-events:none;z-index:1}
@@ -202,6 +203,24 @@
 
     /* ── ONBOARDING COSMIC CARD ── */
     .onboard-card{background:rgba(12,10,8,0.8)!important;border:1px solid rgba(201,169,110,0.2)!important;box-shadow:0 0 30px rgba(201,169,110,0.06),0 12px 40px rgba(0,0,0,0.5)!important;backdrop-filter:blur(20px)}
+
+    /* ── HERO BRAND TITLE "THE CONCIERGE" chiaroscuro ── */
+    @keyframes flarePulse{
+      0%,100%{opacity:1;box-shadow:0 0 4px 2px rgba(255,255,200,1),0 0 12px 5px rgba(255,248,180,0.85),0 0 28px 10px rgba(201,169,110,0.45),0 -10px 0 0.5px rgba(255,255,220,0.7),0 10px 0 0.5px rgba(255,255,220,0.7),-10px 0 0 0.5px rgba(255,252,200,0.45),10px 0 0 0.5px rgba(255,252,200,0.45)}
+      50%{opacity:0.72;box-shadow:0 0 7px 3px rgba(255,255,220,0.9),0 0 20px 8px rgba(255,252,200,0.7),0 0 45px 16px rgba(201,169,110,0.35),0 -15px 0 0.5px rgba(255,255,230,0.9),0 15px 0 0.5px rgba(255,255,230,0.9),-15px 0 0 0.5px rgba(255,252,210,0.65),15px 0 0 0.5px rgba(255,252,210,0.65)}
+    }
+    .hero-brand-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:28px;position:relative}
+    .hero-brand-label{font-size:9px;font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.35em;text-transform:uppercase;color:rgba(201,169,110,0.32);margin-bottom:14px}
+    .hero-brand-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(40px,7.5vw,70px);font-weight:300;letter-spacing:0.08em;line-height:1;display:inline;position:relative}
+    .hbt-the{color:rgba(232,220,200,0.9);text-shadow:1px 0 2px rgba(255,252,220,0.2),-1px 0 0 rgba(50,32,8,0.4),0 1px 0 rgba(201,169,110,0.28),0 2px 0 rgba(140,95,25,0.18),0 3px 10px rgba(0,0,0,0.88)}
+    .hbt-con{color:#c9a96e;text-shadow:2px 0 1px rgba(255,252,200,0.6),-1px 0 0 rgba(90,55,8,0.75),0 1px 0 rgba(201,169,110,0.55),0 2px 0 rgba(140,95,22,0.38),0 3px 0 rgba(75,48,10,0.25),0 4px 16px rgba(0,0,0,0.95),0 0 22px rgba(201,169,110,0.15)}
+    .hbt-star-o{color:#e8c56a;text-shadow:0 0 5px rgba(255,248,180,0.95),0 0 14px rgba(201,169,110,0.75),0 0 28px rgba(201,169,110,0.38),2px 0 1px rgba(255,252,200,0.55),-1px 0 0 rgba(90,55,8,0.6),0 4px 16px rgba(0,0,0,0.9);display:inline-block;transform:scale(1.08);transform-origin:50% 80%}
+    .hbt-i-wrap{position:relative;display:inline-block}
+    .hbt-i-flare{position:absolute;left:50%;top:0.05em;width:5px;height:5px;border-radius:50%;background:#fffce8;transform:translateX(-50%);animation:flarePulse 2.2s ease-in-out infinite;pointer-events:none;z-index:2}
+    /* Section dark veil for readability against stars */
+    .section-veil{position:relative}
+    .section-veil::before{content:'';position:absolute;inset:-28px -32px;background:radial-gradient(ellipse at 50% 50%,rgba(12,10,8,0.78) 0%,rgba(12,10,8,0.62) 50%,rgba(12,10,8,0.2) 78%,transparent 100%);pointer-events:none;z-index:0;border-radius:24px}
+    .section-veil>*{position:relative;z-index:1}
   </style>
 </head>
 <body>
@@ -240,19 +259,27 @@
 <!-- LANDING -->
 <div id="landing">
   <div style="text-align:center;margin-bottom:40px">
-    <div style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.22em;text-transform:uppercase;color:rgba(201,169,110,0.45);margin-bottom:32px">✦ The Conc<span style="position:relative;display:inline-block"><span style="visibility:hidden">i</span><span style="position:absolute;left:50%;top:-2px;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:#C9A96E;box-shadow:0 0 6px 2px rgba(201,169,110,0.9);animation:bravePulse 1.8s ease-in-out infinite;display:block"></span></span>erge</div>
+    <!-- Hero brand title "The Concierge" -->
+    <div class="hero-brand-wrap">
+      <div class="hero-brand-label">Brave by Bruno · presents</div>
+      <h2 class="hero-brand-title" aria-label="The Concierge">
+        <span class="hbt-the">The </span><span class="hbt-con">C</span><span class="hbt-star-o">◦</span><span class="hbt-con">nc</span><span class="hbt-i-wrap"><span class="hbt-con">i</span><span class="hbt-i-flare"></span></span><span class="hbt-con">erge</span>
+      </h2>
+    </div>
     <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:24px;flex-wrap:wrap">
-      <div style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(120,160,100,0.1);border:1px solid rgba(120,160,100,0.22);border-radius:20px;font-size:10px;font-family:'Jost',sans-serif;color:#7a9e6e;letter-spacing:0.08em;text-transform:uppercase">
+      <div onclick="document.getElementById('demo-grid').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){window.loadDemo&&window.loadDemo('bruno')},600)" style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(120,160,100,0.1);border:1px solid rgba(120,160,100,0.22);border-radius:20px;font-size:10px;font-family:'Jost',sans-serif;color:#7a9e6e;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">
         <div style="width:5px;height:5px;border-radius:50%;background:#7a9e6e;animation:pulse 2s infinite"></div>Live Demo
       </div>
       <button class="play-btn" onclick="document.getElementById('demo-video-modal').style.display='flex'" title="Watch demo video" style="width:36px;height:36px;font-size:12px">▶</button>
       <span style="font-size:11px;font-family:'Jost',sans-serif;color:rgba(201,169,110,0.4);letter-spacing:0.06em">Watch how it works</span>
     </div>
-    <div style="position:relative;display:inline-block">
-      <h1 id="hero-h1" style="font-size:clamp(34px,6vw,58px);font-weight:300;color:#e8dcc8;line-height:1.1;margin-bottom:12px;text-shadow:0 1px 0 rgba(201,169,110,0.35),0 2px 0 rgba(201,169,110,0.2),0 3px 0 rgba(201,169,110,0.1),0 4px 20px rgba(0,0,0,0.8)">Your clients deserve<br/><span style="color:#c9a96e;text-shadow:0 1px 0 rgba(201,169,110,0.5),0 2px 0 rgba(201,169,110,0.3),0 3px 0 rgba(201,169,110,0.15),0 4px 20px rgba(0,0,0,0.9),0 0 30px rgba(201,169,110,0.15)">instant answers.</span></h1>
-      <canvas id="hero-particles" style="position:absolute;inset:-30px -20px;pointer-events:none;z-index:2"></canvas>
+    <div class="section-veil" style="display:inline-block">
+      <div style="position:relative;display:inline-block">
+        <h1 id="hero-h1" style="font-size:clamp(34px,6vw,58px);font-weight:300;color:#e8dcc8;line-height:1.1;margin-bottom:12px;text-shadow:0 1px 0 rgba(201,169,110,0.35),0 2px 0 rgba(201,169,110,0.2),0 3px 0 rgba(201,169,110,0.1),0 4px 20px rgba(0,0,0,0.8)">Your clients deserve<br/><span style="color:#c9a96e;text-shadow:0 1px 0 rgba(201,169,110,0.5),0 2px 0 rgba(201,169,110,0.3),0 3px 0 rgba(201,169,110,0.15),0 4px 20px rgba(0,0,0,0.9),0 0 30px rgba(201,169,110,0.15)">instant answers.</span></h1>
+        <canvas id="hero-particles" style="position:absolute;inset:-30px -20px;pointer-events:none;z-index:2"></canvas>
+      </div>
+      <p id="hero-sub" style="font-size:15px;font-style:italic;color:rgba(232,220,200,0.48);max-width:420px;margin:0 auto 12px;line-height:1.7">An AI concierge that responds on your behalf — in your tone, with your services, your prices, your rules. 24/7.</p>
     </div>
-    <p id="hero-sub" style="font-size:15px;font-style:italic;color:rgba(232,220,200,0.42);max-width:420px;margin:0 auto 12px;line-height:1.7">An AI concierge that responds on your behalf — in your tone, with your services, your prices, your rules. 24/7.</p>
     <!-- Trust line -->
     <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px;flex-wrap:wrap">
       <span id="trust-1" style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(201,169,110,0.55);letter-spacing:0.06em">&#10003; Transparent AI concierge</span>
@@ -630,7 +657,7 @@ function setLang(lang) {
 function rn(s){var x=Math.sin(s+1)*39421;return x-Math.floor(x);}
 var BRAVE=[{nx:0.5,ny:0.42,r:3.2}];
 var FIELD=[];
-for(var i=0;i<350;i++){
+for(var i=0;i<210;i++){
   FIELD.push({nx:rn(i*3),ny:rn(i*3+1),r:rn(i*3+2)*1.1+0.15,
     b:0.25+rn(i*5)*0.75,ts:0.5+rn(i*7)*2.4,to:rn(i*11)*Math.PI*2});
 }
@@ -649,7 +676,7 @@ if(typeof THREE==='undefined'){
   window.addEventListener('resize',function(){SC.width=bgW=window.innerWidth;SC.height=bgH=window.innerHeight;});
   (function bg2d(){
     ST+=0.014;sc2.fillStyle='#0c0a08';sc2.fillRect(0,0,bgW,bgH);
-    for(var i=0;i<FIELD.length;i++){var f=FIELD[i];var tw=0.55+0.45*Math.sin(ST*f.ts+f.to);sc2.globalAlpha=f.b*tw;sc2.fillStyle='#E8DCC8';sc2.beginPath();sc2.arc(f.nx*bgW,f.ny*bgH,f.r,0,Math.PI*2);sc2.fill();}
+    for(var i=0;i<FIELD.length;i++){var f=FIELD[i];var tw=0.55+0.45*Math.sin(ST*f.ts+f.to);sc2.globalAlpha=f.b*tw*0.88;sc2.fillStyle='#E8DCC8';sc2.beginPath();sc2.arc(f.nx*bgW,f.ny*bgH,f.r,0,Math.PI*2);sc2.fill();}
     sc2.globalAlpha=1;
     var bv=BRAVE[0],bx=bv.nx*bgW,by=bv.ny*bgH,p=0.72+0.28*Math.sin(ST*1.35);
     var gr=sc2.createRadialGradient(bx,by,0,bx,by,bv.r*28);gr.addColorStop(0,'rgba(201,169,110,'+(0.3*p)+')');gr.addColorStop(0.5,'rgba(201,169,110,'+(0.12*p)+')');gr.addColorStop(1,'rgba(201,169,110,0)');
@@ -686,8 +713,8 @@ function worldPos(nx,ny,z){
 
 /* ── Background star field ── */
 var bgGeo=new THREE.BufferGeometry();
-var bPos=new Float32Array(350*3),bCol=new Float32Array(350*3),bSiz=new Float32Array(350),bTwk=new Float32Array(350);
-for(var i=0;i<350;i++){
+var bPos=new Float32Array(210*3),bCol=new Float32Array(210*3),bSiz=new Float32Array(210),bTwk=new Float32Array(210);
+for(var i=0;i<210;i++){
   var f=FIELD[i];
   var z=-10+rn(i*17)*8;
   var wp=worldPos(f.nx,f.ny,z);
@@ -720,22 +747,22 @@ var bvMat=new THREE.ShaderMaterial({
 });
 var bvGlowGeo=new THREE.BufferGeometry();
 bvGlowGeo.setAttribute('position',new THREE.BufferAttribute(bvGlowPos,3));
-bvGlowGeo.setAttribute('size',new THREE.BufferAttribute(new Float32Array([80]),1));
+bvGlowGeo.setAttribute('size',new THREE.BufferAttribute(new Float32Array([38]),1));
 var bvGlowMat=new THREE.ShaderMaterial({
   uniforms:{uT:{value:0}},
   vertexShader:`attribute float size;uniform float uT;varying float vP;void main(){vP=0.65+0.35*sin(uT*1.35);vec4 mv=modelViewMatrix*vec4(position,1.0);gl_PointSize=size*vP*(300.0/-mv.z);gl_Position=projectionMatrix*mv;}`,
-  fragmentShader:`varying float vP;void main(){vec2 c=2.0*gl_PointCoord-1.0;float r=length(c);if(r>1.0)discard;float nebula=exp(-r*r*1.2)*0.22;float halo=exp(-r*r*3.5)*0.35;float a=(nebula+halo)*vP;gl_FragColor=vec4(0.80,0.67,0.44,a);}`,
+  fragmentShader:`varying float vP;void main(){vec2 c=2.0*gl_PointCoord-1.0;float r=length(c);if(r>1.0)discard;float nebula=exp(-r*r*1.2)*0.1;float halo=exp(-r*r*3.5)*0.16;float a=(nebula+halo)*vP;gl_FragColor=vec4(0.80,0.67,0.44,a);}`,
   transparent:true,depthWrite:false,blending:THREE.AdditiveBlending
 });
-/* Extra-large nebula cloud */
+/* Soft nebula cloud — reduced size/opacity */
 var bvNebPos=new Float32Array(3);
 var bvNebGeo=new THREE.BufferGeometry();
 bvNebGeo.setAttribute('position',new THREE.BufferAttribute(bvNebPos,3));
-bvNebGeo.setAttribute('size',new THREE.BufferAttribute(new Float32Array([220]),1));
+bvNebGeo.setAttribute('size',new THREE.BufferAttribute(new Float32Array([100]),1));
 var bvNebMat=new THREE.ShaderMaterial({
   uniforms:{uT:{value:0}},
   vertexShader:`attribute float size;uniform float uT;void main(){float p=0.5+0.5*sin(uT*0.7);vec4 mv=modelViewMatrix*vec4(position,1.0);gl_PointSize=size*p*(300.0/-mv.z);gl_Position=projectionMatrix*mv;}`,
-  fragmentShader:`void main(){vec2 c=2.0*gl_PointCoord-1.0;float r=length(c);if(r>1.0)discard;float a=(1.0-r)*(1.0-r)*0.09;gl_FragColor=vec4(0.78,0.63,0.41,a);}`,
+  fragmentShader:`void main(){vec2 c=2.0*gl_PointCoord-1.0;float r=length(c);if(r>1.0)discard;float a=(1.0-r)*(1.0-r)*0.038;gl_FragColor=vec4(0.78,0.63,0.41,a);}`,
   transparent:true,depthWrite:false,blending:THREE.AdditiveBlending
 });
 bgScene.add(new THREE.Points(bvGeo,bvMat));
@@ -758,22 +785,22 @@ var ARIES=[[-2.8,1.1,-14],[-1.2,0.4,-12],[0,0,-11],[1.8,-0.6,-13],[3.2,1.4,-15],
 var ARIES_LINES=[[4,0],[0,1],[1,2],[2,3],[3,5],[2,6]];
 var ariesGroup=new THREE.Group();
 bgScene.add(ariesGroup);
-var apv=new Float32Array(ARIES.length*3),asz=new Float32Array([3.0,2.2,2.0,1.7,2.3,1.5,1.8]);
+var apv=new Float32Array(ARIES.length*3),asz=new Float32Array([5.0,3.8,3.2,2.8,4.2,2.6,3.0]);
 for(var i=0;i<ARIES.length;i++){apv[i*3]=ARIES[i][0];apv[i*3+1]=ARIES[i][1];apv[i*3+2]=ARIES[i][2];}
 var apGeo=new THREE.BufferGeometry();
 apGeo.setAttribute('position',new THREE.BufferAttribute(apv,3));
 apGeo.setAttribute('size',new THREE.BufferAttribute(asz,1));
 var apMat=new THREE.ShaderMaterial({
   uniforms:{uT:{value:0}},
-  vertexShader:`attribute float size;uniform float uT;void main(){float tw=0.55+0.45*sin(uT*0.7+position.x*0.4);vec4 mv=modelViewMatrix*vec4(position,1.0);gl_PointSize=size*(260.0/-mv.z)*tw;gl_Position=projectionMatrix*mv;}`,
-  fragmentShader:`void main(){vec2 c=2.0*gl_PointCoord-1.0;float r=dot(c,c);if(r>1.0)discard;gl_FragColor=vec4(0.93,0.9,0.84,(1.0-r)*0.65);}`,
+  vertexShader:`attribute float size;uniform float uT;void main(){float tw=0.65+0.35*sin(uT*0.7+position.x*0.4);vec4 mv=modelViewMatrix*vec4(position,1.0);gl_PointSize=size*(280.0/-mv.z)*tw;gl_Position=projectionMatrix*mv;}`,
+  fragmentShader:`void main(){vec2 c=2.0*gl_PointCoord-1.0;float r=dot(c,c);if(r>1.0)discard;float core=exp(-r*r*4.0);float sx=exp(-c.y*c.y*28.0)*0.5*exp(-sqrt(r)*0.8);float sy=exp(-c.x*c.x*28.0)*0.5*exp(-sqrt(r)*0.8);float a=clamp(core+sx+sy,0.0,1.0)*0.88;gl_FragColor=vec4(1.0,0.97,0.88,a);}`,
   transparent:true,depthWrite:false,blending:THREE.AdditiveBlending
 });
 ariesGroup.add(new THREE.Points(apGeo,apMat));
 var lv=[];
 for(var k=0;k<ARIES_LINES.length;k++){var a=ARIES[ARIES_LINES[k][0]],b=ARIES[ARIES_LINES[k][1]];lv.push(a[0],a[1],a[2],b[0],b[1],b[2]);}
 var lGeo=new THREE.BufferGeometry();lGeo.setAttribute('position',new THREE.BufferAttribute(new Float32Array(lv),3));
-ariesGroup.add(new THREE.LineSegments(lGeo,new THREE.LineBasicMaterial({color:0xC9A96E,transparent:true,opacity:0.12})));
+ariesGroup.add(new THREE.LineSegments(lGeo,new THREE.LineBasicMaterial({color:0xD4B97A,transparent:true,opacity:0.48})));
 
 /* ── Background render loop ── */
 var bgT=0,scrollY=0,bgRunning=false;
@@ -887,10 +914,38 @@ for(var j=0;j<BRAVE.length;j++){
 }
 var wAngles=iStars.map(function(s){return s.va;});
 
+/* ── Brand text star particles: BRAVE BY BRUNO PRESENTS written in stars ── */
+var brandTextStars=[];
+document.fonts.ready.then(function(){
+  var tw=Math.min(IW,800),th=Math.max(48,Math.round(IH*0.068));
+  var tmp=document.createElement('canvas');tmp.width=tw;tmp.height=th;
+  var tc=tmp.getContext('2d');
+  var fsize=Math.max(9,Math.round(IW*0.015));
+  tc.fillStyle='#fff';
+  tc.font='300 '+fsize+'px Jost,sans-serif';
+  tc.textAlign='center';tc.textBaseline='middle';
+  tc.fillText('BRAVE  BY  BRUNO  ·  PRESENTS',tw/2,th/2);
+  var data=tc.getImageData(0,0,tw,th).data;
+  var step=Math.max(2,Math.round(fsize*0.5));
+  var offX=IW/2-tw/2,offY=IH*0.383-th/2;
+  for(var py=0;py<th;py+=step){
+    for(var px=0;px<tw;px+=step){
+      if(data[(py*tw+px)*4+3]>90){
+        brandTextStars.push({
+          x:offX+px+(Math.random()-0.5)*step*0.5,
+          y:offY+py+(Math.random()-0.5)*step*0.5,
+          r:0.35+Math.random()*0.5,
+          jit:Math.random()*Math.PI*2
+        });
+      }
+    }
+  }
+});
+
 /* HTML text overlay elements */
 var brandEl=document.getElementById('intro-brand-text');
 var titleWrap=document.getElementById('intro-title-wrap');
-var titleText='The Concierge'; // non-breaking space
+var titleText='The Concierge';
 var fs2=Math.max(36,Math.round(Math.min(window.innerWidth*0.1,window.innerHeight*0.12,86)));
 var fs1=Math.max(10,Math.round(Math.min(window.innerWidth,window.innerHeight)*0.017));
 if(brandEl){brandEl.style.fontSize=fs1+'px';brandEl.textContent='BRAVE  BY  BRUNO  ·  PRESENTS';}
@@ -906,17 +961,23 @@ if(titleWrap){
   for(var k=0;k<titleText.length;k++){
     var sp=document.createElement('span');
     sp.className='intro-letter';
-    sp.textContent=titleText[k];
-    if(k<4){sp.style.color='#E8DCC8';}
+    if(k<4){sp.style.color='rgba(232,220,200,0.92)';}
     else{sp.style.color='#C9A96E';}
-    if(k===8){ // 'i' in Concierge
+    if(k===5){ // 'o' in Concierge -> gold star circle ◦
+      sp.textContent='\u25e6'; // ◦ white bullet
+      sp.style.fontSize=(fs2*1.05)+'px';
+      sp.style.color='#e8c56a';
+      sp.style.textShadow='0 0 5px rgba(255,248,180,0.95),0 0 14px rgba(201,169,110,0.75),0 0 30px rgba(201,169,110,0.38)';
+      sp.style.display='inline-block';
+    } else {
+      sp.textContent=titleText[k];
+    }
+    if(k===8){ // 'i' in Concierge -> lens flare
       iDotLetterIdx=k;
       sp.style.position='relative';
-      // Suppress font dot, place our star above
       var idot=document.createElement('div');
       idot.id='brave-star-idot';
-      idot.style.cssText='position:absolute;left:50%;transform:translateX(-50%);border-radius:50%;background:#C9A96E;box-shadow:0 0 8px 4px rgba(201,169,110,0.9),0 0 20px 8px rgba(201,169,110,0.5);animation:bravePulse 1.8s ease-in-out infinite;pointer-events:none;';
-      // Size the dot relative to font size (set in reveal step)
+      idot.style.cssText='position:absolute;left:50%;transform:translateX(-50%);border-radius:50%;background:#fffce8;box-shadow:0 0 4px 2px rgba(255,255,200,1),0 0 12px 5px rgba(255,248,180,0.85),0 0 28px 10px rgba(201,169,110,0.5),0 -10px 0 0.5px rgba(255,255,220,0.7),0 10px 0 0.5px rgba(255,255,220,0.7),-10px 0 0 0.5px rgba(255,252,200,0.45),10px 0 0 0.5px rgba(255,252,200,0.45);animation:flarePulse 2.2s ease-in-out infinite;pointer-events:none;';
       iDotEl=idot;
       sp.appendChild(idot);
     }
@@ -931,19 +992,19 @@ var lettersStarted=false;
 function finishIntro(){
   if(introDone)return;introDone=true;
   if(introRaf)cancelAnimationFrame(introRaf);
-  // Show brand elements for a beat, then hide overlay
   if(brandEl)brandEl.style.opacity='0';
-  // Brave Star continues as persistent element
+  if(titleWrap)titleWrap.style.opacity='0';
+  // Brave Star continues as persistent element after intro
   var ps=document.getElementById('brave-star-persistent');
   if(ps){
-    // Position at Brave Star 0 location
     var bx=BRAVE[0].nx*window.innerWidth;
     var by=BRAVE[0].ny*window.innerHeight;
     ps.style.display='block';
     ps.style.width='6px';ps.style.height='6px';
     ps.style.left=(bx-3)+'px';ps.style.top=(by-3)+'px';
   }
-  introEl.style.transition='opacity 0.9s ease';
+  // Dark-to-dark fade — no white flash
+  introEl.style.transition='opacity 1.1s ease';
   introEl.style.opacity='0';
   setTimeout(function(){
     introEl.style.display='none';
@@ -1036,140 +1097,160 @@ function drawIntro(ts){
     ctx.fillStyle=cGlow;ctx.beginPath();ctx.arc(CX,CY,vorP*60,0,Math.PI*2);ctx.fill();
   }
 
-  // ── Phase 4: IMPLOSION flash → gold big bang 4.5→5.0s ──
+  // ── Phase 4: IMPLOSION — dark gold burst, NO white flash 4.5→5.0s ──
   var implP=ease(ph(e,4.5,0.35));
   if(implP>0){
-    // White-gold flash
-    ctx.fillStyle='rgba(255,248,210,'+implP*0.92+')';ctx.fillRect(0,0,IW,IH);
+    // Dark gold implosion (not white — stays cinematic)
+    var igGr=ctx.createRadialGradient(CX,CY,0,CX,CY,implP*Math.max(IW,IH)*0.35);
+    igGr.addColorStop(0,'rgba(255,245,180,'+(implP*0.55)+')');
+    igGr.addColorStop(0.35,'rgba(201,169,110,'+(implP*0.28)+')');
+    igGr.addColorStop(1,'rgba(12,10,8,0)');
+    ctx.fillStyle=igGr;ctx.fillRect(0,0,IW,IH);
   }
-  var expP=ease(ph(e,4.82,0.55));
+  // ── Phase 4b: EXPLOSION — sharp star particles burst outward 4.82→5.45s ──
+  var expP=ease(ph(e,4.82,0.62));
   if(expP>0){
-    ctx.fillStyle='rgba(12,10,8,'+(1-expP)*0.8+')';ctx.fillRect(0,0,IW,IH);
-    // Particles burst outward
+    ctx.fillStyle='rgba(12,10,8,'+(1-expP)*0.75+')';ctx.fillRect(0,0,IW,IH);
     for(var i=0;i<iStars.length;i++){
       var tx=iStars[i].nx*IW,ty=iStars[i].ny*IH;
       var ang=Math.atan2(ty-CY,tx-CX)+(1-expP)*Math.PI*1.4;
       var rad=Math.sqrt((tx-CX)*(tx-CX)+(ty-CY)*(ty-CY))*expP;
       var sx=CX+Math.cos(ang)*rad,sy=CY+Math.sin(ang)*rad;
-      ctx.globalAlpha=iStars[i].brave?expP*1.0:iStars[i].b*expP*0.85;
-      ctx.fillStyle=iStars[i].brave?'#C9A96E':'#E8DCC8';
-      ctx.beginPath();ctx.arc(sx,sy,iStars[i].r,0,Math.PI*2);ctx.fill();
+      var sa=iStars[i].brave?expP:iStars[i].b*expP*0.9;
+      var sr=iStars[i].r*(0.8+expP*0.4);
+      ctx.globalAlpha=sa;
+      // Draw crisp 4-point star for explosion sharpness
+      if(iStars[i].brave){
+        ctx.fillStyle='#C9A96E';
+        var ss=sr*3.5;
+        ctx.beginPath();ctx.moveTo(sx,sy-ss);ctx.lineTo(sx+ss*0.22,sy-ss*0.22);ctx.lineTo(sx+ss,sy);
+        ctx.lineTo(sx+ss*0.22,sy+ss*0.22);ctx.lineTo(sx,sy+ss);ctx.lineTo(sx-ss*0.22,sy+ss*0.22);
+        ctx.lineTo(sx-ss,sy);ctx.lineTo(sx-ss*0.22,sy-ss*0.22);ctx.closePath();ctx.fill();
+      } else {
+        ctx.fillStyle='#E8DCC8';
+        ctx.beginPath();ctx.arc(sx,sy,sr,0,Math.PI*2);ctx.fill();
+      }
     }
     ctx.globalAlpha=1;
-    // Expanding gold ring
-    var ringR=expP*Math.max(IW,IH)*0.6;
-    var ring=ctx.createRadialGradient(CX,CY,ringR*0.88,CX,CY,ringR);
-    ring.addColorStop(0,'rgba(201,169,110,0)');ring.addColorStop(0.6,'rgba(201,169,110,'+(expP*(1-expP)*2.2)+')');ring.addColorStop(1,'rgba(201,169,110,0)');
+    // Sharp expanding gold ring
+    var ringR=expP*Math.max(IW,IH)*0.62;
+    var ring=ctx.createRadialGradient(CX,CY,ringR*0.86,CX,CY,ringR);
+    ring.addColorStop(0,'rgba(201,169,110,0)');
+    ring.addColorStop(0.55,'rgba(255,248,180,'+(expP*(1-expP)*2.8)+')');
+    ring.addColorStop(1,'rgba(201,169,110,0)');
     ctx.fillStyle=ring;ctx.beginPath();ctx.arc(CX,CY,ringR,0,Math.PI*2);ctx.fill();
   }
 
-  // ── Phase 5: Stars reform into spiral vortex 5.3→6.0s ──
-  var spiralP=ease(ph(e,5.3,0.7));
-  if(spiralP>0&&expP>=0.98){
+  // ── Phase 5: Stars drift to field positions 5.3→5.9s ──
+  var spiralP=ease(ph(e,5.3,0.6));
+  if(spiralP>0&&e<6.0){
     for(var i=0;i<iStars.length;i++){
-      var tx=iStars[i].nx*IW,ty=iStars[i].ny*IH;
-      // Spiral: blend from explosion pos to spiral pos
-      var spiralAng=iStars[i].va+spiralP*Math.PI*0.8;
+      var spiralAng=iStars[i].va+spiralP*Math.PI*0.6;
       var spiralR=iStars[i].vr*Math.min(IW,IH)*spiralP;
-      var sx=CX+Math.cos(spiralAng)*spiralR*(0.4+spiralP*0.6);
-      var sy=CY+Math.sin(spiralAng)*spiralR*(0.4+spiralP*0.6);
-      ctx.globalAlpha=iStars[i].brave?spiralP:(iStars[i].b*spiralP*0.8);
+      var sx=CX+Math.cos(spiralAng)*spiralR*(0.5+spiralP*0.5);
+      var sy=CY+Math.sin(spiralAng)*spiralR*(0.5+spiralP*0.5);
+      ctx.globalAlpha=iStars[i].brave?spiralP:(iStars[i].b*spiralP*0.75);
       ctx.fillStyle=iStars[i].brave?'#C9A96E':'#E8DCC8';
       ctx.beginPath();ctx.arc(sx,sy,iStars[i].r,0,Math.PI*2);ctx.fill();
     }
     ctx.globalAlpha=1;
   }
 
-  // ── Phase 6: Milky Way streak 5.9→6.6s ──
-  var mwP=ease(ph(e,5.9,0.7));
-  if(mwP>0){
-    // Horizontal band of particles
-    for(var i=0;i<iStars.length;i++){
-      var origX=iStars[i].nx*IW,origY=iStars[i].ny*IH;
-      var mwX=origX,mwY=CY+(origY-CY)*(1-mwP*0.88);
-      ctx.globalAlpha=iStars[i].brave?mwP*0.9:iStars[i].b*mwP*0.7;
-      ctx.fillStyle=iStars[i].brave?'#C9A96E':'#E8DCC8';
-      ctx.beginPath();ctx.arc(mwX,mwY,iStars[i].r*(1+mwP*0.3),0,Math.PI*2);ctx.fill();
-    }
-    ctx.globalAlpha=1;
-    // Glow along center band
-    var mwGr=ctx.createLinearGradient(0,CY,IW,CY);
-    mwGr.addColorStop(0,'rgba(201,169,110,0)');mwGr.addColorStop(0.2,'rgba(201,169,110,'+mwP*0.06+')');
-    mwGr.addColorStop(0.5,'rgba(232,220,200,'+mwP*0.09+')');mwGr.addColorStop(0.8,'rgba(201,169,110,'+mwP*0.06+')');mwGr.addColorStop(1,'rgba(201,169,110,0)');
-    ctx.fillStyle=mwGr;ctx.fillRect(0,CY-30*mwP,IW,60*mwP);
+  // ── Phase 6: "BRAVE BY BRUNO PRESENTS" written in stars 5.7→7.1s ──
+  var vigP=ease(ph(e,5.7,0.85));
+  if(vigP>0){
+    var vig=ctx.createRadialGradient(CX,CY,0,CX,CY,Math.max(IW,IH)*0.52);
+    vig.addColorStop(0,'rgba(12,10,8,0)');vig.addColorStop(0.7,'rgba(12,10,8,0.55)');vig.addColorStop(1,'rgba(12,10,8,0.82)');
+    ctx.globalAlpha=vigP;ctx.fillStyle=vig;ctx.fillRect(0,0,IW,IH);ctx.globalAlpha=1;
   }
-
-  // ── Phase 7: "Brave by Bruno presents" + letter reveal 5.8→8.5s ──
-  if(e>=5.8){
-    // Vignette
-    var vig=ctx.createRadialGradient(CX,CY,0,CX,CY,Math.max(IW,IH)*0.5);
-    vig.addColorStop(0,'rgba(12,10,8,0)');vig.addColorStop(1,'rgba(12,10,8,0.68)');
-    ctx.globalAlpha=ease(ph(e,5.8,0.9));ctx.fillStyle=vig;ctx.fillRect(0,0,IW,IH);ctx.globalAlpha=1;
-  }
-  // ── Writing cursor: comet traces where brand text will appear 5.8→6.55s ──
-  var writeP=ease(ph(e,5.8,0.75));
+  // Comet cursor writes brand line 5.7→6.55s
+  var writeP=ease(ph(e,5.7,0.85));
   if(writeP>0&&e<6.6){
     var brandY=IH*0.4;
-    var x0=IW*0.09,x1=IW*0.91;
+    var x0=IW*0.08,x1=IW*0.92;
     var cursorX=x0+(x1-x0)*writeP;
-    // Drawn trail from left to cursor
     var trailGr=ctx.createLinearGradient(x0,brandY,cursorX,brandY);
     trailGr.addColorStop(0,'rgba(201,169,110,0)');
-    trailGr.addColorStop(Math.max(0,1-0.22/Math.max(0.01,writeP)),'rgba(201,169,110,0)');
-    trailGr.addColorStop(Math.min(1,1-0.08/Math.max(0.01,writeP)),'rgba(201,169,110,'+(writeP*0.35)+')');
-    trailGr.addColorStop(1,'rgba(255,250,210,'+(writeP*0.9)+')');
+    trailGr.addColorStop(Math.max(0,1-0.2/Math.max(0.01,writeP)),'rgba(201,169,110,0)');
+    trailGr.addColorStop(Math.min(1,1-0.06/Math.max(0.01,writeP)),'rgba(201,169,110,'+(writeP*0.3)+')');
+    trailGr.addColorStop(1,'rgba(255,252,210,'+(writeP*0.85)+')');
     ctx.strokeStyle=trailGr;ctx.lineWidth=1;
     ctx.beginPath();ctx.moveTo(x0,brandY);ctx.lineTo(cursorX,brandY);ctx.stroke();
-    // Cursor comet head
-    var hGr=ctx.createRadialGradient(cursorX,brandY,0,cursorX,brandY,14);
+    var hGr=ctx.createRadialGradient(cursorX,brandY,0,cursorX,brandY,12);
     hGr.addColorStop(0,'rgba(255,252,200,'+writeP+')');
-    hGr.addColorStop(0.4,'rgba(201,169,110,'+(writeP*0.6)+')');
+    hGr.addColorStop(0.45,'rgba(201,169,110,'+(writeP*0.55)+')');
     hGr.addColorStop(1,'rgba(201,169,110,0)');
-    ctx.fillStyle=hGr;ctx.beginPath();ctx.arc(cursorX,brandY,14,0,Math.PI*2);ctx.fill();
-    // Tiny bright dot at tip
-    ctx.fillStyle='rgba(255,252,220,'+writeP+')';ctx.beginPath();ctx.arc(cursorX,brandY,2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle=hGr;ctx.beginPath();ctx.arc(cursorX,brandY,12,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(255,255,230,'+writeP+')';ctx.beginPath();ctx.arc(cursorX,brandY,1.8,0,Math.PI*2);ctx.fill();
   }
-  // Brand text: show 6.45→7.2s (after writing cursor finishes)
+  // Draw brand text as star particles 6.1→7.15s
+  var brandStarP=ease(ph(e,6.1,0.7));
+  var brandStarHide=ease(ph(e,7.0,0.4));
+  var bsAlpha=Math.max(0,brandStarP-brandStarHide);
+  if(bsAlpha>0&&brandTextStars.length>0){
+    var revealFrac=Math.min(1,(e-6.1)/0.9);
+    var nShow=Math.floor(brandTextStars.length*revealFrac);
+    for(var i=0;i<nShow;i++){
+      var bs=brandTextStars[i];
+      var tw2=0.7+0.3*Math.sin(e*2.8+bs.jit);
+      ctx.globalAlpha=bsAlpha*tw2*0.88;
+      ctx.fillStyle='rgba(232,220,200,1)';
+      ctx.beginPath();ctx.arc(bs.x,bs.y,bs.r,0,Math.PI*2);ctx.fill();
+      // Cross sparkle on larger particles
+      if(bs.r>0.65){
+        var ss=bs.r*2.2;
+        ctx.globalAlpha=bsAlpha*tw2*0.45;
+        ctx.strokeStyle='rgba(255,248,180,1)';ctx.lineWidth=0.5;
+        ctx.beginPath();ctx.moveTo(bs.x-ss,bs.y);ctx.lineTo(bs.x+ss,bs.y);
+        ctx.moveTo(bs.x,bs.y-ss);ctx.lineTo(bs.x,bs.y+ss);ctx.stroke();
+      }
+    }
+    ctx.globalAlpha=1;
+  }
+  // HTML brand text fades in over star particles 6.5→7.0s, hides 7.0→7.4s
   if(brandEl){
-    var brandShow=ease(ph(e,6.45,0.55));
-    var brandHide=ease(ph(e,7.1,0.5));
+    var brandShow=ease(ph(e,6.5,0.45));
+    var brandHide=ease(ph(e,7.0,0.38));
     brandEl.style.opacity=Math.max(0,brandShow-brandHide).toString();
   }
-  // Second writing cursor for "The Concierge" line 6.1→6.5s
-  var writeP2=ease(ph(e,6.1,0.4));
-  if(writeP2>0&&e<6.55){
-    var titleY=IH*0.49;
-    var w2x0=IW*0.18,w2x1=IW*0.82;
+
+  // ── Phase 7: "The Concierge" writing cursor + letter reveal 7.1→8.8s ──
+  // Writing cursor for title 7.1→7.55s
+  var writeP2=ease(ph(e,7.1,0.45));
+  if(writeP2>0&&e<7.6){
+    var titleY=IH*0.5;
+    var w2x0=IW*0.22,w2x1=IW*0.78;
     var cur2X=w2x0+(w2x1-w2x0)*writeP2;
     var trGr2=ctx.createLinearGradient(w2x0,titleY,cur2X,titleY);
-    trGr2.addColorStop(Math.max(0,1-0.2/Math.max(0.01,writeP2)),'rgba(201,169,110,0)');
-    trGr2.addColorStop(1,'rgba(201,169,110,'+(writeP2*0.55)+')');
+    trGr2.addColorStop(Math.max(0,1-0.18/Math.max(0.01,writeP2)),'rgba(201,169,110,0)');
+    trGr2.addColorStop(1,'rgba(201,169,110,'+(writeP2*0.5)+')');
     ctx.strokeStyle=trGr2;ctx.lineWidth=0.8;
     ctx.beginPath();ctx.moveTo(w2x0,titleY);ctx.lineTo(cur2X,titleY);ctx.stroke();
+    ctx.fillStyle='rgba(255,252,220,'+writeP2*0.7+')';ctx.beginPath();ctx.arc(cur2X,titleY,1.5,0,Math.PI*2);ctx.fill();
   }
-  // Letter reveal 6.3→7.6s
-  if(e>=6.3&&titleWrap){
+  // Letter reveal 7.45→8.8s
+  if(e>=7.45&&titleWrap){
     titleWrap.style.opacity='1';
-    var ldel=0.085;
+    var ldel=0.09;
     for(var k=0;k<letterEls.length;k++){
-      var lp=ease(ph(e,6.3+k*ldel,0.22));
+      var lp=ease(ph(e,7.45+k*ldel,0.24));
       letterEls[k].style.opacity=lp.toString();
-      letterEls[k].style.transform='translateY('+(18*(1-lp))+'px)';
+      letterEls[k].style.transform='translateY('+(20*(1-lp))+'px)';
       if(!lettersStarted&&lp>0.01)lettersStarted=true;
     }
-    // Position i-dot
     if(iDotEl&&letterEls[8]){
-      var dotSize=Math.max(4,Math.round(fs2*0.12))+'px';
-      var dotTop=Math.round(fs2*0.06)+'px';
+      var dotSize=Math.max(5,Math.round(fs2*0.11))+'px';
+      var dotTop=Math.round(fs2*0.07)+'px';
       iDotEl.style.width=dotSize;iDotEl.style.height=dotSize;iDotEl.style.top='-'+dotTop;
     }
   }
 
-  // ── Phase 8: Fade to dark 8.0→9.0s ──
-  if(e>=8.0){
-    var fadeA=ease(ph(e,8.0,1.0));
+  // ── Phase 8: Fade to dark 8.9→9.7s (no white — direct to dark) ──
+  if(e>=8.9){
+    var fadeA=ease(ph(e,8.9,0.8));
     ctx.globalAlpha=fadeA;ctx.fillStyle='#0c0a08';ctx.fillRect(0,0,IW,IH);ctx.globalAlpha=1;
     if(brandEl)brandEl.style.opacity='0';
+    if(titleWrap&&fadeA>0.3)titleWrap.style.opacity=(1-fadeA).toString();
     if(fadeA>=1)finishIntro();
   }
 
