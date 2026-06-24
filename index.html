@@ -173,7 +173,7 @@
     .hero-brand-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(40px,7.5vw,70px);font-weight:600;letter-spacing:0.08em;line-height:1;display:inline;position:relative}
     .hbt-the{color:rgba(232,220,200,0.95);text-shadow:0 1px 0 rgba(201,169,110,0.3),0 2px 8px rgba(0,0,0,0.9)}
     .hbt-con{color:#e8c97a;text-shadow:0 1px 0 rgba(201,169,110,0.6),0 2px 0 rgba(140,95,22,0.45),0 4px 18px rgba(0,0,0,0.95),0 0 28px rgba(201,169,110,0.25)}
-    .hbt-star-o{color:#C9A96E;display:inline-block;font-size:0.7em;line-height:1;vertical-align:0.12em}
+    .hbt-star-o{color:#C9A96E;display:inline-block;font-size:0.52em;line-height:1;vertical-align:0.15em;opacity:0.82}
     .hbt-i-wrap{position:relative;display:inline-block}
     .hbt-i-flare{position:absolute;left:50%;top:-0.05em;transform:translateX(-50%);pointer-events:none;z-index:2;font-size:0.28em;line-height:1;color:#C9A96E;text-shadow:0 0 4px rgba(201,169,110,0.8),0 0 10px rgba(201,169,110,0.4);animation:starPulse 2.4s ease-in-out infinite}
     /* Section dark veil for readability against stars */
@@ -776,11 +776,11 @@ if(!isRoot||!introEl){
   document.body.classList.add('intro-done');
   startBgRender();return;
 }
-if(sessionStorage.getItem('cai_intro_v8')){
+if(sessionStorage.getItem('cai_intro_v9')){
   introEl.style.display='none';document.body.classList.add('intro-done');
   startBgRender();return;
 }
-sessionStorage.setItem('cai_intro_v8','1');
+sessionStorage.setItem('cai_intro_v9','1');
 
 /* ═══════════════════════════════════════════════════════════
    CINEMATIC INTRO (7 seconds, 2D canvas enhanced)
@@ -1047,16 +1047,16 @@ function drawIntro(ts){
     ctx.globalAlpha=1;
   }
 
-  // ── Phase 6: "BRAVE BY BRUNO PRESENTS" written in stars 5.7→7.1s ──
-  var vigP=ease(ph(e,5.7,0.85));
+  // ── Phase 6: "BRAVE BY BRUNO PRESENTS" 5.3→7.2s ──
+  var vigP=ease(ph(e,5.3,0.7));
   if(vigP>0){
     var vig=ctx.createRadialGradient(CX,CY,0,CX,CY,Math.max(IW,IH)*0.52);
     vig.addColorStop(0,'rgba(12,10,8,0)');vig.addColorStop(0.7,'rgba(12,10,8,0.55)');vig.addColorStop(1,'rgba(12,10,8,0.82)');
     ctx.globalAlpha=vigP;ctx.fillStyle=vig;ctx.fillRect(0,0,IW,IH);ctx.globalAlpha=1;
   }
-  // Comet cursor writes brand line 5.7→6.55s
-  var writeP=ease(ph(e,5.7,0.85));
-  if(writeP>0&&e<6.6){
+  // Comet cursor writes brand line 5.3→6.1s
+  var writeP=ease(ph(e,5.3,0.75));
+  if(writeP>0&&e<6.15){
     var brandY=IH*0.4;
     var x0=IW*0.08,x1=IW*0.92;
     var cursorX=x0+(x1-x0)*writeP;
@@ -1074,12 +1074,12 @@ function drawIntro(ts){
     ctx.fillStyle=hGr;ctx.beginPath();ctx.arc(cursorX,brandY,12,0,Math.PI*2);ctx.fill();
     ctx.fillStyle='rgba(255,255,230,'+writeP+')';ctx.beginPath();ctx.arc(cursorX,brandY,1.8,0,Math.PI*2);ctx.fill();
   }
-  // Draw brand text as star particles 6.1→7.15s
-  var brandStarP=ease(ph(e,6.1,0.7));
-  var brandStarHide=ease(ph(e,7.0,0.4));
+  // Draw brand text as star particles 5.7→7.3s
+  var brandStarP=ease(ph(e,5.7,0.65));
+  var brandStarHide=ease(ph(e,7.1,0.4));
   var bsAlpha=Math.max(0,brandStarP-brandStarHide);
   if(bsAlpha>0&&brandTextStars.length>0){
-    var revealFrac=Math.min(1,(e-6.1)/0.9);
+    var revealFrac=Math.min(1,(e-5.7)/0.9);
     var nShow=Math.floor(brandTextStars.length*revealFrac);
     for(var i=0;i<nShow;i++){
       var bs=brandTextStars[i];
@@ -1087,7 +1087,6 @@ function drawIntro(ts){
       ctx.globalAlpha=bsAlpha*tw2*0.88;
       ctx.fillStyle='rgba(232,220,200,1)';
       ctx.beginPath();ctx.arc(bs.x,bs.y,bs.r,0,Math.PI*2);ctx.fill();
-      // Cross sparkle on larger particles
       if(bs.r>0.65){
         var ss=bs.r*2.2;
         ctx.globalAlpha=bsAlpha*tw2*0.45;
@@ -1098,16 +1097,16 @@ function drawIntro(ts){
     }
     ctx.globalAlpha=1;
   }
-  // HTML brand text fades in over star particles 6.5→7.0s, hides 7.0→7.4s
+  // HTML brand text: prominent from 5.5s, holds until 7.0s, then fades
   if(brandEl){
-    var brandShow=ease(ph(e,6.5,0.45));
-    var brandHide=ease(ph(e,7.0,0.38));
+    var brandShow=ease(ph(e,5.5,0.55));
+    var brandHide=ease(ph(e,7.0,0.5));
     brandEl.style.opacity=Math.max(0,brandShow-brandHide).toString();
   }
 
-  // ── Phase 6b: Two orbiting stars around center axis 6.6→7.5s ──
-  var orbP=ease(ph(e,6.6,0.5));
-  var orbFade=ease(ph(e,7.3,0.3));
+  // ── Phase 6b: Two orbiting stars around center axis 7.0→7.8s ──
+  var orbP=ease(ph(e,7.0,0.5));
+  var orbFade=ease(ph(e,7.5,0.3));
   var orbAlpha=Math.max(0,orbP-orbFade);
   if(orbAlpha>0){
     var orbSpeed=(e-6.6)*3.2;
@@ -1282,8 +1281,8 @@ function initHeroSparkles(){
 function initIntro2D(){
   var introEl2=document.getElementById('intro-screen');
   if(!introEl2){document.body.classList.add('intro-done');return;}
-  if(sessionStorage.getItem('cai_intro_v8')){introEl2.style.display='none';document.body.classList.add('intro-done');return;}
-  sessionStorage.setItem('cai_intro_v8','1');
+  if(sessionStorage.getItem('cai_intro_v9')){introEl2.style.display='none';document.body.classList.add('intro-done');return;}
+  sessionStorage.setItem('cai_intro_v9','1');
   setTimeout(function(){introEl2.style.transition='opacity 0.9s';introEl2.style.opacity='0';setTimeout(function(){introEl2.style.display='none';document.body.classList.add('intro-done');},900);},6500);
 }
 
@@ -3316,6 +3315,8 @@ function App(){
         document.body.appendChild(el);setTimeout(()=>el.remove(),650);
       }
     }
+    // Demos bypass the consent gate — consent is for real client pages only
+    if(id!=='onboard')sessionStorage.setItem('cai_consent','demo-'+Date.now());
     _go(()=>{
       if(id==='onboard'){setView('onboard');document.getElementById('landing').style.display='none';document.getElementById('app').style.display='block';return;}
       const d=DEMOS[id];if(!d)return;
