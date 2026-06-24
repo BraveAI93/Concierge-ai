@@ -54,7 +54,23 @@ type Profile struct {
 	GoogleRefreshToken  string    `json:"google_refresh_token"`
 	DigestFrequency     string    `json:"digest_frequency"` // "none","biweekly","weekly","bimonthly","monthly"
 	DigestLastSent      time.Time `json:"digest_last_sent"`
+	StripeAccountID     string    `json:"stripe_account_id"`
 	CreatedAt           time.Time `json:"created_at"`
+}
+
+// BookingPayment — tracks deposit payments via Stripe
+type BookingPayment struct {
+	ID            string    `json:"id"`
+	ProfileID     string    `json:"profile_id"`
+	BookingID     string    `json:"booking_id"`
+	ClientEmail   string    `json:"client_email"`
+	ClientName    string    `json:"client_name"`
+	ServiceName   string    `json:"service_name"`
+	AmountPence   int       `json:"amount_pence"`
+	Currency      string    `json:"currency"`
+	Status        string    `json:"status"` // pending|paid|refunded
+	StripeSession string    `json:"stripe_session_id"`
+	CreatedAt     time.Time `json:"created_at"`
 }
 
 type Consent struct {
@@ -478,4 +494,25 @@ func GetBookingPrefsByProfile(slug string) ([]BookingPrefs, error) {
 		return nil, err
 	}
 	return prefs, nil
+}
+
+// ── STRIPE PAYMENTS ───────────────────────────────────────────
+
+func SaveBookingPayment(bp BookingPayment) error { return insert("booking_payments", bp) }
+
+func UpdateBookingPaymentBySession(sessionID, status string) error {
+	return patch("booking_payments", "stripe_session_id", sessionID, map[string]interface{}{"status": status})
+}
+
+func GetPaymentsByProfile(slug string) ([]BookingPayment, error) {
+	u := fmt.Sprintf("%s/rest/v1/booking_payments?profile_id=eq.%s&select=*&order=created_at.desc", supabaseURL(), url.QueryEscape(slug))
+	b, err := getMany(u)
+	if err != nil {
+		return nil, err
+	}
+	var payments []BookingPayment
+	if err := json.Unmarshal(b, &payments); err != nil {
+		return nil, err
+	}
+	return payments, nil
 }

@@ -99,6 +99,13 @@ func main() {
 	r.GET("/owner/booking-prefs", handleGetBookingPrefs)
 	r.POST("/owner/booking-prefs", handleSaveBookingPrefs)
 
+	// Stripe payments
+	r.POST("/stripe/onboard", handleStripeOnboard)
+	r.GET("/stripe/status", handleStripeStatus)
+	r.POST("/stripe/checkout", handleCreateCheckout)
+	r.POST("/stripe/webhook", handleStripeWebhook)
+	r.GET("/owner/payments", handleGetPayments)
+
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
