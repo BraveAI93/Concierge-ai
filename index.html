@@ -46,6 +46,12 @@
     .star-btn:hover::after{opacity:1}
     /* Cards float in space */
     .dc:nth-child(1){animation-delay:0.05s}.dc:nth-child(2){animation-delay:0.1s}.dc:nth-child(3){animation-delay:0.15s}.dc:nth-child(4){animation-delay:0.2s}.dc:nth-child(5){animation-delay:0.25s}
+    body.intro-done .dc{animation:cardFromVoid 0.6s cubic-bezier(0.22,1,0.36,1) both}
+    body.intro-done .dc:nth-child(1){animation-delay:0.6s}
+    body.intro-done .dc:nth-child(2){animation-delay:0.75s}
+    body.intro-done .dc:nth-child(3){animation-delay:0.9s}
+    body.intro-done .dc:nth-child(4){animation-delay:1.05s}
+    body.intro-done .dc:nth-child(5){animation-delay:1.2s}
 
     /* LIGHT MODE */
     body.light{background:#f7f3ed;color:#1a1714}
@@ -212,16 +218,17 @@
     }
     .hero-brand-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:28px;position:relative}
     .hero-brand-label{font-size:9px;font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.35em;text-transform:uppercase;color:rgba(201,169,110,0.32);margin-bottom:14px}
-    .hero-brand-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(40px,7.5vw,70px);font-weight:300;letter-spacing:0.08em;line-height:1;display:inline;position:relative}
-    .hbt-the{color:rgba(232,220,200,0.9);text-shadow:1px 0 2px rgba(255,252,220,0.2),-1px 0 0 rgba(50,32,8,0.4),0 1px 0 rgba(201,169,110,0.28),0 2px 0 rgba(140,95,25,0.18),0 3px 10px rgba(0,0,0,0.88)}
-    .hbt-con{color:#c9a96e;text-shadow:2px 0 1px rgba(255,252,200,0.6),-1px 0 0 rgba(90,55,8,0.75),0 1px 0 rgba(201,169,110,0.55),0 2px 0 rgba(140,95,22,0.38),0 3px 0 rgba(75,48,10,0.25),0 4px 16px rgba(0,0,0,0.95),0 0 22px rgba(201,169,110,0.15)}
-    .hbt-star-o{color:#C9A96E;display:inline-block}
+    .hero-brand-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(40px,7.5vw,70px);font-weight:500;letter-spacing:0.08em;line-height:1;display:inline;position:relative}
+    .hbt-the{color:rgba(232,220,200,0.95);text-shadow:0 1px 0 rgba(201,169,110,0.3),0 2px 8px rgba(0,0,0,0.9)}
+    .hbt-con{color:#e8c97a;text-shadow:0 1px 0 rgba(201,169,110,0.6),0 2px 0 rgba(140,95,22,0.45),0 4px 18px rgba(0,0,0,0.95),0 0 28px rgba(201,169,110,0.25)}
+    .hbt-star-o{color:#C9A96E;display:inline-block;font-size:0.7em;line-height:1;vertical-align:0.12em}
     .hbt-i-wrap{position:relative;display:inline-block}
     .hbt-i-flare{position:absolute;left:50%;top:-0.05em;transform:translateX(-50%);pointer-events:none;z-index:2;font-size:0.28em;line-height:1;color:#C9A96E;text-shadow:0 0 4px rgba(201,169,110,0.8),0 0 10px rgba(201,169,110,0.4);animation:starPulse 2.4s ease-in-out infinite}
     /* Section dark veil for readability against stars */
     .section-veil{position:relative}
     .section-veil::before{content:'';position:absolute;inset:-16px -24px;background:rgba(12,10,8,0.6);pointer-events:none;z-index:0;border-radius:16px}
     .section-veil>*{position:relative;z-index:1}
+    #gnav-back:hover,#gnav-close:hover{background:rgba(201,169,110,0.15);border-color:rgba(201,169,110,0.6);color:#e8c97a}
   </style>
 </head>
 <body>
@@ -322,22 +329,22 @@
       <div style="font-size:12px;font-family:'Jost',sans-serif;font-weight:500;color:#e8dcc8;margin-bottom:3px" id="d-bruno-t">Therapist</div>
       <div style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.32)">Bruno · London</div>
     </div>
-    <div class="dc" onclick="window.loadDemo('marco',event)" style="padding:18px 12px;background:rgba(255,255,255,0.025);border:1px solid rgba(110,143,201,0.12);border-radius:13px;cursor:pointer;transition:all 0.2s;text-align:center">
+    <div class="dc" onclick="window.loadDemo('marco',event)" style="padding:18px 12px;background:rgba(12,10,8,0.5);border:1px solid rgba(110,143,201,0.3);box-shadow:0 0 18px rgba(110,143,201,0.06);backdrop-filter:blur(10px);border-radius:13px;cursor:pointer;transition:all 0.2s;text-align:center">
       <div style="font-size:24px;margin-bottom:8px">⚖️</div>
       <div style="font-size:12px;font-family:'Jost',sans-serif;font-weight:500;color:#e8dcc8;margin-bottom:3px" id="d-marco-t">Lawyer</div>
       <div style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.32)">Marco · Milan</div>
     </div>
-    <div class="dc" onclick="window.loadDemo('nour',event)" style="padding:18px 12px;background:rgba(255,255,255,0.025);border:1px solid rgba(201,150,110,0.12);border-radius:13px;cursor:pointer;transition:all 0.2s;text-align:center">
+    <div class="dc" onclick="window.loadDemo('nour',event)" style="padding:18px 12px;background:rgba(12,10,8,0.5);border:1px solid rgba(201,150,110,0.3);box-shadow:0 0 18px rgba(201,150,110,0.06);backdrop-filter:blur(10px);border-radius:13px;cursor:pointer;transition:all 0.2s;text-align:center">
       <div style="font-size:24px;margin-bottom:8px">🍽️</div>
       <div style="font-size:12px;font-family:'Jost',sans-serif;font-weight:500;color:#e8dcc8;margin-bottom:3px" id="d-nour-t">Private Chef</div>
       <div style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.32)">Nour · London</div>
     </div>
-    <div class="dc" onclick="window.loadDemo('sofia',event)" style="padding:18px 12px;background:rgba(255,255,255,0.025);border:1px solid rgba(201,110,154,0.12);border-radius:13px;cursor:pointer;transition:all 0.2s;text-align:center">
+    <div class="dc" onclick="window.loadDemo('sofia',event)" style="padding:18px 12px;background:rgba(12,10,8,0.5);border:1px solid rgba(201,110,154,0.3);box-shadow:0 0 18px rgba(201,110,154,0.06);backdrop-filter:blur(10px);border-radius:13px;cursor:pointer;transition:all 0.2s;text-align:center">
       <div style="font-size:24px;margin-bottom:8px">💃</div>
       <div style="font-size:12px;font-family:'Jost',sans-serif;font-weight:500;color:#e8dcc8;margin-bottom:3px" id="d-sofia-t">Dance Teacher</div>
       <div style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.32)">Sofia · Milan</div>
     </div>
-    <div class="dc" onclick="window.loadDemo('alex',event)" style="padding:18px 12px;background:rgba(255,255,255,0.025);border:1px solid rgba(110,180,150,0.12);border-radius:13px;cursor:pointer;transition:all 0.2s;text-align:center">
+    <div class="dc" onclick="window.loadDemo('alex',event)" style="padding:18px 12px;background:rgba(12,10,8,0.5);border:1px solid rgba(110,180,150,0.3);box-shadow:0 0 18px rgba(110,180,150,0.06);backdrop-filter:blur(10px);border-radius:13px;cursor:pointer;transition:all 0.2s;text-align:center">
       <div style="font-size:24px;margin-bottom:8px">📸</div>
       <div style="font-size:12px;font-family:'Jost',sans-serif;font-weight:500;color:#e8dcc8;margin-bottom:3px" id="d-alex-t">Creator</div>
       <div style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.32)">Alex · Remote</div>
@@ -849,11 +856,11 @@ if(!isRoot||!introEl){
   document.body.classList.add('intro-done');
   startBgRender();return;
 }
-if(sessionStorage.getItem('cai_intro_v6')){
+if(sessionStorage.getItem('cai_intro_v7')){
   introEl.style.display='none';document.body.classList.add('intro-done');
   startBgRender();return;
 }
-sessionStorage.setItem('cai_intro_v6','1');
+sessionStorage.setItem('cai_intro_v7','1');
 
 /* ═══════════════════════════════════════════════════════════
    CINEMATIC INTRO (7 seconds, 2D canvas enhanced)
@@ -1329,8 +1336,8 @@ function initHeroSparkles(){
 function initIntro2D(){
   var introEl2=document.getElementById('intro-screen');
   if(!introEl2){document.body.classList.add('intro-done');return;}
-  if(sessionStorage.getItem('cai_intro_v6')){introEl2.style.display='none';document.body.classList.add('intro-done');return;}
-  sessionStorage.setItem('cai_intro_v6','1');
+  if(sessionStorage.getItem('cai_intro_v7')){introEl2.style.display='none';document.body.classList.add('intro-done');return;}
+  sessionStorage.setItem('cai_intro_v7','1');
   setTimeout(function(){introEl2.style.transition='opacity 0.9s';introEl2.style.opacity='0';setTimeout(function(){introEl2.style.display='none';document.body.classList.add('intro-done');},900);},6500);
 }
 
@@ -3379,6 +3386,7 @@ function App(){
   };
 
   const back=()=>_go(()=>{setView(null);document.getElementById('landing').style.display='flex';document.getElementById('app').style.display='none';});
+  window._appNavBack=back;
   const ownerLogout=()=>{
     localStorage.removeItem('cai_owner_token');
     localStorage.removeItem('cai_owner_slug');
@@ -3445,6 +3453,27 @@ function App(){
 }
 
 ReactDOM.createRoot(document.getElementById('app')).render(<App/>);
+</script>
+
+<!-- Global nav overlay: back arrow + X close, shown when #app is visible -->
+<div id="global-nav" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;pointer-events:none">
+  <button id="gnav-back" onclick="if(window._appNavBack)window._appNavBack()" title="Back to demos"
+    style="position:fixed;top:16px;left:16px;pointer-events:all;width:40px;height:40px;border-radius:50%;background:rgba(12,10,8,0.75);border:1px solid rgba(201,169,110,0.35);color:#c9a96e;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:all 0.2s;line-height:1">&#8592;</button>
+  <button id="gnav-close" onclick="if(window._appNavBack)window._appNavBack()" title="Close"
+    style="position:fixed;top:16px;right:16px;pointer-events:all;width:40px;height:40px;border-radius:50%;background:rgba(12,10,8,0.75);border:1px solid rgba(201,169,110,0.35);color:#c9a96e;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:all 0.2s;line-height:1">&#215;</button>
+</div>
+<script>
+(function(){
+  var nav=document.getElementById('global-nav');
+  var appEl=document.getElementById('app');
+  function syncNav(){
+    var vis=appEl&&(appEl.style.display==='block'||getComputedStyle(appEl).display==='block');
+    nav.style.display=vis?'block':'none';
+  }
+  var mo=new MutationObserver(syncNav);
+  mo.observe(appEl,{attributes:true,attributeFilter:['style']});
+  syncNav();
+})();
 </script>
 </body>
 </html>
