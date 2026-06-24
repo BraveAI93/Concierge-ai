@@ -1974,6 +1974,10 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile}){
   // Digest
   const[digestFreq,setDigestFreq]=useState('none');
   const[digestSaving,setDigestSaving]=useState(false);
+  // Notifications & Sound
+  const NOTIF_DEFAULTS={newLead:true,hotLead:true,newBooking:true,newMessage:false,dailyBriefing:false,soundEnabled:true,soundStyle:'subtle'};
+  const[notifPrefs,setNotifPrefs]=useState(()=>{try{const s=localStorage.getItem('cai_notif_prefs');return s?{...NOTIF_DEFAULTS,...JSON.parse(s)}:NOTIF_DEFAULTS;}catch(e){return NOTIF_DEFAULTS;}});
+  const updateNotif=(key,val)=>{const u={...notifPrefs,[key]:val};setNotifPrefs(u);localStorage.setItem('cai_notif_prefs',JSON.stringify(u));};
 
   useEffect(()=>{
     Promise.all([
@@ -2356,6 +2360,59 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile}){
 
       {/* ── SETTINGS TAB ── */}
       {activeTab==='settings'&&<>
+        <div style={sectionLabel}>Notifications &amp; Sound</div>
+        <div style={{...card,marginBottom:16}}>
+          {[
+            ['newLead','New lead notification','🔔'],
+            ['hotLead','Hot lead alert','🔥'],
+            ['newBooking','New booking request','📅'],
+            ['newMessage','New message','💬'],
+            ['dailyBriefing','Daily briefing','📊'],
+          ].map(([key,label,icon])=>{
+            const on=notifPrefs[key];
+            return <div key={key} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'11px 0',borderBottom:'1px solid rgba(201,169,110,0.07)'}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <span style={{fontSize:15,lineHeight:1}}>{icon}</span>
+                <span style={{fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:400,color:'rgba(232,220,200,0.75)'}}>{label}</span>
+              </div>
+              <div onClick={()=>updateNotif(key,!on)} style={{width:40,height:22,borderRadius:11,cursor:'pointer',position:'relative',transition:'background 0.2s',
+                background:on?'rgba(201,169,110,0.45)':'rgba(255,255,255,0.07)',
+                border:'1px solid',borderColor:on?'rgba(201,169,110,0.5)':'rgba(255,255,255,0.1)'}}>
+                <div style={{position:'absolute',top:2,left:on?18:2,width:16,height:16,borderRadius:'50%',transition:'left 0.2s,background 0.2s',
+                  background:on?'#c9a96e':'rgba(255,255,255,0.22)',
+                  boxShadow:on?'0 0 6px rgba(201,169,110,0.7)':'none'}}/>
+              </div>
+            </div>;
+          })}
+          <div style={{borderTop:'1px solid rgba(201,169,110,0.12)',margin:'12px 0'}}/>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'11px 0',borderBottom:notifPrefs.soundEnabled?'1px solid rgba(201,169,110,0.07)':'none'}}>
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <span style={{fontSize:15,lineHeight:1}}>{notifPrefs.soundEnabled?'🔊':'🔇'}</span>
+              <span style={{fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:400,color:'rgba(232,220,200,0.75)'}}>Sound</span>
+            </div>
+            <div onClick={()=>updateNotif('soundEnabled',!notifPrefs.soundEnabled)} style={{width:40,height:22,borderRadius:11,cursor:'pointer',position:'relative',transition:'background 0.2s',
+              background:notifPrefs.soundEnabled?'rgba(201,169,110,0.45)':'rgba(255,255,255,0.07)',
+              border:'1px solid',borderColor:notifPrefs.soundEnabled?'rgba(201,169,110,0.5)':'rgba(255,255,255,0.1)'}}>
+              <div style={{position:'absolute',top:2,left:notifPrefs.soundEnabled?18:2,width:16,height:16,borderRadius:'50%',transition:'left 0.2s,background 0.2s',
+                background:notifPrefs.soundEnabled?'#c9a96e':'rgba(255,255,255,0.22)',
+                boxShadow:notifPrefs.soundEnabled?'0 0 6px rgba(201,169,110,0.7)':'none'}}/>
+            </div>
+          </div>
+          {notifPrefs.soundEnabled&&<div style={{padding:'12px 0 2px'}}>
+            <div style={{fontSize:10,fontFamily:"'Jost',sans-serif",letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.4)',marginBottom:8}}>Sound style</div>
+            <div style={{display:'flex',gap:6}}>
+              {[['subtle','Subtle'],['standard','Standard'],['bold','Bold']].map(([v,label])=>
+                <button key={v} onClick={()=>updateNotif('soundStyle',v)} style={{padding:'5px 14px',borderRadius:7,border:'1px solid',cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",transition:'all 0.18s',
+                  background:notifPrefs.soundStyle===v?'rgba(201,169,110,0.15)':'transparent',
+                  borderColor:notifPrefs.soundStyle===v?'rgba(201,169,110,0.45)':'rgba(255,255,255,0.08)',
+                  color:notifPrefs.soundStyle===v?'#c9a96e':'rgba(232,220,200,0.35)'}}>
+                  {label}
+                </button>
+              )}
+            </div>
+          </div>}
+        </div>
+
         <div style={sectionLabel}>Your Public Link</div>
         <div style={{...card,marginBottom:16}}>
           <div style={{fontSize:13,fontFamily:"'Jost',sans-serif",color:'#c9a96e',wordBreak:'break-all',marginBottom:10}}>
