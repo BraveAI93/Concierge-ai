@@ -53,51 +53,6 @@
     body.intro-done .dc:nth-child(4){animation-delay:1.05s}
     body.intro-done .dc:nth-child(5){animation-delay:1.2s}
 
-    /* LIGHT MODE */
-    body.light{background:#f7f3ed;color:#1a1714}
-    body.light #landing{background:#f7f3ed;color:#1a1714}
-    body.light h1,body.light p,body.light div,body.light span{color:#1a1714}
-    body.light h1 span[style*="color:#c9a96e"]{color:#8c5e14!important}
-    body.light .dc{background:rgba(255,255,255,0.8)!important;border-color:rgba(140,94,20,0.2)!important;box-shadow:0 2px 12px rgba(0,0,0,0.06)}
-    body.light .dc:hover{background:rgba(201,169,110,0.12)!important;border-color:rgba(140,94,20,0.35)!important}
-    body.light #app{background:#f7f3ed}
-    /* Fix specific text colors in light mode */
-    body.light [style*="color:rgba(232,220,200"]{color:rgba(60,45,20,0.65)!important}
-    body.light [style*="color:rgba(201,169,110,0.35)"]{color:rgba(140,94,20,0.5)!important}
-    body.light [style*="color:rgba(201,169,110,0.4)"]{color:rgba(140,94,20,0.55)!important}
-    body.light [style*="color:rgba(201,169,110,0.45)"]{color:rgba(140,94,20,0.6)!important}
-    body.light [style*="color:rgba(201,169,110,0.55)"]{color:rgba(140,94,20,0.7)!important}
-    body.light [style*="color:#c9a96e"]{color:#8c5e14!important}
-    body.light [style*="color:#e8dcc8"]{color:#1a1714!important}
-    body.light [style*="background:#0c0a08"]{background:#f7f3ed!important}
-    body.light [style*="color:rgba(232,220,200,0.42)"]{color:rgba(60,40,10,0.6)!important}
-    body.light [style*="color:rgba(232,220,200,0.28)"]{color:rgba(60,40,10,0.45)!important}
-    body.light [style*="color:rgba(232,220,200,0.25)"]{color:rgba(60,40,10,0.4)!important}
-    body.light [style*="color:rgba(232,220,200,0.32)"]{color:rgba(60,40,10,0.5)!important}
-    body.light [style*="color:rgba(232,220,200,0.35)"]{color:rgba(60,40,10,0.52)!important}
-    /* Trust line, privacy, how it works */
-    body.light #trust-1,body.light #trust-2,body.light #trust-3{color:rgba(140,94,20,0.75)!important}
-    body.light #privacy-note{color:rgba(60,40,10,0.45)!important}
-    body.light #price-main{color:#8c5e14!important}
-    body.light #price-sub{color:rgba(60,40,10,0.5)!important}
-    body.light #hiw-label{color:rgba(140,94,20,0.5)!important}
-    body.light #hiw-1,body.light #hiw-2,body.light #hiw-3,body.light #hiw-4{color:rgba(60,40,10,0.5)!important}
-    body.light #demo-label{color:rgba(140,94,20,0.45)!important}
-    /* Pricing teaser border */
-    body.light [style*="border:1px solid rgba(201,169,110,0.2)"]{border-color:rgba(140,94,20,0.25)!important;background:rgba(140,94,20,0.06)!important}
-    /* How it works box */
-    body.light [style*="background:rgba(255,255,255,0.02)"]{background:rgba(255,255,255,0.7)!important;border-color:rgba(140,94,20,0.15)!important;box-shadow:0 2px 12px rgba(0,0,0,0.05)}
-    /* Step numbers */
-    body.light .card div[style*="font-size:18px"]{color:#8c5e14!important}
-    /* Language toggle buttons */
-    body.light #btn-en,body.light #btn-it,body.light #btn-es,body.light #btn-pt,body.light #btn-fr{border-color:rgba(140,94,20,0.2)!important;color:rgba(140,94,20,0.5)!important}
-    /* Own link and owner link */
-    body.light #own-link,body.light #owner-link{color:rgba(140,94,20,0.45)!important}
-    /* Live badge */
-    body.light [style*="color:#7a9e6e"]{color:#3a6e3a!important}
-    body.light [style*="background:#7a9e6e"]{background:#3a6e3a!important}
-    .theme-toggle{position:fixed;top:14px;right:14px;z-index:999;width:38px;height:38px;border-radius:50%;border:1px solid rgba(201,169,110,0.3);background:rgba(201,169,110,0.1);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.2s;backdrop-filter:blur(10px)}
-    .theme-toggle:hover{background:rgba(201,169,110,0.2)}
     .turn-fill{height:100%;border-radius:1px;background:linear-gradient(90deg,#c9a96e,#e8c878);transition:width 0.4s ease}
     /* DASHBOARD */
     .stat-card{background:rgba(255,255,255,0.03);border:1px solid rgba(201,169,110,0.12);border-radius:14px;padding:20px;flex:1;min-width:120px}
@@ -112,7 +67,7 @@
     #intro-screen{position:fixed;inset:0;z-index:9999;background:#0c0a08;pointer-events:all}
     #intro-canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
     #intro-text-overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;z-index:2}
-    #intro-brand-text{font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.32em;text-transform:uppercase;color:rgba(232,220,200,0.82);opacity:0;text-align:center;margin-bottom:2.5em;transition:opacity 0.6s ease;text-shadow:0 0 10px rgba(201,169,110,0.45),0 0 24px rgba(201,169,110,0.2),0 1px 0 rgba(201,169,110,0.3)}
+    #intro-brand-text{font-family:'Jost',sans-serif;font-weight:400;letter-spacing:0.28em;text-transform:uppercase;color:rgba(232,220,200,0.95);opacity:0;text-align:center;margin-bottom:2.5em;transition:opacity 0.6s ease;text-shadow:0 0 12px rgba(201,169,110,0.65),0 0 28px rgba(201,169,110,0.3),0 1px 0 rgba(201,169,110,0.4)}
     #intro-title-wrap{display:flex;align-items:baseline;justify-content:center;opacity:0;transition:opacity 0.3s ease;position:relative}
     #intro-title-wrap .lt-the{color:rgba(232,220,200,0.92)}
     #intro-title-wrap .lt-con{color:#C9A96E}
@@ -126,9 +81,6 @@
     @keyframes landingIn{from{opacity:0}to{opacity:1}}
     /* Sparkle canvas */
     #sparkle-canvas{position:absolute;inset:0;pointer-events:none;z-index:1}
-    /* Light mode: opaque landing so stars don't show */
-    body.light #landing{background:#f7f3ed!important}
-    body.light #star-canvas{opacity:0}
     /* Brave Star persistent element after intro */
     #brave-star-persistent{position:fixed;border-radius:50%;background:#C9A96E;pointer-events:none;z-index:1;animation:bravePulse 2s ease-in-out infinite;box-shadow:0 0 10px 5px rgba(201,169,110,0.9),0 0 28px 12px rgba(201,169,110,0.4);transition:top 1.2s cubic-bezier(0.34,1.56,0.64,1),left 1.2s cubic-bezier(0.34,1.56,0.64,1),width 0.8s ease,height 0.8s ease;display:none}
 
@@ -218,7 +170,7 @@
     }
     .hero-brand-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:28px;position:relative}
     .hero-brand-label{font-size:9px;font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.35em;text-transform:uppercase;color:rgba(201,169,110,0.32);margin-bottom:14px}
-    .hero-brand-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(40px,7.5vw,70px);font-weight:500;letter-spacing:0.08em;line-height:1;display:inline;position:relative}
+    .hero-brand-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(40px,7.5vw,70px);font-weight:600;letter-spacing:0.08em;line-height:1;display:inline;position:relative}
     .hbt-the{color:rgba(232,220,200,0.95);text-shadow:0 1px 0 rgba(201,169,110,0.3),0 2px 8px rgba(0,0,0,0.9)}
     .hbt-con{color:#e8c97a;text-shadow:0 1px 0 rgba(201,169,110,0.6),0 2px 0 rgba(140,95,22,0.45),0 4px 18px rgba(0,0,0,0.95),0 0 28px rgba(201,169,110,0.25)}
     .hbt-star-o{color:#C9A96E;display:inline-block;font-size:0.7em;line-height:1;vertical-align:0.12em}
@@ -248,7 +200,6 @@
 </div>
 <div id="brave-star-persistent"></div>
 
-<button class="theme-toggle" onclick="toggleTheme()" id="theme-btn" title="Toggle light/dark mode">🌙</button>
 <!-- LANDING -->
 <div id="landing">
   <div style="text-align:center;margin-bottom:40px">
@@ -269,47 +220,25 @@
         <h1 id="hero-h1" style="font-size:clamp(34px,6vw,58px);font-weight:300;color:#e8dcc8;line-height:1.1;margin-bottom:12px;text-shadow:0 1px 0 rgba(201,169,110,0.35),0 2px 0 rgba(201,169,110,0.2),0 3px 0 rgba(201,169,110,0.1),0 4px 20px rgba(0,0,0,0.8)">Your clients deserve<br/><span style="color:#c9a96e;text-shadow:0 1px 0 rgba(201,169,110,0.5),0 2px 0 rgba(201,169,110,0.3),0 3px 0 rgba(201,169,110,0.15),0 4px 20px rgba(0,0,0,0.9),0 0 30px rgba(201,169,110,0.15)">instant answers.</span></h1>
         <canvas id="hero-particles" style="position:absolute;inset:-30px -20px;pointer-events:none;z-index:2"></canvas>
       </div>
-      <p id="hero-sub" style="font-size:15px;font-style:italic;color:rgba(232,220,200,0.48);max-width:420px;margin:0 auto 12px;line-height:1.7">An AI concierge that responds on your behalf — in your tone, with your services, your prices, your rules. 24/7.</p>
+      <p id="hero-sub" style="font-size:15px;font-style:italic;color:rgba(232,220,200,0.9);font-weight:400;max-width:420px;margin:0 auto 12px;line-height:1.7;background:rgba(0,0,0,0.4);border-radius:8px;padding:8px 16px">An AI concierge that responds on your behalf — in your tone, with your services, your prices, your rules. 24/7.</p>
     </div>
     <!-- Trust line -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px;flex-wrap:wrap;background:rgba(12,10,8,0.6);border-radius:10px;padding:6px 16px">
-      <span id="trust-1" style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(201,169,110,0.55);letter-spacing:0.06em">&#10003; Transparent AI concierge</span>
-      <span style="color:rgba(201,169,110,0.2)">&#183;</span>
-      <span id="trust-2" style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(201,169,110,0.55);letter-spacing:0.06em">&#10003; Human review available</span>
-      <span style="color:rgba(201,169,110,0.2)">&#183;</span>
-      <span id="trust-3" style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(201,169,110,0.55);letter-spacing:0.06em">&#10003; Built for solo professionals</span>
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px;flex-wrap:wrap;background:rgba(0,0,0,0.4);border-radius:10px;padding:6px 16px">
+      <span id="trust-1" style="font-size:11px;font-family:'Jost',sans-serif;font-weight:400;color:rgba(201,169,110,0.9);letter-spacing:0.06em">&#10003; Transparent AI concierge</span>
+      <span style="color:rgba(201,169,110,0.3)">&#183;</span>
+      <span id="trust-2" style="font-size:11px;font-family:'Jost',sans-serif;font-weight:400;color:rgba(201,169,110,0.9);letter-spacing:0.06em">&#10003; Human review available</span>
+      <span style="color:rgba(201,169,110,0.3)">&#183;</span>
+      <span id="trust-3" style="font-size:11px;font-family:'Jost',sans-serif;font-weight:400;color:rgba(201,169,110,0.9);letter-spacing:0.06em">&#10003; Built for solo professionals</span>
     </div>
     <!-- Privacy note -->
-    <div style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.55);max-width:400px;margin:0 auto 10px;line-height:1.6;font-style:italic;background:rgba(12,10,8,0.6);border-radius:8px;padding:4px 14px">
+    <div style="font-size:11px;font-family:'Jost',sans-serif;font-weight:400;color:rgba(232,220,200,0.9);max-width:400px;margin:0 auto 10px;line-height:1.6;font-style:italic;background:rgba(0,0,0,0.4);border-radius:8px;padding:4px 14px">
       <span id="privacy-note">Sensitive medical, legal or personal matters are always reviewed by the professional.</span>
     </div>
     <!-- Pricing teaser -->
     <div style="display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.2);border-radius:20px;margin-bottom:18px">
       <span id="price-main" style="font-size:12px;font-family:'Jost',sans-serif;font-weight:500;color:#c9a96e">Starter from &#163;19/month</span>
       <span style="color:rgba(201,169,110,0.3)">&#183;</span>
-      <span id="price-sub" style="font-size:12px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(201,169,110,0.55)">Early access available now</span>
-    </div>
-    <!-- How it works -->
-    <div style="width:100%;max-width:580px;margin-bottom:20px;padding:16px 20px;background:rgba(255,255,255,0.02);border:1px solid rgba(201,169,110,0.1);border-radius:14px">
-      <div id="hiw-label" style="font-size:10px;font-family:'Jost',sans-serif;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:rgba(201,169,110,0.4);margin-bottom:12px;text-align:center">How it works</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
-        <div style="text-align:center;padding:8px 4px">
-          <div style="font-size:18px;margin-bottom:5px">1</div>
-          <div style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.45);line-height:1.4" id="hiw-1">Add your services, prices and rules</div>
-        </div>
-        <div style="text-align:center;padding:8px 4px">
-          <div style="font-size:18px;margin-bottom:5px">2</div>
-          <div style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.45);line-height:1.4" id="hiw-2">Share your concierge link</div>
-        </div>
-        <div style="text-align:center;padding:8px 4px">
-          <div style="font-size:18px;margin-bottom:5px">3</div>
-          <div style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.45);line-height:1.4" id="hiw-3">Clients ask questions 24/7</div>
-        </div>
-        <div style="text-align:center;padding:8px 4px">
-          <div style="font-size:18px;margin-bottom:5px">4</div>
-          <div style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.45);line-height:1.4" id="hiw-4">You review and convert enquiries</div>
-        </div>
-      </div>
+      <span id="price-sub" style="font-size:12px;font-family:'Jost',sans-serif;font-weight:400;color:rgba(201,169,110,0.9)">Early access available now</span>
     </div>
     <!-- Language toggle -->
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:40px">
@@ -450,15 +379,6 @@
 <script>
 // Language state
 window._lang = 'en';
-window._theme = 'dark';
-function toggleTheme() {
-  window._theme = window._theme === 'dark' ? 'light' : 'dark';
-  document.body.classList.toggle('light', window._theme === 'light');
-  document.getElementById('theme-btn').textContent = window._theme === 'dark' ? '🌙' : '☀️';
-  // Update chat backgrounds if in chat
-  const appEl = document.getElementById('app');
-  if (appEl) appEl.style.background = window._theme === 'light' ? '#f5f0e8' : '#0c0a08';
-}
 const T = {
   en: {
     demoLabel: 'Choose a demo',
@@ -856,11 +776,11 @@ if(!isRoot||!introEl){
   document.body.classList.add('intro-done');
   startBgRender();return;
 }
-if(sessionStorage.getItem('cai_intro_v7')){
+if(sessionStorage.getItem('cai_intro_v8')){
   introEl.style.display='none';document.body.classList.add('intro-done');
   startBgRender();return;
 }
-sessionStorage.setItem('cai_intro_v7','1');
+sessionStorage.setItem('cai_intro_v8','1');
 
 /* ═══════════════════════════════════════════════════════════
    CINEMATIC INTRO (7 seconds, 2D canvas enhanced)
@@ -898,7 +818,7 @@ document.fonts.ready.then(function(){
   var tw=Math.min(IW,800),th=Math.max(48,Math.round(IH*0.068));
   var tmp=document.createElement('canvas');tmp.width=tw;tmp.height=th;
   var tc=tmp.getContext('2d');
-  var fsize=Math.max(9,Math.round(IW*0.015));
+  var fsize=Math.max(11,Math.round(IW*0.02));
   tc.fillStyle='#fff';
   tc.font='300 '+fsize+'px Jost,sans-serif';
   tc.textAlign='center';tc.textBaseline='middle';
@@ -925,7 +845,7 @@ var brandEl=document.getElementById('intro-brand-text');
 var titleWrap=document.getElementById('intro-title-wrap');
 var titleText='The Concierge';
 var fs2=Math.max(36,Math.round(Math.min(window.innerWidth*0.1,window.innerHeight*0.12,86)));
-var fs1=Math.max(10,Math.round(Math.min(window.innerWidth,window.innerHeight)*0.017));
+var fs1=Math.max(12,Math.round(Math.min(window.innerWidth,window.innerHeight)*0.022));
 if(brandEl){brandEl.style.fontSize=fs1+'px';brandEl.textContent='BRAVE  BY  BRUNO  ·  PRESENTS';}
 if(titleWrap){
   titleWrap.style.fontSize=fs2+'px';
@@ -975,12 +895,12 @@ function finishIntro(){
   if(titleWrap)titleWrap.style.opacity='0';
   /* brave-star-persistent removed — no central orb */
   // Dark-to-dark fade — no white flash
-  introEl.style.transition='opacity 1.1s ease';
+  introEl.style.transition='opacity 0.3s ease';
   introEl.style.opacity='0';
   setTimeout(function(){
     introEl.style.display='none';
     document.body.classList.add('intro-done');
-  },900);
+  },300);
   startBgRender();
 }
 
@@ -1185,6 +1105,32 @@ function drawIntro(ts){
     brandEl.style.opacity=Math.max(0,brandShow-brandHide).toString();
   }
 
+  // ── Phase 6b: Two orbiting stars around center axis 6.6→7.5s ──
+  var orbP=ease(ph(e,6.6,0.5));
+  var orbFade=ease(ph(e,7.3,0.3));
+  var orbAlpha=Math.max(0,orbP-orbFade);
+  if(orbAlpha>0){
+    var orbSpeed=(e-6.6)*3.2;
+    var orbR=Math.min(IW,IH)*0.12;
+    for(var oi=0;oi<2;oi++){
+      var ang=orbSpeed+oi*Math.PI;
+      var ox=CX+Math.cos(ang)*orbR;
+      var oy=CY+Math.sin(ang)*orbR*0.32; // flat ellipse on axis
+      var pulse2=0.7+0.3*Math.sin(e*6+oi*Math.PI);
+      // Star glow
+      var oGr=ctx.createRadialGradient(ox,oy,0,ox,oy,10*pulse2);
+      oGr.addColorStop(0,'rgba(255,248,200,'+orbAlpha*0.9+')');
+      oGr.addColorStop(0.35,'rgba(201,169,110,'+orbAlpha*0.5+')');
+      oGr.addColorStop(1,'rgba(201,169,110,0)');
+      ctx.fillStyle=oGr;ctx.beginPath();ctx.arc(ox,oy,10*pulse2,0,Math.PI*2);ctx.fill();
+      // Sharp star core
+      ctx.globalAlpha=orbAlpha*pulse2;
+      ctx.fillStyle='#fffce8';
+      ctx.beginPath();ctx.arc(ox,oy,2.2,0,Math.PI*2);ctx.fill();
+      ctx.globalAlpha=1;
+    }
+  }
+
   // ── Phase 7: "The Concierge" writing cursor + letter reveal 7.1→8.8s ──
   // Writing cursor for title 7.1→7.55s
   var writeP2=ease(ph(e,7.1,0.45));
@@ -1336,8 +1282,8 @@ function initHeroSparkles(){
 function initIntro2D(){
   var introEl2=document.getElementById('intro-screen');
   if(!introEl2){document.body.classList.add('intro-done');return;}
-  if(sessionStorage.getItem('cai_intro_v7')){introEl2.style.display='none';document.body.classList.add('intro-done');return;}
-  sessionStorage.setItem('cai_intro_v7','1');
+  if(sessionStorage.getItem('cai_intro_v8')){introEl2.style.display='none';document.body.classList.add('intro-done');return;}
+  sessionStorage.setItem('cai_intro_v8','1');
   setTimeout(function(){introEl2.style.transition='opacity 0.9s';introEl2.style.opacity='0';setTimeout(function(){introEl2.style.display='none';document.body.classList.add('intro-done');},900);},6500);
 }
 
@@ -3209,10 +3155,9 @@ function BusinessPagePreview({data, lang, onStartChat, onBack}){
     setDownloaded(true);
   };
 
-  const isLight = (window._theme||'dark') === 'light';
-  const bg = isLight ? '#f7f3ed' : '#0c0a08';
-  const text = isLight ? '#1a1714' : '#e8dcc8';
-  const cardBg = isLight ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.025)';
+  const bg = '#0c0a08';
+  const text = '#e8dcc8';
+  const cardBg = 'rgba(255,255,255,0.025)';
   const publicURL = data._slug ? `${window.location.origin}/${data._slug}` : window.location.href;
 
   return <div style={{minHeight:'100vh',background:bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'24px 16px',fontFamily:"'Cormorant Garamond',serif",color:text}}>
