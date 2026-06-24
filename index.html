@@ -3440,6 +3440,19 @@ function App(){
   const[ownerToken,setOwnerToken]=useState(()=>localStorage.getItem('cai_owner_token')||null);
   const[ownerSlug,setOwnerSlug]=useState(()=>localStorage.getItem('cai_owner_slug')||null);
 
+  // Auto-navigate to dashboard when token is set (handles post-signup black screen + page refresh)
+  useEffect(()=>{
+    if(!ownerToken) return;
+    const path=window.location.pathname.replace(/^\//,'').replace(/\.html$/,'');
+    if(path && path!=='' && !DEMOS[path]) return; // don't interfere with profile URL loading
+    if(view===null || view==='owner-auth'){
+      setView('owner-dashboard');
+      const l=document.getElementById('landing');const a=document.getElementById('app');
+      if(l)l.style.display='none';if(a)a.style.display='block';
+      if(window.updateAuthBtn) window.updateAuthBtn();
+    }
+  },[ownerToken]);
+
   // Load profile from URL slug on startup (e.g. /aprea)
   useEffect(()=>{
     const path=window.location.pathname.replace(/^\//,'').replace(/\.html$/,'');
@@ -3515,9 +3528,19 @@ function App(){
     <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.4)',letterSpacing:'0.1em',textTransform:'uppercase'}}>Loading your concierge…</div>
   </div>;
   if(view==='admin')return <AdminDashboard onBack={back}/>;
-  if(view==='owner-auth')return <OwnerAuth onBack={back} onAuthed={(token,slug)=>{setOwnerToken(token);setOwnerSlug(slug);setView('owner-dashboard');}}/>;
-  if(view==='owner-dashboard'&&ownerToken)return <OwnerDashboard token={ownerToken} slug={ownerSlug} onBack={back} onLogout={ownerLogout} onEditProfile={()=>setView('owner-edit')}/>;
-  if(view==='owner-edit'&&ownerToken)return <OwnerEditProfile token={ownerToken} slug={ownerSlug} lang={lang} onBack={()=>setView('owner-dashboard')} onSaved={()=>setView('owner-dashboard')}/>;
+  if(view==='owner-auth')return <OwnerAuth onBack={back} onAuthed={(token,slug)=>{
+    localStorage.setItem('cai_owner_token',token);
+    localStorage.setItem('cai_owner_slug',slug||'');
+    setOwnerToken(token);
+    setOwnerSlug(slug);
+    setView('owner-dashboard');
+    if(window.updateAuthBtn) window.updateAuthBtn();
+  }}/>;
+  // Use localStorage as synchronous fallback in case React batch renders view before ownerToken state is flushed
+  const _tok=ownerToken||localStorage.getItem('cai_owner_token');
+  const _slg=ownerSlug||localStorage.getItem('cai_owner_slug');
+  if(view==='owner-dashboard'&&_tok)return <OwnerDashboard token={_tok} slug={_slg} onBack={back} onLogout={ownerLogout} onEditProfile={()=>setView('owner-edit')}/>;
+  if(view==='owner-edit'&&_tok)return <OwnerEditProfile token={_tok} slug={_slg} lang={lang} onBack={()=>setView('owner-dashboard')} onSaved={()=>setView('owner-dashboard')}/>;
   if(view==='preview'&&onboardData)return <BusinessPagePreview
     data={onboardData}
     lang={lang}
