@@ -225,6 +225,25 @@
     .action-opt-card:hover{background:rgba(201,169,110,0.09);border-color:rgba(201,169,110,0.45);transform:translateY(-4px);box-shadow:0 10px 30px rgba(201,169,110,0.12)}
     .action-opt-card.primary{background:linear-gradient(135deg,rgba(201,169,110,0.15),rgba(201,169,110,0.05));border-color:rgba(201,169,110,0.4)}
     .action-opt-card.primary:hover{background:linear-gradient(135deg,rgba(201,169,110,0.26),rgba(201,169,110,0.1));border-color:rgba(201,169,110,0.7)}
+    /* ── DEMO TOUR ── */
+    #demo-tour{position:fixed;inset:0;z-index:21000;background:rgba(6,4,2,0.97);backdrop-filter:blur(24px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeUp 0.35s ease}
+    .dt-wrap{max-width:480px;width:100%;text-align:center;position:relative}
+    .dt-card{background:rgba(14,10,6,0.99);border:1px solid rgba(201,169,110,0.28);border-radius:24px;padding:48px 38px 38px;box-shadow:0 0 80px rgba(201,169,110,0.08),0 32px 80px rgba(0,0,0,0.85);position:relative;animation:dtSlide 0.32s ease}
+    @keyframes dtSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+    .dt-step-label{font-size:9px;font-family:'Jost',sans-serif;letter-spacing:0.28em;text-transform:uppercase;color:rgba(201,169,110,0.38);margin-bottom:18px}
+    .dt-icon{font-size:46px;margin-bottom:18px;display:block;line-height:1}
+    .dt-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:29px;font-weight:400;color:rgba(232,220,200,0.96);margin-bottom:14px;line-height:1.2}
+    .dt-desc{font-family:'Jost',sans-serif;font-size:13.5px;font-weight:300;color:rgba(232,220,200,0.5);line-height:1.8;margin-bottom:32px}
+    .dt-dots{display:flex;justify-content:center;gap:7px;margin-bottom:28px}
+    .dt-dot{width:6px;height:6px;border-radius:50%;background:rgba(201,169,110,0.18);cursor:pointer;transition:all 0.25s}
+    .dt-dot.active{background:#c9a96e;width:20px;border-radius:3px}
+    .dt-nav{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap}
+    .dt-btn{padding:11px 26px;border-radius:20px;border:1px solid rgba(201,169,110,0.3);background:transparent;color:rgba(201,169,110,0.65);font-size:12px;font-family:'Jost',sans-serif;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s}
+    .dt-btn:hover{border-color:rgba(201,169,110,0.6);color:#e8dcc8;background:rgba(201,169,110,0.06)}
+    .dt-btn.primary{background:linear-gradient(135deg,#c9a96e,#7a4f0e);border-color:transparent;color:#0c0a08;font-weight:600;letter-spacing:0.1em}
+    .dt-btn.primary:hover{box-shadow:0 6px 24px rgba(201,169,110,0.4);transform:translateY(-1px)}
+    .dt-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(232,220,200,0.35);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;line-height:1;padding:0;font-family:sans-serif}
+    .dt-close:hover{background:rgba(255,255,255,0.1);color:#e8dcc8}
     /* ── LIGHT MODE: LOWER SECTIONS ── */
     body.light-mode #diff-section [style*="color:rgba(232,220,200"],body.light-mode #pricing-section [style*="color:rgba(232,220,200"]{color:rgba(44,31,14,0.78)!important}
     body.light-mode #pricing-section [style*="color:#e8dcc8"]{color:#2c1f0e!important}
@@ -288,10 +307,10 @@
     <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-weight:400;color:rgba(232,220,200,0.95);margin-bottom:4px">What would you like to do?</div>
     <div style="font-size:12px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.35);margin-bottom:0">Choose your path</div>
     <div class="action-opts">
-      <div onclick="closeActionPopup();window.loadDemo&&window.loadDemo('bruno')" class="action-opt-card">
+      <div onclick="closeActionPopup();window.startDemoTour&&window.startDemoTour()" class="action-opt-card">
         <div style="font-size:28px;margin-bottom:12px">▶</div>
-        <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:500;color:rgba(232,220,200,0.92);margin-bottom:6px">Watch a demo</div>
-        <div style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.35);line-height:1.5">See how a real<br/>concierge works</div>
+        <div style="font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:500;color:rgba(232,220,200,0.92);margin-bottom:6px">Watch how it works</div>
+        <div style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.35);line-height:1.5">7-step tour of every<br/>feature — 2 minutes</div>
       </div>
       <div onclick="closeActionPopup();window.loadDemo&&window.loadDemo('onboard')" class="action-opt-card primary">
         <div style="font-size:28px;margin-bottom:12px;color:#c9a96e">✦</div>
@@ -300,6 +319,25 @@
       </div>
     </div>
     <div onclick="closeActionPopup()" style="margin-top:20px;font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.25);cursor:pointer;letter-spacing:0.06em">Maybe later</div>
+  </div>
+</div>
+
+<!-- DEMO TOUR -->
+<div id="demo-tour" style="display:none">
+  <div class="dt-wrap">
+    <div class="dt-card">
+      <button class="dt-close" onclick="window.closeDemoTour()">&#215;</button>
+      <div class="dt-step-label" id="dt-step">Step 1 of 7</div>
+      <div class="dt-icon" id="dt-icon">✦</div>
+      <div class="dt-title" id="dt-title">Your AI Concierge Page</div>
+      <div class="dt-desc" id="dt-desc">A beautiful, branded page that works for you 24/7. Clients find it, ask questions, and book — while you sleep.</div>
+      <div class="dt-dots" id="dt-dots"></div>
+      <div class="dt-nav">
+        <button class="dt-btn" id="dt-prev" onclick="window.demoTourPrev()" style="display:none">&#8592; Back</button>
+        <button class="dt-btn primary" id="dt-next" onclick="window.demoTourNext()">Next &#8594;</button>
+        <button class="dt-btn primary" id="dt-create" onclick="window.closeDemoTour();window.loadDemo&&window.loadDemo('onboard')" style="display:none">Create yours &#8594;</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -707,6 +745,55 @@ function pickLang(lang) {
 }
 function closeActionPopup() {
   document.getElementById('action-popup').style.display = 'none';
+}
+
+// ── DEMO TOUR ──────────────────────────────────────────────────────────
+var _dtStep = 0;
+var _dtSteps = [
+  { icon: '✦', title: 'Your AI Concierge Page', desc: 'A beautiful, branded page that works for you 24/7. Clients find it, ask questions, and book — while you sleep. No app, no manual replies needed.' },
+  { icon: '💬', title: 'Instant AI Chat', desc: 'Your concierge answers clients instantly in your own voice. It knows your services, pricing, FAQs, and booking flow — handling every enquiry with intelligence and warmth.' },
+  { icon: '🔥', title: 'Automatic Lead Capture', desc: 'Every conversation becomes a lead. Hot prospects are flagged in real time so you know exactly who to follow up with — and when — without lifting a finger.' },
+  { icon: '✦', title: 'Brave PA — Your Personal AI', desc: 'A floating AI assistant in your dashboard. Morning briefings, live web search, message drafting, tasks, and calendar management — built for busy professionals.' },
+  { icon: '📊', title: 'Owner Dashboard', desc: 'One place for everything: leads, bookings, notes, industry news, and your public profile. Your whole business at a glance, always in your pocket.' },
+  { icon: '🔔', title: 'Smart Notifications', desc: 'Get alerted for hot leads, new bookings, and daily briefings at 7am. Choose exactly what you hear and how — your assistant adapts to you, not the other way around.' },
+  { icon: '🎨', title: 'Fully Yours in 3 Minutes', desc: 'Your name, profession, services, photos, pricing, and tone of voice. Set it up once, refine it whenever. A branded page that represents you perfectly and grows with your business.' },
+];
+window.startDemoTour = function() {
+  _dtStep = 0;
+  _renderDemoTour();
+  document.getElementById('demo-tour').style.display = 'flex';
+};
+window.closeDemoTour = function() {
+  document.getElementById('demo-tour').style.display = 'none';
+};
+window.demoTourNext = function() {
+  if (_dtStep < _dtSteps.length - 1) { _dtStep++; _renderDemoTour(); }
+};
+window.demoTourPrev = function() {
+  if (_dtStep > 0) { _dtStep--; _renderDemoTour(); }
+};
+function _renderDemoTour() {
+  var s = _dtSteps[_dtStep];
+  var total = _dtSteps.length;
+  document.getElementById('dt-step').textContent = 'Step ' + (_dtStep + 1) + ' of ' + total;
+  document.getElementById('dt-icon').textContent = s.icon;
+  document.getElementById('dt-title').textContent = s.title;
+  document.getElementById('dt-desc').textContent = s.desc;
+  var dotsEl = document.getElementById('dt-dots');
+  dotsEl.innerHTML = '';
+  for (var i = 0; i < total; i++) {
+    var d = document.createElement('div');
+    d.className = 'dt-dot' + (i === _dtStep ? ' active' : '');
+    (function(idx){ d.onclick = function(){ _dtStep = idx; _renderDemoTour(); }; })(i);
+    dotsEl.appendChild(d);
+  }
+  var isLast = _dtStep === total - 1;
+  var isFirst = _dtStep === 0;
+  document.getElementById('dt-next').style.display = isLast ? 'none' : 'inline-block';
+  document.getElementById('dt-create').style.display = isLast ? 'inline-block' : 'none';
+  document.getElementById('dt-prev').style.display = isFirst ? 'none' : 'inline-block';
+  var card = document.querySelector('.dt-card');
+  if (card) { card.style.animation = 'none'; card.offsetHeight; card.style.animation = 'dtSlide 0.28s ease'; }
 }
 (function initLangPopup() {
   if (localStorage.getItem('lang_selected')) return;
