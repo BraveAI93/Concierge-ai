@@ -215,12 +215,12 @@
     .hero-brand-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(40px,7.5vw,70px);font-weight:300;letter-spacing:0.08em;line-height:1;display:inline;position:relative}
     .hbt-the{color:rgba(232,220,200,0.9);text-shadow:1px 0 2px rgba(255,252,220,0.2),-1px 0 0 rgba(50,32,8,0.4),0 1px 0 rgba(201,169,110,0.28),0 2px 0 rgba(140,95,25,0.18),0 3px 10px rgba(0,0,0,0.88)}
     .hbt-con{color:#c9a96e;text-shadow:2px 0 1px rgba(255,252,200,0.6),-1px 0 0 rgba(90,55,8,0.75),0 1px 0 rgba(201,169,110,0.55),0 2px 0 rgba(140,95,22,0.38),0 3px 0 rgba(75,48,10,0.25),0 4px 16px rgba(0,0,0,0.95),0 0 22px rgba(201,169,110,0.15)}
-    .hbt-star-o{color:#e8c56a;text-shadow:0 0 5px rgba(255,248,180,0.95),0 0 14px rgba(201,169,110,0.75),0 0 28px rgba(201,169,110,0.38),2px 0 1px rgba(255,252,200,0.55),-1px 0 0 rgba(90,55,8,0.6),0 4px 16px rgba(0,0,0,0.9);display:inline-block;transform:scale(1.08);transform-origin:50% 80%}
+    .hbt-star-o{color:#C9A96E;display:inline-block}
     .hbt-i-wrap{position:relative;display:inline-block}
-    .hbt-i-flare{position:absolute;left:50%;top:0.05em;transform:translateX(-50%);pointer-events:none;z-index:2;font-size:0.28em;line-height:1;color:#fffce8;text-shadow:0 0 4px rgba(255,252,200,0.95),0 0 10px rgba(201,169,110,0.65),0 0 18px rgba(201,169,110,0.35);animation:starPulse 2.4s ease-in-out infinite}
+    .hbt-i-flare{position:absolute;left:50%;top:-0.05em;transform:translateX(-50%);pointer-events:none;z-index:2;font-size:0.28em;line-height:1;color:#C9A96E;text-shadow:0 0 4px rgba(201,169,110,0.8),0 0 10px rgba(201,169,110,0.4);animation:starPulse 2.4s ease-in-out infinite}
     /* Section dark veil for readability against stars */
     .section-veil{position:relative}
-    .section-veil::before{content:'';position:absolute;inset:-28px -32px;background:radial-gradient(ellipse at 50% 50%,rgba(12,10,8,0.78) 0%,rgba(12,10,8,0.62) 50%,rgba(12,10,8,0.2) 78%,transparent 100%);pointer-events:none;z-index:0;border-radius:24px}
+    .section-veil::before{content:'';position:absolute;inset:-16px -24px;background:rgba(12,10,8,0.6);pointer-events:none;z-index:0;border-radius:16px}
     .section-veil>*{position:relative;z-index:1}
   </style>
 </head>
@@ -249,7 +249,7 @@
     <div class="hero-brand-wrap">
       <div class="hero-brand-label">Brave by Bruno · presents</div>
       <h2 class="hero-brand-title" aria-label="The Concierge">
-        <span class="hbt-the">The </span><span class="hbt-con">C</span><span class="hbt-star-o">◦</span><span class="hbt-con">nc</span><span class="hbt-i-wrap"><span class="hbt-con">i</span><span class="hbt-i-flare">✦</span></span><span class="hbt-con">erge</span>
+        <span class="hbt-the">The </span><span class="hbt-con">C</span><span class="hbt-star-o">✦</span><span class="hbt-con">nc</span><span class="hbt-i-wrap"><span class="hbt-con">ı</span><span class="hbt-i-flare">✦</span></span><span class="hbt-con">erge</span>
       </h2>
     </div>
     <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:24px;flex-wrap:wrap">
@@ -265,7 +265,7 @@
       <p id="hero-sub" style="font-size:15px;font-style:italic;color:rgba(232,220,200,0.48);max-width:420px;margin:0 auto 12px;line-height:1.7">An AI concierge that responds on your behalf — in your tone, with your services, your prices, your rules. 24/7.</p>
     </div>
     <!-- Trust line -->
-    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px;flex-wrap:wrap">
+    <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:10px;flex-wrap:wrap;background:rgba(12,10,8,0.6);border-radius:10px;padding:6px 16px">
       <span id="trust-1" style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(201,169,110,0.55);letter-spacing:0.06em">&#10003; Transparent AI concierge</span>
       <span style="color:rgba(201,169,110,0.2)">&#183;</span>
       <span id="trust-2" style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(201,169,110,0.55);letter-spacing:0.06em">&#10003; Human review available</span>
@@ -273,7 +273,7 @@
       <span id="trust-3" style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(201,169,110,0.55);letter-spacing:0.06em">&#10003; Built for solo professionals</span>
     </div>
     <!-- Privacy note -->
-    <div style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.25);max-width:400px;margin:0 auto 10px;line-height:1.6;font-style:italic">
+    <div style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.55);max-width:400px;margin:0 auto 10px;line-height:1.6;font-style:italic;background:rgba(12,10,8,0.6);border-radius:8px;padding:4px 14px">
       <span id="privacy-note">Sensitive medical, legal or personal matters are always reviewed by the professional.</span>
     </div>
     <!-- Pricing teaser -->
@@ -749,13 +749,9 @@ var bvNebMat=new THREE.ShaderMaterial({
   fragmentShader:`void main(){vec2 c=2.0*gl_PointCoord-1.0;float r=length(c);if(r>1.0)discard;float a=(1.0-r)*(1.0-r)*0.038;gl_FragColor=vec4(0.78,0.63,0.41,a);}`,
   transparent:true,depthWrite:false,blending:THREE.AdditiveBlending
 });
-bgScene.add(new THREE.Points(bvGeo,bvMat));
+/* bvGeo removed — no central orb */
 
-function refreshBravePos(){
-  var p=worldPos(BRAVE[0].nx,BRAVE[0].ny,0);
-  bvPos[0]=p.x;bvPos[1]=p.y;bvPos[2]=0;
-  bvGeo.attributes.position.needsUpdate=true;
-}
+function refreshBravePos(){}
 refreshBravePos();
 
 /* ── Aries constellation (slowly rotating) ── */
@@ -789,9 +785,6 @@ function startBgRender(){
   (function loop(){
     requestAnimationFrame(loop);bgT+=0.012;
     bgMat.uniforms.uT.value=bgT;
-    bvMat.uniforms.uT.value=bgT;
-    bvGlowMat.uniforms.uT.value=bgT;
-    bvNebMat.uniforms.uT.value=bgT;
     apMat.uniforms.uT.value=bgT;
     ariesGroup.rotation.y=bgT*0.025;
     ariesGroup.rotation.x=Math.sin(bgT*0.018)*0.04;
@@ -973,15 +966,7 @@ function finishIntro(){
   if(introRaf)cancelAnimationFrame(introRaf);
   if(brandEl)brandEl.style.opacity='0';
   if(titleWrap)titleWrap.style.opacity='0';
-  // Brave Star continues as persistent element after intro
-  var ps=document.getElementById('brave-star-persistent');
-  if(ps){
-    var bx=BRAVE[0].nx*window.innerWidth;
-    var by=BRAVE[0].ny*window.innerHeight;
-    ps.style.display='block';
-    ps.style.width='6px';ps.style.height='6px';
-    ps.style.left=(bx-3)+'px';ps.style.top=(by-3)+'px';
-  }
+  /* brave-star-persistent removed — no central orb */
   // Dark-to-dark fade — no white flash
   introEl.style.transition='opacity 1.1s ease';
   introEl.style.opacity='0';
