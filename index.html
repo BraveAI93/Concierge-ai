@@ -23,6 +23,7 @@
     @keyframes bravePulse{0%,100%{opacity:1;box-shadow:0 0 6px 3px rgba(201,169,110,0.9),0 0 18px 8px rgba(201,169,110,0.35)}50%{opacity:0.7;box-shadow:0 0 12px 6px rgba(201,169,110,1),0 0 32px 14px rgba(201,169,110,0.55)}}
     @keyframes goldShimmer{0%{background-position:200% center}100%{background-position:-200% center}}
     @keyframes starFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.05)}}
+    @keyframes starPulse{0%,100%{opacity:1;text-shadow:0 0 4px rgba(255,252,200,0.95),0 0 10px rgba(201,169,110,0.65),0 0 18px rgba(201,169,110,0.35)}50%{opacity:0.55;text-shadow:0 0 7px rgba(255,255,220,1),0 0 16px rgba(201,169,110,0.9),0 0 26px rgba(201,169,110,0.5)}}
     @keyframes cardEmerge{from{opacity:0;transform:translateY(18px) scale(0.97)}to{opacity:1;transform:translateY(0) scale(1)}}
     @keyframes lightRay{0%{opacity:0;transform:scaleX(0)}50%{opacity:1;transform:scaleX(1)}100%{opacity:0;transform:scaleX(0)}}
     .ma{animation:fadeUp 0.3s ease forwards}
@@ -112,7 +113,7 @@
     .intro-letter{display:inline-block;opacity:0;transform:translateY(18px);transition:opacity 0.18s ease,transform 0.18s ease;text-shadow:2px 0 1px rgba(255,252,200,0.5),-1px 0 0 rgba(80,50,8,0.6),0 1px 0 rgba(201,169,110,0.45),0 2px 0 rgba(130,88,18,0.3),0 3px 0 rgba(70,44,8,0.2),0 4px 14px rgba(0,0,0,0.95),0 0 18px rgba(201,169,110,0.15)}
     .intro-letter.lt-the{text-shadow:1px 0 2px rgba(255,252,220,0.18),-1px 0 0 rgba(50,32,8,0.35),0 1px 0 rgba(201,169,110,0.25),0 2px 0 rgba(140,95,25,0.15),0 3px 10px rgba(0,0,0,0.88)}
     .intro-letter-reveal{opacity:1!important;transform:translateY(0)!important}
-    #brave-star-idot{position:absolute;border-radius:50%;background:#C9A96E;transform:translate(-50%,-50%);animation:bravePulse 1.8s ease-in-out infinite;box-shadow:0 0 8px 4px rgba(201,169,110,0.9),0 0 24px 10px rgba(201,169,110,0.4);pointer-events:none}
+    #brave-star-idot{position:absolute;transform:translate(-50%,-50%);pointer-events:none;color:#fffce8;font-size:0.28em;line-height:1;animation:starPulse 2.4s ease-in-out infinite}
     /* Landing page — hidden until intro completes, dark-to-dark */
     #landing{opacity:0}
     body.intro-done #landing{animation:landingIn 1.4s ease forwards}
@@ -216,7 +217,7 @@
     .hbt-con{color:#c9a96e;text-shadow:2px 0 1px rgba(255,252,200,0.6),-1px 0 0 rgba(90,55,8,0.75),0 1px 0 rgba(201,169,110,0.55),0 2px 0 rgba(140,95,22,0.38),0 3px 0 rgba(75,48,10,0.25),0 4px 16px rgba(0,0,0,0.95),0 0 22px rgba(201,169,110,0.15)}
     .hbt-star-o{color:#e8c56a;text-shadow:0 0 5px rgba(255,248,180,0.95),0 0 14px rgba(201,169,110,0.75),0 0 28px rgba(201,169,110,0.38),2px 0 1px rgba(255,252,200,0.55),-1px 0 0 rgba(90,55,8,0.6),0 4px 16px rgba(0,0,0,0.9);display:inline-block;transform:scale(1.08);transform-origin:50% 80%}
     .hbt-i-wrap{position:relative;display:inline-block}
-    .hbt-i-flare{position:absolute;left:50%;top:0.05em;width:5px;height:5px;border-radius:50%;background:#fffce8;transform:translateX(-50%);animation:flarePulse 2.2s ease-in-out infinite;pointer-events:none;z-index:2}
+    .hbt-i-flare{position:absolute;left:50%;top:0.05em;transform:translateX(-50%);pointer-events:none;z-index:2;font-size:0.28em;line-height:1;color:#fffce8;text-shadow:0 0 4px rgba(255,252,200,0.95),0 0 10px rgba(201,169,110,0.65),0 0 18px rgba(201,169,110,0.35);animation:starPulse 2.4s ease-in-out infinite}
     /* Section dark veil for readability against stars */
     .section-veil{position:relative}
     .section-veil::before{content:'';position:absolute;inset:-28px -32px;background:radial-gradient(ellipse at 50% 50%,rgba(12,10,8,0.78) 0%,rgba(12,10,8,0.62) 50%,rgba(12,10,8,0.2) 78%,transparent 100%);pointer-events:none;z-index:0;border-radius:24px}
@@ -229,21 +230,6 @@
 <canvas id="transition-canvas" aria-hidden="true"></canvas>
 
 <!-- Demo Video Modal -->
-<div id="demo-video-modal" onclick="if(event.target===this)this.style.display='none'">
-  <div style="position:relative;width:100%;max-width:640px">
-    <button class="demo-video-close" onclick="document.getElementById('demo-video-modal').style.display='none'">×</button>
-    <div style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;letter-spacing:0.2em;text-transform:uppercase;color:rgba(201,169,110,0.45);text-align:center;margin-bottom:18px">✦ The Concierge — Demo</div>
-    <div style="aspect-ratio:16/9;background:rgba(255,255,255,0.02);border:1px solid rgba(201,169,110,0.2);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;margin-bottom:18px;overflow:hidden;position:relative">
-      <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 50%,rgba(201,169,110,0.06) 0%,transparent 70%)"></div>
-      <div style="font-size:56px;color:rgba(201,169,110,0.25);margin-bottom:16px;position:relative">▶</div>
-      <div style="font-family:'Jost',sans-serif;color:rgba(201,169,110,0.45);letter-spacing:0.14em;text-transform:uppercase;font-size:11px;position:relative">Demo video coming soon</div>
-      <div style="font-family:'Cormorant Garamond',serif;color:rgba(232,220,200,0.3);font-size:13px;font-style:italic;margin-top:8px;position:relative">Watch how The Concierge responds to your clients 24/7</div>
-    </div>
-    <div style="text-align:center">
-      <button onclick="document.getElementById('demo-video-modal').style.display='none';window.loadDemo('onboard')" style="padding:12px 32px;background:linear-gradient(135deg,#c9a96e,#7a4f0e);border:none;border-radius:24px;cursor:pointer;color:#0c0a08;font-family:'Jost',sans-serif;font-size:12px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase">Create Yours ✦</button>
-    </div>
-  </div>
-</div>
 
 <!-- INTRO SEQUENCE -->
 <div id="intro-screen" aria-hidden="true">
@@ -263,15 +249,13 @@
     <div class="hero-brand-wrap">
       <div class="hero-brand-label">Brave by Bruno · presents</div>
       <h2 class="hero-brand-title" aria-label="The Concierge">
-        <span class="hbt-the">The </span><span class="hbt-con">C</span><span class="hbt-star-o">◦</span><span class="hbt-con">nc</span><span class="hbt-i-wrap"><span class="hbt-con">i</span><span class="hbt-i-flare"></span></span><span class="hbt-con">erge</span>
+        <span class="hbt-the">The </span><span class="hbt-con">C</span><span class="hbt-star-o">◦</span><span class="hbt-con">nc</span><span class="hbt-i-wrap"><span class="hbt-con">i</span><span class="hbt-i-flare">✦</span></span><span class="hbt-con">erge</span>
       </h2>
     </div>
     <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:24px;flex-wrap:wrap">
-      <div onclick="document.getElementById('demo-grid').scrollIntoView({behavior:'smooth',block:'center'});setTimeout(function(){window.loadDemo&&window.loadDemo('bruno')},600)" style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(120,160,100,0.1);border:1px solid rgba(120,160,100,0.22);border-radius:20px;font-size:10px;font-family:'Jost',sans-serif;color:#7a9e6e;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">
+      <div onclick="window.loadDemo&&window.loadDemo('bruno')" style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(120,160,100,0.1);border:1px solid rgba(120,160,100,0.22);border-radius:20px;font-size:10px;font-family:'Jost',sans-serif;color:#7a9e6e;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">
         <div style="width:5px;height:5px;border-radius:50%;background:#7a9e6e;animation:pulse 2s infinite"></div>Live Demo
       </div>
-      <button class="play-btn" onclick="document.getElementById('demo-video-modal').style.display='flex'" title="Watch demo video" style="width:36px;height:36px;font-size:12px">▶</button>
-      <span style="font-size:11px;font-family:'Jost',sans-serif;color:rgba(201,169,110,0.4);letter-spacing:0.06em">Watch how it works</span>
     </div>
     <div class="section-veil" style="display:inline-block">
       <div style="position:relative;display:inline-block">
@@ -766,17 +750,11 @@ var bvNebMat=new THREE.ShaderMaterial({
   transparent:true,depthWrite:false,blending:THREE.AdditiveBlending
 });
 bgScene.add(new THREE.Points(bvGeo,bvMat));
-bgScene.add(new THREE.Points(bvGlowGeo,bvGlowMat));
-bgScene.add(new THREE.Points(bvNebGeo,bvNebMat));
 
 function refreshBravePos(){
   var p=worldPos(BRAVE[0].nx,BRAVE[0].ny,0);
   bvPos[0]=p.x;bvPos[1]=p.y;bvPos[2]=0;
-  bvGlowPos[0]=p.x;bvGlowPos[1]=p.y;bvGlowPos[2]=0;
-  bvNebPos[0]=p.x;bvNebPos[1]=p.y;bvNebPos[2]=0;
   bvGeo.attributes.position.needsUpdate=true;
-  bvGlowGeo.attributes.position.needsUpdate=true;
-  bvNebGeo.attributes.position.needsUpdate=true;
 }
 refreshBravePos();
 
@@ -975,9 +953,10 @@ if(titleWrap){
     if(k===8){ // 'i' in Concierge -> lens flare
       iDotLetterIdx=k;
       sp.style.position='relative';
-      var idot=document.createElement('div');
+      var idot=document.createElement('span');
       idot.id='brave-star-idot';
-      idot.style.cssText='position:absolute;left:50%;transform:translateX(-50%);border-radius:50%;background:#fffce8;box-shadow:0 0 4px 2px rgba(255,255,200,1),0 0 12px 5px rgba(255,248,180,0.85),0 0 28px 10px rgba(201,169,110,0.5),0 -10px 0 0.5px rgba(255,255,220,0.7),0 10px 0 0.5px rgba(255,255,220,0.7),-10px 0 0 0.5px rgba(255,252,200,0.45),10px 0 0 0.5px rgba(255,252,200,0.45);animation:flarePulse 2.2s ease-in-out infinite;pointer-events:none;';
+      idot.textContent='✶';
+      idot.style.cssText='position:absolute;left:50%;transform:translateX(-50%);pointer-events:none;font-size:0.28em;line-height:1;color:#fffce8;text-shadow:0 0 4px rgba(255,252,200,0.95),0 0 10px rgba(201,169,110,0.65),0 0 18px rgba(201,169,110,0.35);animation:starPulse 2.4s ease-in-out infinite;';
       iDotEl=idot;
       sp.appendChild(idot);
     }
@@ -1239,9 +1218,8 @@ function drawIntro(ts){
       if(!lettersStarted&&lp>0.01)lettersStarted=true;
     }
     if(iDotEl&&letterEls[8]){
-      var dotSize=Math.max(5,Math.round(fs2*0.11))+'px';
       var dotTop=Math.round(fs2*0.07)+'px';
-      iDotEl.style.width=dotSize;iDotEl.style.height=dotSize;iDotEl.style.top='-'+dotTop;
+      iDotEl.style.top='-'+dotTop;
     }
   }
 
