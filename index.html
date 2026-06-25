@@ -2024,6 +2024,7 @@ function OwnerAuth({onBack, onAuthed}){
       if(!r.ok){setErr(d.error||'Something went wrong');setLoading(false);return;}
       localStorage.setItem('cai_owner_token', d.token);
       localStorage.setItem('cai_owner_slug', d.slug);
+      localStorage.setItem('ownerToken', d.token);
       onAuthed(d.token, d.slug);
     }catch(e){setErr('Connection error');}
     setLoading(false);
@@ -4158,7 +4159,7 @@ function requestNotificationPermission() {
 }
 
 function App(){
-  const[view,setView]=useState(null);
+  const[view,setView]=useState(()=>localStorage.getItem('ownerToken')?'owner-dashboard':null);
   const[prof,setProf]=useState(null);
   const[prompt,setPrompt]=useState(null);
   const[profId,setProfId]=useState(null);
@@ -4313,6 +4314,7 @@ function App(){
         if(signupResp.ok){
           localStorage.setItem('cai_owner_token', signupResult.token);
           localStorage.setItem('cai_owner_slug', signupResult.slug);
+          localStorage.setItem('ownerToken', signupResult.token);
           setOwnerToken(signupResult.token);
           setOwnerSlug(signupResult.slug);
           signupSucceeded=true;
