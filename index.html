@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>The Concierge — AI Assistant for Professionals</title>
   <meta name="description" content="AI-powered concierge for solo professionals. Responds to clients 24/7 in your tone, with your services, your rules."/>
+  <link rel="manifest" href="/pwa_manifest.json"/>
+  <meta name="theme-color" content="#C9A96E"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <link rel="apple-touch-icon" href="/icon-192.png"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -4267,6 +4272,7 @@ function App(){
     setOwnerSlug(slug);
     setView('owner-dashboard');
     if(window.updateAuthBtn) window.updateAuthBtn();
+    if(window.requestPushPermission) window.requestPushPermission();
   }}/>;
   // Use localStorage as synchronous fallback in case React batch renders view before ownerToken state is flushed
   const _tok=ownerToken||localStorage.getItem('cai_owner_token');
@@ -4344,6 +4350,47 @@ ReactDOM.createRoot(document.getElementById('app')).render(<App/>);
   var mo=new MutationObserver(syncNav);
   mo.observe(appEl,{attributes:true,attributeFilter:['style']});
   syncNav();
+})();
+</script>
+<script>
+// Service Worker registration
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('/service_worker.js');
+  });
+}
+
+// Push notification permission (called after owner login)
+window.requestPushPermission=function(){
+  if(!('Notification' in window)||Notification.permission!=='default') return;
+  Notification.requestPermission();
+};
+
+// PWA install prompt for mobile users
+(function(){
+  var deferredPrompt=null;
+  window.addEventListener('beforeinstallprompt',function(e){
+    e.preventDefault();
+    deferredPrompt=e;
+    setTimeout(function(){
+      if(!deferredPrompt) return;
+      var banner=document.createElement('div');
+      banner.id='pwa-install-banner';
+      banner.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:9000;background:rgba(12,10,8,0.96);border:1px solid rgba(201,169,110,0.35);border-radius:16px;padding:14px 20px;display:flex;align-items:center;gap:14px;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,0.6);font-family:Jost,sans-serif;max-width:340px;width:calc(100vw - 48px);animation:fadeUp 0.4s ease forwards';
+      banner.innerHTML='<div style="flex:1"><div style="font-size:13px;font-weight:500;color:#e8dcc8;letter-spacing:0.04em">Add to Home Screen</div><div style="font-size:11px;color:rgba(232,220,200,0.45);margin-top:2px">Install The Concierge for quick access</div></div><button id="pwa-install-btn" style="padding:8px 16px;background:linear-gradient(135deg,#c9a96e,#8c5e14);border:none;border-radius:10px;cursor:pointer;color:#0c0a08;font-size:12px;font-family:Jost,sans-serif;font-weight:600;letter-spacing:0.05em;white-space:nowrap">Install</button><button id="pwa-dismiss-btn" style="background:none;border:none;cursor:pointer;color:rgba(232,220,200,0.35);font-size:20px;line-height:1;padding:2px 6px">×</button>';
+      document.body.appendChild(banner);
+      document.getElementById('pwa-install-btn').onclick=function(){
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(){deferredPrompt=null;banner.remove();});
+      };
+      document.getElementById('pwa-dismiss-btn').onclick=function(){banner.remove();};
+    },3000);
+  });
+  window.addEventListener('appinstalled',function(){
+    deferredPrompt=null;
+    var b=document.getElementById('pwa-install-banner');
+    if(b) b.remove();
+  });
 })();
 </script>
 </body>
