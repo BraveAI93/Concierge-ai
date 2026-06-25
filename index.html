@@ -1727,7 +1727,7 @@ SCARCITY: Alex takes limited clients per month. "Alex's schedule fills quickly �
 // Onboarding steps
 const STEPS=[
   // Step 0: Multi-mode selector
-  {id:"modes",title:{en:"What describes you?",it:"Come ti descrivi?"},sub:{en:"Select all that apply — your concierge handles every dimension.",it:"Seleziona tutto ciò che ti descrive — il tuo concierge gestisce ogni dimensione."},type:"chips_multi",field:"modes",options:["💆 Wellness / Therapist","🎭 Performer","📱 Creator","🍽 Chef / Hospitality","🧠 Consultant / Expert","🎓 Educator / Tutor","🔧 Trades / Home"]},
+  {id:"modes",title:{en:"What describes you?",it:"Come ti descrivi?"},sub:{en:"Select all that apply — your concierge handles every dimension.",it:"Seleziona tutto ciò che ti descrive — il tuo concierge gestisce ogni dimensione."},type:"chips_multi",field:"modes",options:["💆 Wellness / Therapist","🎭 Performer","📱 Creator","🍽 Chef / Hospitality","🧠 Consultant / Expert","🎓 Educator / Tutor","🔧 Trades / Home","🏡 B&B / Short-let Host"]},
   // Step 1: Basics
   {id:"basics",title:{en:"The basics",it:"Le basi"},sub:{en:"What your clients will see first.",it:"Cosa vedranno i tuoi clienti."},type:"form",fields:[{key:"name",label:{en:"Your name",it:"Il tuo nome"},ph:{en:"e.g. Bruno",it:"es. Bruno"}},{key:"biz",label:{en:"Business name",it:"Nome del business"},ph:{en:"e.g. Brave Fitness",it:"es. Brave Fitness"}},{key:"loc",label:{en:"City / Location",it:"Città"},ph:{en:"e.g. London",it:"es. Milano"}},{key:"tag",label:{en:"Your tagline",it:"Il tuo tagline"},ph:{en:"e.g. Your body is your best friend.",it:"es. Il tuo corpo è il tuo migliore amico."}}]},
   // Step 2: Tone
@@ -1740,6 +1740,8 @@ const STEPS=[
   {id:"perform",title:{en:"If you perform or create",it:"Se esegui o crei"},sub:{en:"Leave blank if not applicable.",it:"Lascia vuoto se non applicabile."},type:"form",fields:[{key:"showreel",label:{en:"Showreel / Portfolio link",it:"Link showreel / portfolio"},ph:{en:"e.g. vimeo.com/yourname",it:"es. vimeo.com/tuonome"}},{key:"equip_own",label:{en:"Equipment you own",it:"Attrezzatura che possiedi"},ph:{en:"e.g. DJ deck, PA system, costumes",it:"es. Giradischi, impianto audio, costumi"}},{key:"equip_need",label:{en:"Equipment you need provided",it:"Attrezzatura che richiedi"},ph:{en:"e.g. Stage, lighting rig, dressing room",it:"es. Palco, impianto luci, camerino"}},{key:"fee",label:{en:"Fee range",it:"Range cachet"},ph:{en:"e.g. From £500 for events, £150/hr",it:"es. Da €500 per eventi, €150/ora"}},{key:"availability",label:{en:"Availability",it:"Disponibilità"},ph:{en:"e.g. Weekends, evenings, touring available",it:"es. Weekend, serate, touring disponibile"}}]},
   // Step 6: Creator-specific
   {id:"creator",title:{en:"If you're a creator",it:"Se sei un creator"},sub:{en:"Leave blank if not applicable.",it:"Lascia vuoto se non applicabile."},type:"form",fields:[{key:"platforms",label:{en:"Your platforms & following",it:"Le tue piattaforme e following"},ph:{en:"e.g. Instagram 15K, TikTok 8K, YouTube 2K",it:"es. Instagram 15K, TikTok 8K, YouTube 2K"}},{key:"niche",label:{en:"Content niche",it:"Nicchia di contenuto"},ph:{en:"e.g. Wellness, travel, lifestyle, performing arts",it:"es. Benessere, viaggi, lifestyle, arti performative"}},{key:"collab",label:{en:"Collaboration packages",it:"Pacchetti collaborazione"},ph:{en:"e.g. Sponsored post from £500, reel from £800, event coverage from £1,200",it:"es. Post sponsorizzato da €500, reel da €800"}},{key:"mediakit",label:{en:"Media kit link",it:"Link media kit"},ph:{en:"e.g. drive.google.com/mediakit",it:"es. drive.google.com/mediakit"}}]},
+  // Step 6b: B&B / Short-let details
+  {id:"bb",title:{en:"Your property details",it:"Dettagli della tua proprietà"},sub:{en:"If you're a B&B or short-let host — leave blank otherwise.",it:"Se gestisci un B&B o short-let — lascia vuoto altrimenti."},type:"bb_details"},
   // Step 7: Sensitive topics
   {id:"sensitive",title:{en:"What needs your attention?",it:"Cosa richiede la tua attenzione?"},sub:{en:"Your Concierge flags these for you.",it:"Il tuo Concierge ti segnala questi argomenti."},type:"chips_multi",field:"sensitive",options:["Medical conditions","Injuries & pain","Pregnancy","Price negotiation","Refunds & complaints","Home visits","Custom packages","Cancellations","Nervous first-timers","Contracts & rights","Collaboration briefs","Sensitive content"]},
   // Step 8: Contact & booking
@@ -1779,10 +1781,32 @@ ${d.collab?`Collaboration packages: ${d.collab}`:''}
 ${d.mediakit?`Media kit: ${d.mediakit}`:''}
 When brand/collaboration enquiries come in: be proactive, pitch ${d.name} as the perfect partner, share media kit link, ask about campaign goals and budget. Qualify the lead.` : '';
 
+  const bbSection = (d.modes||[]).some(m=>m.includes('B&B')) && (d.propertyType||d.nightlyRate||d.checkIn||d.amenities?.length) ? `
+B&B / SHORT-LET PROPERTY:
+${d.propertyType?`Property type: ${d.propertyType}`:''}
+${d.bbAddress?`Address: ${d.bbAddress}`:''}
+${d.nightlyRate?`Nightly rate: ${d.bbCurrency||'£'}${d.nightlyRate} per night`:''}
+${d.minStay?`Minimum stay: ${d.minStay} night${d.minStay==1?'':'s'}`:''}
+${d.maxGuests?`Max guests: ${d.maxGuests}`:''}
+${d.checkIn?`Check-in from: ${d.checkIn}`:''}
+${d.checkOut?`Check-out by: ${d.checkOut}`:''}
+${(d.amenities||[]).length?`Amenities: ${d.amenities.join(', ')}`:''}
+${d.petsAllowed==='Yes'?'Pets: Welcome':''}${d.petsAllowed==='No'?'Pets: Not permitted':''}
+${d.smokingAllowed==='Yes'?'Smoking: Permitted':''}${d.smokingAllowed==='No'?'Smoking: Not permitted':''}
+${d.childrenWelcome==='Yes'?'Children: Very welcome':''}${d.childrenWelcome==='No'?'Children: Adults only':''}
+${d.houseRules?`House rules: ${d.houseRules}`:''}
+
+GUEST ENQUIRY HANDLING:
+- Availability: say you'll check the calendar and the owner will confirm promptly; direct to booking link
+- Booking requests: collect guest name, arrival date, departure date, number of guests, any special requests — then say "Perfect, I've forwarded your request to ${d.name||'the host'}. You'll hear back within 24 hours to confirm."
+- Upsell warmly: mention breakfast (if included), late checkout, airport transfer, or local taxi if relevant
+- Local tips: if guests ask about restaurants, attractions or activities, be warm and specific — ask where they're from to personalise
+- Check-in guidance: quote check-in time (${d.checkIn||'from 3:00 PM'}), note that ${d.name||'the host'} will send full key/entry instructions before arrival` : '';
+
   const modeInstruction = modes ? `
 ACTIVE MODES: ${modes}
 Detect which dimension the client is enquiring about and respond accordingly. Cross-sell naturally across dimensions when relevant.
-If someone asks about massage → wellness mode. If about events/performances → performer mode. If about content/brand → creator mode. If about AI/consulting → expert mode.` : '';
+If someone asks about massage → wellness mode. If about events/performances → performer mode. If about content/brand → creator mode. If about AI/consulting → expert mode. If about property/rooms/availability/check-in/house rules → B&B host mode.` : '';
 
   return `You are the digital concierge for ${d.name}${d.biz&&d.biz!==d.name?` at ${d.biz}`:', a multidisciplinary professional'}, based in ${d.loc||'London'}.
 
@@ -1799,6 +1823,7 @@ SERVICES & OFFERINGS:
 ${svcs||'To be confirmed — ask what they are looking for.'}
 ${performerSection}
 ${creatorSection}
+${bbSection}
 
 BOOKING & CONTACT:
 ${d.booking?`Booking: ${d.booking}`:''}
@@ -2709,7 +2734,7 @@ function Onboarding({onComplete,onBack,lang}){
     if(cur.type==='chips')return!!data[cur.field];
     if(cur.type==='form'){
       // Optional steps — performer, creator, contact, media are all optional
-      if(cur.id==='perform'||cur.id==='creator'||cur.id==='contact'||cur.id==='media'||cur.id==='account')return true;
+      if(cur.id==='perform'||cur.id==='creator'||cur.id==='contact'||cur.id==='media'||cur.id==='account'||cur.id==='bb')return true;
       return!!data[cur.fields[0].key]?.trim();
     }
     if(cur.type==='chips_multi'){
@@ -2822,6 +2847,72 @@ function Onboarding({onComplete,onBack,lang}){
           <div>
             <div style={{fontSize:8,fontFamily:"'Jost',sans-serif",letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.32)',marginBottom:4}}>{L==='it'?'Altre città disponibili (opzionale)':'Other cities you cover (optional)'}</div>
             <input value={data.otherCities||''} onChange={e=>set('otherCities',e.target.value)} placeholder={L==='it'?'es. Milano (estate), Sorrento (luglio-agosto)':'e.g. Milan (summer), Sorrento (July-August)'} style={{width:'100%',padding:'9px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.16)',borderRadius:8,color:'#e8dcc8',fontSize:13,fontFamily:"'Jost',sans-serif"}}/>
+          </div>
+        </div>}
+        {cur.type==='bb_details'&&<div>
+          <div style={{marginBottom:11}}>
+            <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.42)',marginBottom:6}}>Property type</div>
+            <select value={data.propertyType||''} onChange={e=>set('propertyType',e.target.value)} style={{width:'100%',padding:'9px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.16)',borderRadius:8,color:data.propertyType?'#e8dcc8':'rgba(232,220,200,0.3)',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:300}}>
+              <option value="" style={{background:'#1a1410'}}>Select type...</option>
+              <option value="B&B" style={{background:'#1a1410'}}>B&B</option>
+              <option value="Boutique Hotel" style={{background:'#1a1410'}}>Boutique Hotel</option>
+              <option value="Short-let" style={{background:'#1a1410'}}>Short-let</option>
+              <option value="Apartment" style={{background:'#1a1410'}}>Apartment</option>
+              <option value="Villa" style={{background:'#1a1410'}}>Villa</option>
+            </select>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:11}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.42)',marginBottom:6}}>Check-in</div>
+              <input value={data.checkIn||''} onChange={e=>set('checkIn',e.target.value)} placeholder="e.g. 3:00 PM" style={{width:'100%',padding:'9px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.16)',borderRadius:8,color:'#e8dcc8',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:300}}/>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.42)',marginBottom:6}}>Check-out</div>
+              <input value={data.checkOut||''} onChange={e=>set('checkOut',e.target.value)} placeholder="e.g. 11:00 AM" style={{width:'100%',padding:'9px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.16)',borderRadius:8,color:'#e8dcc8',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:300}}/>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:11}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.42)',marginBottom:6}}>Currency</div>
+              <select value={data.bbCurrency||'£'} onChange={e=>set('bbCurrency',e.target.value)} style={{width:'100%',padding:'9px 8px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.16)',borderRadius:8,color:'#e8dcc8',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:300}}>
+                <option value="£" style={{background:'#1a1410'}}>£ GBP</option>
+                <option value="€" style={{background:'#1a1410'}}>€ EUR</option>
+                <option value="$" style={{background:'#1a1410'}}>$ USD</option>
+              </select>
+            </div>
+            <div style={{flex:2}}>
+              <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.42)',marginBottom:6}}>Nightly rate</div>
+              <input value={data.nightlyRate||''} onChange={e=>set('nightlyRate',e.target.value)} placeholder="e.g. 120" type="number" style={{width:'100%',padding:'9px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.16)',borderRadius:8,color:'#e8dcc8',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:300}}/>
+            </div>
+          </div>
+          <div style={{display:'flex',gap:8,marginBottom:11}}>
+            <div style={{flex:1}}>
+              <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.42)',marginBottom:6}}>Min stay (nights)</div>
+              <input value={data.minStay||''} onChange={e=>set('minStay',e.target.value)} placeholder="e.g. 2" type="number" style={{width:'100%',padding:'9px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.16)',borderRadius:8,color:'#e8dcc8',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:300}}/>
+            </div>
+            <div style={{flex:1}}>
+              <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.42)',marginBottom:6}}>Max guests</div>
+              <input value={data.maxGuests||''} onChange={e=>set('maxGuests',e.target.value)} placeholder="e.g. 4" type="number" style={{width:'100%',padding:'9px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.16)',borderRadius:8,color:'#e8dcc8',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:300}}/>
+            </div>
+          </div>
+          <div style={{marginBottom:11}}>
+            <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.42)',marginBottom:8}}>Amenities</div>
+            <div style={{display:'flex',flexWrap:'wrap',gap:6}}>
+              {['WiFi','Parking','Breakfast included','Kitchen access','Garden/Terrace','Pool','Hot tub','Air conditioning','Heating','TV/Netflix','Washing machine','Towels & linen','Late check-in','Luggage storage'].map(a=>{
+                const active=(data.amenities||[]).includes(a);
+                return <button key={a} onClick={()=>tog('amenities',a)} style={{padding:'6px 11px',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",fontWeight:active?500:300,border:active?'1px solid #c9a96e':'1px solid rgba(201,169,110,0.16)',background:active?'rgba(201,169,110,0.15)':'rgba(201,169,110,0.04)',color:active?'#e8c878':'rgba(232,220,200,0.52)',transition:'all 0.15s',marginBottom:2}}>{a}</button>;
+              })}
+            </div>
+          </div>
+          <div style={{marginBottom:4}}>
+            <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.42)',marginBottom:8}}>House rules</div>
+            <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:9}}>
+              {[['petsAllowed','🐾 Pets allowed'],['smokingAllowed','🚬 Smoking allowed'],['childrenWelcome','👶 Children welcome']].map(([k,label])=>{
+                const active=data[k]==='Yes';
+                return <button key={k} onClick={()=>set(k,active?'No':'Yes')} style={{padding:'6px 11px',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",fontWeight:active?500:300,border:active?'1px solid #c9a96e':'1px solid rgba(201,169,110,0.16)',background:active?'rgba(201,169,110,0.15)':'rgba(201,169,110,0.04)',color:active?'#e8c878':'rgba(232,220,200,0.52)',transition:'all 0.15s'}}>{label}</button>;
+              })}
+            </div>
+            <textarea value={data.houseRules||''} onChange={e=>set('houseRules',e.target.value)} placeholder="e.g. No parties or events. Quiet hours 10pm–8am. Shoes off inside." rows={3} style={{width:'100%',padding:'9px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.16)',borderRadius:8,color:'#e8dcc8',fontSize:12,fontFamily:"'Cormorant Garamond',serif",lineHeight:1.65}}/>
           </div>
         </div>}
         {cur.type==='handle'&&<div>
