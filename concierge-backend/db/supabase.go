@@ -141,6 +141,17 @@ type BookingPrefs struct {
 	UpdatedAt      time.Time `json:"updated_at"`
 }
 
+// FormSubmission — client-completed legal form sent via shareable link
+type FormSubmission struct {
+	ID          string    `json:"id"`
+	ProfileSlug string    `json:"profile_slug"`
+	FormType    string    `json:"form_type"`
+	ClientName  string    `json:"client_name"`
+	ClientEmail string    `json:"client_email"`
+	Responses   string    `json:"responses"` // jsonb stored as string
+	SubmittedAt time.Time `json:"submitted_at"`
+}
+
 func supabaseURL() string { return os.Getenv("SUPABASE_URL") }
 func supabaseKey() string { return os.Getenv("SUPABASE_KEY") }
 
@@ -528,4 +539,19 @@ func GetPaymentsByProfile(slug string) ([]BookingPayment, error) {
 		return nil, err
 	}
 	return payments, nil
+}
+
+func SaveFormSubmission(fs FormSubmission) error { return insert("form_submissions", fs) }
+
+func GetFormSubmissionsByProfile(slug string) ([]FormSubmission, error) {
+	u := fmt.Sprintf("%s/rest/v1/form_submissions?profile_slug=eq.%s&select=*&order=submitted_at.desc", supabaseURL(), url.QueryEscape(slug))
+	b, err := getMany(u)
+	if err != nil {
+		return nil, err
+	}
+	var subs []FormSubmission
+	if err := json.Unmarshal(b, &subs); err != nil {
+		return nil, err
+	}
+	return subs, nil
 }

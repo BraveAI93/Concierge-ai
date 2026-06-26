@@ -3,12 +3,15 @@ package main
 import (
 	"bytes"
 	"crypto/sha256"
+	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -110,6 +113,15 @@ func main() {
 	r.POST("/stripe/checkout", handleCreateCheckout)
 	r.POST("/stripe/webhook", handleStripeWebhook)
 	r.GET("/owner/payments", handleGetPayments)
+
+	// Media & AI
+	r.POST("/media/upload", handleMediaUpload)
+	r.POST("/ai/import-services", handleImportServices)
+
+	// Client form pages (public)
+	r.GET("/forms/:slug/:formType", handleGetFormInfo)
+	r.POST("/forms/:slug/:formType", handleSubmitForm)
+	r.GET("/owner/form-submissions", handleGetFormSubmissions)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -1093,4 +1105,248 @@ func handleSwitchProfile(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"token": token, "slug": target.Slug})
+}
+
+// ─── MEDIA UPLOAD ───────────────────────────────
+
+func handleMediaUpload(c *gin.Context) {
+	// Optional auth — if present, use slug path; otherwise use temp UUID path
+	pathPrefix := "temp/" + uuid.New().String()
+	authHeader := c.GetHeader("Authorization")
+	if strings.HasPrefix(authHeader, "Bearer ") {
+		token := strings.TrimPrefix(authHeader, "Bearer ")
+		if s, err := db.GetSessionSlug(token); err == nil && s != "" {
+			pathPrefix = s
+		}
+	}
+
+	file, header, err := c.Request.FormFile("file")
+	if err != nil {
+		c.JSON(400, gin.H{"error": "No file provided"})
+		return
+	}
+	defer file.Close()
+
+	if header.Size > 50*1024*1024 {
+		c.JSON(400, gin.H{"error": "File too large (max 50MB)"})
+		return
+	}
+
+	fileData, err := io.ReadAll(file)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Could not read file"})
+		return
+	}
+
+	ext := strings.ToLower(filepath.Ext(header.Filename))
+	if ext == "" {
+		ext = ".bin"
+	}
+	contentType := mime.TypeByExtension(ext)
+	if contentType == "" {
+		contentType = header.Header.Get("Content-Type")
+	}
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	storagePath := fmt.Sprintf("%s/%s%s", pathPrefix, uuid.New().String(), ext)
+	supabaseBase := os.Getenv("SUPABASE_URL")
+	supabaseKey := os.Getenv("SUPABASE_KEY")
+	uploadURL := fmt.Sprintf("%s/storage/v1/object/media/%s", supabaseBase, storagePath)
+
+	req, err := http.NewRequest("PUT", uploadURL, bytes.NewReader(fileData))
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Upload request failed"})
+		return
+	}
+	req.Header.Set("apikey", supabaseKey)
+	req.Header.Set("Authorization", "Bearer "+supabaseKey)
+	req.Header.Set("Content-Type", contentType)
+
+	client := &http.Client{Timeout: 60 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Upload failed: " + err.Error()})
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		b, _ := io.ReadAll(resp.Body)
+		c.JSON(500, gin.H{"error": fmt.Sprintf("Storage error %d: %s", resp.StatusCode, string(b))})
+		return
+	}
+
+	publicURL := fmt.Sprintf("%s/storage/v1/object/public/media/%s", supabaseBase, storagePath)
+	c.JSON(200, gin.H{"url": publicURL})
+}
+
+// ─── AI SERVICE IMPORT FROM SCREENSHOT ─────────
+
+func callAnthropicVision(imageBase64, mimeType, prompt string) (string, error) {
+	apiKey := os.Getenv("ANTHROPIC_API_KEY")
+	body := map[string]interface{}{
+		"model":      "claude-haiku-4-5-20251001",
+		"max_tokens": 2048,
+		"messages": []map[string]interface{}{
+			{
+				"role": "user",
+				"content": []map[string]interface{}{
+					{
+						"type": "image",
+						"source": map[string]interface{}{
+							"type":       "base64",
+							"media_type": mimeType,
+							"data":       imageBase64,
+						},
+					},
+					{
+						"type": "text",
+						"text": prompt,
+					},
+				},
+			},
+		},
+	}
+	reqBody, _ := json.Marshal(body)
+	req, err := http.NewRequest("POST", "https://api.anthropic.com/v1/messages", bytes.NewBuffer(reqBody))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("x-api-key", apiKey)
+	req.Header.Set("anthropic-version", "2023-06-01")
+	client := &http.Client{Timeout: 60 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", err
+	}
+	defer resp.Body.Close()
+	respBody, _ := io.ReadAll(resp.Body)
+	var anthropicResp AnthropicResponse
+	if err := json.Unmarshal(respBody, &anthropicResp); err != nil {
+		return "", fmt.Errorf("parse error: %s", string(respBody))
+	}
+	if len(anthropicResp.Content) == 0 {
+		return "", fmt.Errorf("empty response")
+	}
+	return anthropicResp.Content[0].Text, nil
+}
+
+func handleImportServices(c *gin.Context) {
+	_, ok := authenticateToken(c)
+	if !ok {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var req struct {
+		ImageBase64 string `json:"image_base64"`
+		MimeType    string `json:"mime_type"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil || req.ImageBase64 == "" {
+		c.JSON(400, gin.H{"error": "image_base64 required"})
+		return
+	}
+	if req.MimeType == "" {
+		req.MimeType = "image/jpeg"
+	}
+
+	// Validate it's actually base64
+	if _, err := base64.StdEncoding.DecodeString(req.ImageBase64[:min(64, len(req.ImageBase64))]); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid base64 image data"})
+		return
+	}
+
+	text, err := callAnthropicVision(
+		req.ImageBase64,
+		req.MimeType,
+		"Extract all services from this image. Return a JSON array where each element has these fields: name (string), duration_minutes (number or null), price (number or null), currency (string, default \"£\"), description (string). Return ONLY valid JSON array, no other text, no markdown.",
+	)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "AI analysis failed: " + err.Error()})
+		return
+	}
+
+	// Strip markdown code fences if present
+	text = strings.TrimSpace(text)
+	text = strings.TrimPrefix(text, "```json")
+	text = strings.TrimPrefix(text, "```")
+	text = strings.TrimSuffix(text, "```")
+	text = strings.TrimSpace(text)
+
+	var services []map[string]interface{}
+	if err := json.Unmarshal([]byte(text), &services); err != nil {
+		c.JSON(500, gin.H{"error": "Could not parse AI response", "raw": text})
+		return
+	}
+	c.JSON(200, gin.H{"services": services})
+}
+
+// ─── CLIENT FORM PAGES ─────────────────────────────
+
+func handleGetFormInfo(c *gin.Context) {
+	slug := c.Param("slug")
+	p, err := db.GetProfile(slug)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Profile not found"})
+		return
+	}
+	c.JSON(200, gin.H{
+		"name":       p.Name,
+		"profession": p.Profession,
+		"accent":     p.Accent,
+		"slug":       p.Slug,
+	})
+}
+
+func handleSubmitForm(c *gin.Context) {
+	slug := c.Param("slug")
+	formType := c.Param("formType")
+
+	var req struct {
+		ClientName  string `json:"client_name"`
+		ClientEmail string `json:"client_email"`
+		Responses   string `json:"responses"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil || req.ClientName == "" {
+		c.JSON(400, gin.H{"error": "client_name required"})
+		return
+	}
+
+	sub := db.FormSubmission{
+		ID:          uuid.New().String(),
+		ProfileSlug: slug,
+		FormType:    formType,
+		ClientName:  req.ClientName,
+		ClientEmail: req.ClientEmail,
+		Responses:   req.Responses,
+		SubmittedAt: time.Now(),
+	}
+	if err := db.SaveFormSubmission(sub); err != nil {
+		c.JSON(500, gin.H{"error": "Could not save submission", "detail": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"status": "ok", "id": sub.ID})
+}
+
+func handleGetFormSubmissions(c *gin.Context) {
+	slug, ok := authenticateToken(c)
+	if !ok {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	subs, err := db.GetFormSubmissionsByProfile(slug)
+	if err != nil {
+		c.JSON(200, gin.H{"submissions": []interface{}{}})
+		return
+	}
+	c.JSON(200, gin.H{"submissions": subs})
+}
+
+func min(a, b int) int {
+	if a < b {
+		return a
+	}
+	return b
 }

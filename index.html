@@ -2094,6 +2094,9 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoa
   const updateNotif=(key,val)=>{const u={...notifPrefs,[key]:val};setNotifPrefs(u);localStorage.setItem('cai_notif_prefs',JSON.stringify(u));};
   const[ownerProfiles,setOwnerProfiles]=useState([]);
   const[profilesLoading,setProfilesLoading]=useState(false);
+  const[formSubmissions,setFormSubmissions]=useState([]);
+  const[formSubsLoading,setFormSubsLoading]=useState(false);
+  const[copiedFormSlug,setCopiedFormSlug]=useState('');
 
   useEffect(()=>{
     setProfilesLoading(true);
@@ -2102,6 +2105,15 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoa
       .then(d=>{setOwnerProfiles(d.profiles||[]);setProfilesLoading(false);})
       .catch(()=>setProfilesLoading(false));
   },[token]);
+
+  useEffect(()=>{
+    if(activeTab!=='forms') return;
+    setFormSubsLoading(true);
+    fetch(`${BACKEND_URL}/owner/form-submissions`,{headers:{Authorization:`Bearer ${token}`}})
+      .then(r=>r.ok?r.json():{submissions:[]})
+      .then(d=>{setFormSubmissions(d.submissions||[]);setFormSubsLoading(false);})
+      .catch(()=>setFormSubsLoading(false));
+  },[activeTab,token]);
 
   useEffect(()=>{
     Promise.all([
@@ -2257,7 +2269,7 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoa
 
       {/* Tabs */}
       <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:20}}>
-        {[['overview','📊 Overview'],['bookings','📅 Bookings'+(pendingBookings>0?` (${pendingBookings})`:'')],['notes','📝 Notes'],['news','📰 Insights'],['profiles','✦ Profiles'],['settings','⚙️ Settings']].map(([t,label])=>
+        {[['overview','📊 Overview'],['bookings','📅 Bookings'+(pendingBookings>0?` (${pendingBookings})`:'')],['notes','📝 Notes'],['forms','📋 Forms'],['news','📰 Insights'],['profiles','✦ Profiles'],['settings','⚙️ Settings']].map(([t,label])=>
           <button key={t} onClick={()=>setActiveTab(t)} style={tabBtn(t)}>{label}</button>
         )}
       </div>
@@ -2577,6 +2589,81 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoa
         </button>
       </>}
 
+      {/* ── FORMS TAB ── */}
+      {activeTab==='forms'&&(()=>{
+        const pdata=(()=>{try{return JSON.parse(profile?.profile_data||'{}');}catch(e){return {};}})();
+        const myForms=pdata.legalForms||[];
+        const origin=window.location.origin;
+        const copyFormLink=(formKey)=>{
+          const fSlug=FORM_KEY_TO_SLUG[formKey];
+          if(!fSlug) return;
+          const url=`${origin}/forms/${slug}/${fSlug}`;
+          navigator.clipboard?.writeText(url).catch(()=>{});
+          setCopiedFormSlug(fSlug);
+          setTimeout(()=>setCopiedFormSlug(''),2200);
+        };
+        return <>
+          <div style={sectionLabel}>Sendable Form Links</div>
+          <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.38)',marginBottom:14,lineHeight:1.6}}>
+            Each form has its own shareable link. Send it to clients before their session — they fill it in on their phone or computer, and responses appear below.
+          </div>
+          {myForms.length===0?<div style={{...card,textAlign:'center',padding:'22px 18px'}}>
+            <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.35)',lineHeight:1.7}}>No legal forms configured yet.<br/>Edit your profile and select forms under "Client consent & legal".</div>
+          </div>:<div style={{marginBottom:20}}>
+            {myForms.map(formKey=>{
+              const fSlug=FORM_KEY_TO_SLUG[formKey];
+              if(!fSlug) return null;
+              const def=LEGAL_FORM_FIELDS[formKey];
+              const title=def?.en?.title||formKey;
+              const formUrl=`${origin}/forms/${slug}/${fSlug}`;
+              const copied=copiedFormSlug===fSlug;
+              return <div key={formKey} style={{...card,marginBottom:8,padding:'13px 16px'}}>
+                <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,flexWrap:'wrap'}}>
+                  <div>
+                    <div style={{fontSize:13,fontFamily:"'Jost',sans-serif",color:'#e8dcc8',fontWeight:500,marginBottom:3}}>{title}</div>
+                    <div style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.4)',wordBreak:'break-all'}}>{formUrl}</div>
+                  </div>
+                  <div style={{display:'flex',gap:6,flexShrink:0}}>
+                    <button onClick={()=>copyFormLink(formKey)} style={{padding:'6px 13px',background:copied?'rgba(100,190,120,0.15)':'rgba(201,169,110,0.08)',border:'1px solid',borderColor:copied?'rgba(100,190,120,0.35)':'rgba(201,169,110,0.2)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:copied?'rgba(140,210,150,0.9)':'#c9a96e',transition:'all 0.2s',whiteSpace:'nowrap'}}>
+                      {copied?'✓ Copied':'📋 Copy link'}
+                    </button>
+                    <button onClick={()=>window.open(formUrl,'_blank')} style={{padding:'6px 11px',background:'transparent',border:'1px solid rgba(201,169,110,0.12)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.45)'}}>
+                      👁
+                    </button>
+                  </div>
+                </div>
+              </div>;
+            })}
+          </div>}
+
+          <div style={sectionLabel}>Client Responses</div>
+          {formSubsLoading?<div style={{textAlign:'center',padding:'24px 0',color:'rgba(201,169,110,0.4)',fontSize:13,fontFamily:"'Jost',sans-serif"}}>Loading…</div>
+          :formSubmissions.length===0?<div style={{...card,textAlign:'center',padding:'22px 18px'}}>
+            <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.35)'}}>No responses yet — send a form link to a client to get started.</div>
+          </div>:<div>
+            {formSubmissions.map(sub=>{
+              let resp={};try{resp=JSON.parse(sub.responses||'{}');}catch(e){}
+              const def=LEGAL_FORM_FIELDS[FORM_SLUGS[sub.form_type]];
+              const title=def?.en?.title||sub.form_type;
+              return <div key={sub.id} style={{...card,marginBottom:8,padding:'13px 16px'}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}>
+                  <div>
+                    <div style={{fontSize:13,fontFamily:"'Jost',sans-serif",color:'#e8dcc8',fontWeight:500}}>{sub.client_name}</div>
+                    {sub.client_email&&<div style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.45)',marginTop:1}}>{sub.client_email}</div>}
+                  </div>
+                  <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.4)',textAlign:'right',flexShrink:0}}>
+                    <div>{title}</div>
+                    <div>{new Date(sub.submitted_at).toLocaleDateString()}</div>
+                  </div>
+                </div>
+                {resp.answer&&<div style={{fontSize:12,fontFamily:"'Cormorant Garamond',serif",color:'rgba(232,220,200,0.65)',lineHeight:1.6,padding:'8px 10px',background:'rgba(255,255,255,0.03)',borderRadius:8,borderLeft:'2px solid rgba(201,169,110,0.2)'}}>{resp.answer}</div>}
+                {resp.agreed&&<div style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(100,210,140,0.7)',marginTop:6}}>✓ Agreed & signed</div>}
+              </div>;
+            })}
+          </div>}
+        </>;
+      })()}
+
       {/* ── PROFILES TAB ── */}
       {activeTab==='profiles'&&<>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
@@ -2619,6 +2706,9 @@ function OwnerEditProfile({token, slug, lang, onBack, onSaved}){
   const[profile,setProfile]=useState(null);
   const[pdata,setPdata]=useState({});
   const[saved,setSaved]=useState(false);
+  const[uploading,setUploading]=useState(false);const[uploadPct,setUploadPct]=useState(0);
+  const[editServices,setEditServices]=useState([]);
+  const[svcImporting,setSvcImporting]=useState(false);const[svcPreview,setSvcPreview]=useState(null);
   const L=lang||'en';
 
   useEffect(()=>{
@@ -2629,6 +2719,7 @@ function OwnerEditProfile({token, slug, lang, onBack, onSaved}){
           setProfile(p);
           let parsed={};try{parsed=JSON.parse(p.profile_data||'{}');}catch(e){}
           setPdata(parsed);
+          setEditServices(parsed.services||[]);
         }
         setLoading(false);
       }).catch(()=>setLoading(false));
@@ -2638,14 +2729,57 @@ function OwnerEditProfile({token, slug, lang, onBack, onSaved}){
 
   const save=async()=>{
     setSaving(true);
-    const sp=buildPrompt(pdata,lang);
+    const merged={...pdata,services:editServices};
+    const sp=buildPrompt(merged,lang);
     try{
       await fetch(`${BACKEND_URL}/owner/profile`,{method:'PUT',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
-        body:JSON.stringify({name:pdata.name,business:pdata.biz||pdata.name,profession:pdata.profession||profile.profession,location:pdata.loc||'',system_prompt:sp,profile_data:JSON.stringify(pdata),active:true})});
+        body:JSON.stringify({name:merged.name,business:merged.biz||merged.name,profession:merged.profession||profile.profession,location:merged.loc||'',system_prompt:sp,profile_data:JSON.stringify(merged),active:true})});
       setSaved(true);
       setTimeout(()=>{onSaved&&onSaved();},1200);
     }catch(e){alert('Could not save — please try again.');}
     setSaving(false);
+  };
+
+  const uploadFile=async(file)=>{
+    setUploading(true);setUploadPct(0);
+    const fd=new FormData();fd.append('file',file);
+    try{
+      await new Promise((resolve,reject)=>{
+        const xhr=new XMLHttpRequest();
+        xhr.upload.onprogress=e=>{if(e.lengthComputable)setUploadPct(Math.round(e.loaded/e.total*100));};
+        xhr.onload=()=>{
+          if(xhr.status===200){
+            const d=JSON.parse(xhr.responseText);
+            const cur=(pdata.media_gallery||[]);
+            setPdata(p=>({...p,media_gallery:[...cur,d.url]}));
+            resolve();
+          } else reject(new Error('Upload failed'));
+        };
+        xhr.onerror=()=>reject(new Error('Upload failed'));
+        xhr.open('POST',`${BACKEND_URL}/media/upload`);
+        xhr.setRequestHeader('Authorization','Bearer '+token);
+        xhr.send(fd);
+      });
+    }catch(e){alert('Upload failed: '+e.message);}
+    setUploading(false);setUploadPct(0);
+  };
+
+  const importServices=async(file)=>{
+    setSvcImporting(true);setSvcPreview(null);
+    try{
+      const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});
+      const mimeType=file.type||'image/jpeg';
+      const resp=await fetch(`${BACKEND_URL}/ai/import-services`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify({image_base64:b64,mime_type:mimeType})});
+      const d=await resp.json();
+      if(resp.ok&&d.services){
+        const mapped=d.services.map(s=>({
+          name:s.name||'',durNum:s.duration_minutes?String(s.duration_minutes):'',durUnit:'min',
+          priceNum:s.price?String(s.price):'',currency:s.currency||'£',desc:s.description||''
+        }));
+        setSvcPreview(mapped);
+      } else { alert(d.error||'Could not extract services'); }
+    }catch(e){alert('Import failed: '+e.message);}
+    setSvcImporting(false);
   };
 
   if(loading) return <div style={{minHeight:'100vh',background:'#0c0a08',display:'flex',alignItems:'center',justifyContent:'center'}}>
@@ -2701,6 +2835,53 @@ function OwnerEditProfile({token, slug, lang, onBack, onSaved}){
       <div style={labelStyle}>Gallery link</div>
       <input value={pdata.gallery||''} onChange={e=>set('gallery',e.target.value)} style={fieldStyle}/>
 
+      <div style={{marginBottom:14}}>
+        <div style={labelStyle}>Upload media</div>
+        <button onClick={()=>document.getElementById('ep-media-upload').click()} disabled={uploading} style={{width:'100%',padding:'10px 0',background:'rgba(201,169,110,0.07)',border:'1px dashed rgba(201,169,110,0.28)',borderRadius:20,cursor:uploading?'default':'pointer',color:'rgba(201,169,110,0.72)',fontSize:12,fontFamily:"'Jost',sans-serif",marginBottom:6}}>
+          {uploading?`Uploading… ${uploadPct}%`:'⬆ Upload from device (images & videos)'}
+        </button>
+        <input id="ep-media-upload" type="file" accept="image/*,video/*" style={{display:'none'}} onChange={e=>{if(e.target.files[0])uploadFile(e.target.files[0]);e.target.value='';}}/>
+        {uploading&&<div style={{height:3,background:'rgba(201,169,110,0.1)',borderRadius:2,marginBottom:8}}><div style={{height:'100%',width:uploadPct+'%',background:'linear-gradient(90deg,#c9a96e,#e8c878)',borderRadius:2,transition:'width 0.3s'}}/></div>}
+        {(pdata.media_gallery||[]).length>0&&<div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6}}>
+          {(pdata.media_gallery||[]).map((url,i)=><div key={i} style={{position:'relative',paddingBottom:'100%',background:'rgba(201,169,110,0.06)',borderRadius:8,overflow:'hidden'}}>
+            <img src={url} style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',objectFit:'cover',borderRadius:8}} onError={e=>e.target.style.display='none'}/>
+            <button onClick={()=>setPdata(p=>({...p,media_gallery:(p.media_gallery||[]).filter((_,idx)=>idx!==i)}))} style={{position:'absolute',top:3,right:3,background:'rgba(0,0,0,0.65)',border:'none',borderRadius:'50%',width:18,height:18,cursor:'pointer',color:'#e8dcc8',fontSize:10,lineHeight:'18px',textAlign:'center'}}>×</button>
+          </div>)}
+        </div>}
+      </div>
+
+      <div style={{marginBottom:14}}>
+        <div style={labelStyle}>Services</div>
+        {editServices.map((s,i)=><div key={i} style={{marginBottom:8,padding:'9px 11px',background:'rgba(201,169,110,0.04)',border:'1px solid rgba(201,169,110,0.1)',borderRadius:10}}>
+          <div style={{display:'flex',justifyContent:'space-between',marginBottom:6}}>
+            <span style={{fontSize:9,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.38)',letterSpacing:'0.08em',textTransform:'uppercase'}}>Service {i+1}</span>
+            <button onClick={()=>setEditServices(editServices.filter((_,idx)=>idx!==i))} style={{background:'none',border:'none',cursor:'pointer',color:'rgba(200,80,80,0.4)',fontSize:14,lineHeight:1}}>×</button>
+          </div>
+          <input value={s.name||''} onChange={e=>{const n=[...editServices];n[i]={...n[i],name:e.target.value};setEditServices(n);}} placeholder="Service name" style={{width:'100%',padding:'6px 9px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.1)',borderRadius:6,color:'#e8dcc8',fontSize:12,fontFamily:"'Jost',sans-serif",marginBottom:4}}/>
+          <div style={{display:'flex',gap:5,marginBottom:4}}>
+            <input value={s.currency||'£'} onChange={e=>{const n=[...editServices];n[i]={...n[i],currency:e.target.value};setEditServices(n);}} placeholder="£" style={{width:40,padding:'5px 6px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.1)',borderRadius:6,color:'#e8dcc8',fontSize:12,fontFamily:"'Jost',sans-serif"}}/>
+            <input value={s.priceNum||''} onChange={e=>{const n=[...editServices];n[i]={...n[i],priceNum:e.target.value};setEditServices(n);}} placeholder="Price" type="number" style={{flex:1,padding:'5px 8px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.1)',borderRadius:6,color:'#e8dcc8',fontSize:12,fontFamily:"'Jost',sans-serif"}}/>
+            <input value={s.durNum||''} onChange={e=>{const n=[...editServices];n[i]={...n[i],durNum:e.target.value};setEditServices(n);}} placeholder="Mins" type="number" style={{width:56,padding:'5px 6px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.1)',borderRadius:6,color:'#e8dcc8',fontSize:12,fontFamily:"'Jost',sans-serif"}}/>
+          </div>
+          <input value={s.desc||''} onChange={e=>{const n=[...editServices];n[i]={...n[i],desc:e.target.value};setEditServices(n);}} placeholder="Description" style={{width:'100%',padding:'5px 9px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.1)',borderRadius:6,color:'#e8dcc8',fontSize:12,fontFamily:"'Cormorant Garamond',serif"}}/>
+        </div>)}
+        <button onClick={()=>setEditServices([...editServices,{name:'',durNum:'',durUnit:'min',priceNum:'',currency:'£',desc:''}])} style={{width:'100%',padding:'7px 0',background:'none',border:'1px dashed rgba(201,169,110,0.18)',borderRadius:20,cursor:'pointer',color:'rgba(201,169,110,0.38)',fontSize:12,fontFamily:"'Jost',sans-serif",marginBottom:6}}>+ Add service</button>
+        <button onClick={()=>document.getElementById('ep-svc-screenshot').click()} disabled={svcImporting} style={{width:'100%',padding:'7px 0',background:'none',border:'1px dashed rgba(110,143,201,0.3)',borderRadius:20,cursor:'pointer',color:svcImporting?'rgba(110,143,201,0.35)':'rgba(110,143,201,0.65)',fontSize:12,fontFamily:"'Jost',sans-serif"}}>
+          {svcImporting?'Analysing screenshot…':'📸 Import services from screenshot'}
+        </button>
+        <input id="ep-svc-screenshot" type="file" accept="image/*" style={{display:'none'}} onChange={e=>{if(e.target.files[0])importServices(e.target.files[0]);e.target.value='';}}/>
+        {svcPreview&&<div style={{marginTop:8,padding:'10px 13px',background:'rgba(110,143,201,0.06)',border:'1px solid rgba(110,143,201,0.2)',borderRadius:10}}>
+          <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(110,143,201,0.7)',marginBottom:8}}>AI found {svcPreview.length} service{svcPreview.length!==1?'s':''}</div>
+          {svcPreview.map((s,i)=><div key={i} style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.7)',marginBottom:3,paddingLeft:8,borderLeft:'2px solid rgba(110,143,201,0.3)'}}>
+            <b style={{color:'#e8dcc8'}}>{s.name}</b>{s.priceNum?` · ${s.currency}${s.priceNum}`:''}
+          </div>)}
+          <div style={{display:'flex',gap:8,marginTop:8}}>
+            <button onClick={()=>{setEditServices(sv=>[...sv.filter(s=>s.name.trim()),...svcPreview]);setSvcPreview(null);}} style={{flex:1,padding:'6px 0',background:'rgba(110,143,201,0.15)',border:'1px solid rgba(110,143,201,0.3)',borderRadius:20,cursor:'pointer',color:'rgba(110,143,201,0.9)',fontSize:12,fontFamily:"'Jost',sans-serif"}}>✓ Add all</button>
+            <button onClick={()=>setSvcPreview(null)} style={{padding:'6px 12px',background:'none',border:'1px solid rgba(201,169,110,0.15)',borderRadius:20,cursor:'pointer',color:'rgba(201,169,110,0.4)',fontSize:12,fontFamily:"'Jost',sans-serif"}}>Dismiss</button>
+          </div>
+        </div>}
+      </div>
+
       <div style={labelStyle}>Additional info for your concierge</div>
       <textarea value={pdata.extra||''} onChange={e=>set('extra',e.target.value)} rows={3} style={{...fieldStyle,fontFamily:"'Cormorant Garamond',serif",lineHeight:1.6}}/>
 
@@ -2716,9 +2897,49 @@ function Onboarding({onComplete,onBack,lang}){
   const[step,setStep]=useState(0);const[data,setData]=useState({});const[services,setServices]=useState([{name:'',durNum:'',durUnit:'min',priceNum:'',currency:'£',desc:''}]);
   const[handle,setHandle]=useState('');const[handleStatus,setHandleStatus]=useState('');const[handleTouched,setHandleTouched]=useState(false);
   const[geoStatus,setGeoStatus]=useState('');
+  const[obUploading,setObUploading]=useState(false);const[obUploadPct,setObUploadPct]=useState(0);const[mediaUploads,setMediaUploads]=useState([]);
+  const[svcImporting,setSvcImporting]=useState(false);const[svcPreview,setSvcPreview]=useState(null);
   const cur=STEPS[step];const total=STEPS.length;const L=lang||'en';
   const set=(k,v)=>setData(d=>({...d,[k]:v}));
   const tog=(f,v)=>{const a=data[f]||[];set(f,a.includes(v)?a.filter(x=>x!==v):[...a,v]);};
+
+  const obUploadFile=async(file)=>{
+    setObUploading(true);setObUploadPct(0);
+    const fd=new FormData();fd.append('file',file);
+    try{
+      await new Promise((resolve,reject)=>{
+        const xhr=new XMLHttpRequest();
+        xhr.upload.onprogress=e=>{if(e.lengthComputable)setObUploadPct(Math.round(e.loaded/e.total*100));};
+        xhr.onload=()=>{
+          if(xhr.status===200){const d=JSON.parse(xhr.responseText);setMediaUploads(u=>[...u,d.url]);resolve();}
+          else reject(new Error('Upload failed'));
+        };
+        xhr.onerror=()=>reject(new Error('Upload failed'));
+        xhr.open('POST',`${BACKEND_URL}/media/upload`);
+        xhr.send(fd);
+      });
+    }catch(e){alert('Upload failed: '+e.message);}
+    setObUploading(false);setObUploadPct(0);
+  };
+
+  const obImportServices=async(file)=>{
+    setSvcImporting(true);setSvcPreview(null);
+    try{
+      const b64=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result.split(',')[1]);r.onerror=rej;r.readAsDataURL(file);});
+      const mime=file.type||'image/jpeg';
+      const ownerTok=localStorage.getItem('cai_owner_token')||localStorage.getItem('ownerToken')||'';
+      const resp=await fetch(`${BACKEND_URL}/ai/import-services`,{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+ownerTok},body:JSON.stringify({image_base64:b64,mime_type:mime})});
+      const d=await resp.json();
+      if(resp.ok&&d.services){
+        const mapped=d.services.map(s=>({
+          name:s.name||'',durNum:s.duration_minutes?String(s.duration_minutes):'',durUnit:'min',
+          priceNum:s.price?String(s.price):'',currency:s.currency||'£',desc:s.description||''
+        }));
+        setSvcPreview(mapped);
+      } else { alert(d.error||'Could not extract services'); }
+    }catch(e){alert('Import failed: '+e.message);}
+    setSvcImporting(false);
+  };
 
   const useMyLocation=()=>{
     if(!navigator.geolocation){setGeoStatus('unsupported');return;}
@@ -2793,8 +3014,9 @@ function Onboarding({onComplete,onBack,lang}){
   };
   const next=()=>{
     if(cur.type==='services')set('services',services.filter(s=>s.name.trim()));
+    if(cur.id==='media'&&mediaUploads.length>0)set('media_gallery',[...(data.media_gallery||[]),...mediaUploads]);
     if(step<total-1)setStep(s=>s+1);
-    else onComplete({...data,services:services.filter(s=>s.name.trim()),handle:handle});
+    else onComplete({...data,services:services.filter(s=>s.name.trim()),handle:handle,media_gallery:[...(data.media_gallery||[]),...mediaUploads]});
   };
   const chip=(label,active,onClick)=><button key={label} onClick={onClick} style={{padding:'7px 12px',borderRadius:20,cursor:'pointer',fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:active?500:300,border:active?'1px solid #c9a96e':'1px solid rgba(201,169,110,0.16)',background:active?'rgba(201,169,110,0.15)':'rgba(201,169,110,0.04)',color:active?'#e8c878':'rgba(232,220,200,0.52)',transition:'all 0.15s',marginBottom:4}}>{label}</button>;
 
@@ -2822,6 +3044,20 @@ function Onboarding({onComplete,onBack,lang}){
           <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.42)',marginBottom:6}}>{typeof f.label==='object'?f.label[L]:f.label}</div>
           <input value={data[f.key]||''} onChange={e=>set(f.key,e.target.value)} placeholder={typeof f.ph==='object'?f.ph[L]:f.ph} style={{width:'100%',padding:'9px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.16)',borderRadius:8,color:'#e8dcc8',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:300}}/>
         </div>)}
+        {cur.type==='form'&&cur.id==='media'&&<div style={{marginTop:4}}>
+          <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.42)',marginBottom:8}}>Or upload directly</div>
+          <button onClick={()=>document.getElementById('ob-media-upload').click()} disabled={obUploading} style={{width:'100%',padding:'9px 0',background:'rgba(201,169,110,0.07)',border:'1px dashed rgba(201,169,110,0.25)',borderRadius:20,cursor:obUploading?'default':'pointer',color:'rgba(201,169,110,0.7)',fontSize:12,fontFamily:"'Jost',sans-serif"}}>
+            {obUploading?`Uploading… ${obUploadPct}%`:'⬆ Upload from device'}
+          </button>
+          <input id="ob-media-upload" type="file" accept="image/*,video/*" style={{display:'none'}} onChange={e=>{if(e.target.files[0])obUploadFile(e.target.files[0]);e.target.value='';}}/>
+          {obUploading&&<div style={{marginTop:6,height:3,background:'rgba(201,169,110,0.1)',borderRadius:2}}><div style={{height:'100%',width:obUploadPct+'%',background:'linear-gradient(90deg,#c9a96e,#e8c878)',borderRadius:2,transition:'width 0.3s'}}/></div>}
+          {mediaUploads.length>0&&<div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:6,marginTop:10}}>
+            {mediaUploads.map((url,i)=><div key={i} style={{position:'relative',paddingBottom:'100%',background:'rgba(201,169,110,0.06)',borderRadius:8,overflow:'hidden'}}>
+              <img src={url} style={{position:'absolute',top:0,left:0,width:'100%',height:'100%',objectFit:'cover',borderRadius:8}} onError={e=>e.target.style.display='none'}/>
+              <button onClick={()=>setMediaUploads(u=>u.filter((_,idx)=>idx!==i))} style={{position:'absolute',top:3,right:3,background:'rgba(0,0,0,0.6)',border:'none',borderRadius:'50%',width:18,height:18,cursor:'pointer',color:'#e8dcc8',fontSize:10,lineHeight:'18px',textAlign:'center'}}>×</button>
+            </div>)}
+          </div>}
+        </div>}
         {cur.type==='textarea'&&<textarea value={data[cur.field]||''} onChange={e=>set(cur.field,e.target.value)} placeholder={typeof cur.ph==='object'?cur.ph[L]:cur.ph} rows={4} style={{width:'100%',padding:'10px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.16)',borderRadius:8,color:'#e8dcc8',fontSize:13,fontFamily:"'Cormorant Garamond',serif",lineHeight:1.65}}/>}
         {cur.type==='services'&&<div>
           {services.map((s,i)=><div key={i} style={{marginBottom:11,padding:'11px 13px',background:'rgba(201,169,110,0.04)',border:'1px solid rgba(201,169,110,0.09)',borderRadius:10}}>
@@ -2867,6 +3103,22 @@ function Onboarding({onComplete,onBack,lang}){
             </div>
           </div>)}
           <button onClick={()=>setServices([...services,{name:'',durNum:'',durUnit:'min',priceNum:'',currency:'£',desc:''}])} style={{width:'100%',padding:'8px 0',background:'none',border:'1px dashed rgba(201,169,110,0.18)',borderRadius:20,cursor:'pointer',color:'rgba(201,169,110,0.38)',fontSize:12,fontFamily:"'Jost',sans-serif"}}>+ Add service</button>
+          <div style={{marginTop:8}}>
+            <button onClick={()=>document.getElementById('ob-svc-screenshot').click()} disabled={svcImporting} style={{width:'100%',padding:'8px 0',background:'none',border:'1px dashed rgba(110,143,201,0.3)',borderRadius:20,cursor:'pointer',color:svcImporting?'rgba(110,143,201,0.35)':'rgba(110,143,201,0.65)',fontSize:12,fontFamily:"'Jost',sans-serif"}}>
+              {svcImporting?'Analysing screenshot…':'📸 Import services from screenshot'}
+            </button>
+            <input id="ob-svc-screenshot" type="file" accept="image/*" style={{display:'none'}} onChange={e=>{if(e.target.files[0])obImportServices(e.target.files[0]);e.target.value='';}}/>
+          </div>
+          {svcPreview&&<div style={{marginTop:10,padding:'11px 13px',background:'rgba(110,143,201,0.06)',border:'1px solid rgba(110,143,201,0.18)',borderRadius:10}}>
+            <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(110,143,201,0.7)',marginBottom:8}}>AI found {svcPreview.length} service{svcPreview.length!==1?'s':''} — confirm to add</div>
+            {svcPreview.map((s,i)=><div key={i} style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.7)',marginBottom:4,paddingLeft:8,borderLeft:'2px solid rgba(110,143,201,0.3)'}}>
+              <b style={{color:'#e8dcc8'}}>{s.name}</b>{s.priceNum?` · ${s.currency}${s.priceNum}`:''}
+            </div>)}
+            <div style={{display:'flex',gap:8,marginTop:10}}>
+              <button onClick={()=>{setServices(sv=>[...sv.filter(s=>s.name.trim()),...svcPreview]);setSvcPreview(null);}} style={{flex:1,padding:'7px 0',background:'rgba(110,143,201,0.15)',border:'1px solid rgba(110,143,201,0.3)',borderRadius:20,cursor:'pointer',color:'rgba(110,143,201,0.9)',fontSize:12,fontFamily:"'Jost',sans-serif"}}>✓ Add all</button>
+              <button onClick={()=>setSvcPreview(null)} style={{padding:'7px 14px',background:'none',border:'1px solid rgba(201,169,110,0.15)',borderRadius:20,cursor:'pointer',color:'rgba(201,169,110,0.4)',fontSize:12,fontFamily:"'Jost',sans-serif"}}>Dismiss</button>
+            </div>
+          </div>}
         </div>}
         {cur.type==='location'&&<div>
           <button onClick={useMyLocation} style={{width:'100%',padding:'11px 0',background:'rgba(201,169,110,0.1)',border:'1px solid rgba(201,169,110,0.25)',borderRadius:20,cursor:'pointer',color:'#c9a96e',fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:600,letterSpacing:'0.05em',textTransform:'uppercase',marginBottom:10}}>
@@ -2999,6 +3251,125 @@ const LEGAL_FORM_FIELDS = {
   "Cancellation policy agreement": {en:{title:"Cancellation Policy Agreement",q:"I have read and agree to the cancellation policy described below."},it:{title:"Accordo Politica di Cancellazione",q:"Ho letto e accetto la politica di cancellazione descritta sotto."}},
   "Data processing consent (GDPR)": {en:{title:"Data Processing Consent (GDPR)",q:"I consent to my personal data being processed for the purpose of this booking, in accordance with UK/EU GDPR."},it:{title:"Consenso Trattamento Dati (GDPR)",q:"Acconsento al trattamento dei miei dati personali per questa prenotazione, in conformità con il GDPR UK/EU."}},
 };
+
+// Bidirectional slug ↔ form-key mapping
+const FORM_SLUGS = {
+  "health-disclosure":    "Health & medical disclosure",
+  "injury-allergy":       "Injury / allergy declaration",
+  "pregnancy":            "Pregnancy disclosure",
+  "image-rights":         "Image & usage rights release",
+  "nda":                  "Content collaboration NDA",
+  "id-verification":      "ID / age verification",
+  "damage-deposit":       "Property damage deposit terms",
+  "cancellation-policy":  "Cancellation policy agreement",
+  "gdpr-consent":         "Data processing consent (GDPR)",
+};
+const FORM_KEY_TO_SLUG = Object.fromEntries(Object.entries(FORM_SLUGS).map(([s,k])=>[k,s]));
+
+function FormPage(){
+  const parts=window.location.pathname.replace(/^\//,'').split('/');
+  // parts: ["forms", slug, formTypeSlug]
+  const profileSlug=parts[1]||'';
+  const formTypeSlug=parts[2]||'';
+  const formKey=FORM_SLUGS[formTypeSlug];
+
+  const[profile,setProfile]=useState(null);
+  const[notFound,setNotFound]=useState(false);
+  const[clientName,setClientName]=useState('');
+  const[clientEmail,setClientEmail]=useState('');
+  const[answer,setAnswer]=useState('');
+  const[agreed,setAgreed]=useState(false);
+  const[submitting,setSubmitting]=useState(false);
+  const[done,setDone]=useState(false);
+  const[err,setErr]=useState('');
+
+  useEffect(()=>{
+    if(!profileSlug||!formKey){setNotFound(true);return;}
+    fetch(`${BACKEND_URL}/forms/${profileSlug}/${formTypeSlug}`)
+      .then(r=>r.ok?r.json():null)
+      .then(d=>{if(d&&d.name)setProfile(d);else setNotFound(true);})
+      .catch(()=>setNotFound(true));
+  },[]);
+
+  const submit=async()=>{
+    if(!agreed||!clientName.trim()){return;}
+    setSubmitting(true);setErr('');
+    try{
+      const responses=JSON.stringify({answer,agreed:true});
+      const r=await fetch(`${BACKEND_URL}/forms/${profileSlug}/${formTypeSlug}`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({client_name:clientName,client_email:clientEmail,responses})
+      });
+      if(r.ok){setDone(true);}
+      else{const d=await r.json().catch(()=>({}));setErr(d.error||'Submission failed — please try again.');}
+    }catch(e){setErr('Network error — please try again.');}
+    setSubmitting(false);
+  };
+
+  const acc=(profile?.accent)||'#c9a96e';
+  const def=formKey?LEGAL_FORM_FIELDS[formKey]:null;
+  const txt=def?.en;
+
+  if(notFound) return <div style={{minHeight:'100vh',background:'#0c0a08',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:12}}>
+    <div style={{fontSize:32,color:'rgba(201,169,110,0.3)'}}>✦</div>
+    <div style={{fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)',fontSize:13}}>Form not found</div>
+  </div>;
+
+  if(!profile) return <div style={{minHeight:'100vh',background:'#0c0a08',display:'flex',alignItems:'center',justifyContent:'center'}}>
+    <div style={{fontSize:28,color:acc,animation:'bravePulse 1.8s ease-in-out infinite',textShadow:'0 0 20px rgba(201,169,110,0.6)'}}>✦</div>
+  </div>;
+
+  return <div style={{minHeight:'100vh',background:'#0c0a08',padding:'0 0 60px',fontFamily:"'Cormorant Garamond',Georgia,serif",color:'#e8dcc8'}}>
+    {/* Header */}
+    <div style={{background:'rgba(12,10,8,0.95)',borderBottom:'1px solid rgba(201,169,110,0.15)',padding:'22px 20px 18px',textAlign:'center',backdropFilter:'blur(20px)'}}>
+      <div style={{fontSize:22,color:acc,marginBottom:4,letterSpacing:'0.06em'}}>✦</div>
+      <div style={{fontSize:22,fontWeight:400,color:'#e8dcc8',marginBottom:3}}>{profile.name}</div>
+      <div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.5)',letterSpacing:'0.1em',textTransform:'uppercase'}}>{profile.profession}</div>
+    </div>
+
+    <div style={{maxWidth:520,margin:'0 auto',padding:'28px 18px'}}>
+      {done?<div style={{textAlign:'center',padding:'40px 0'}}>
+        <div style={{fontSize:42,marginBottom:16,color:acc}}>✓</div>
+        <div style={{fontSize:22,fontWeight:400,color:'#e8dcc8',marginBottom:8,fontFamily:"'Cormorant Garamond',serif"}}>Form submitted</div>
+        <div style={{fontSize:13,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.45)',lineHeight:1.7}}>Thank you, {clientName}.<br/>Your response has been securely saved.</div>
+      </div>:<>
+        <div style={{marginBottom:24}}>
+          <div style={{fontSize:24,fontWeight:400,color:'#e8dcc8',marginBottom:6,lineHeight:1.3}}>{txt?.title}</div>
+          <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.38)',lineHeight:1.6}}>Complete this form before your session with {profile.name}. Fully GDPR compliant and securely stored.</div>
+        </div>
+
+        <div style={{marginBottom:14}}>
+          <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.45)',marginBottom:5}}>Full name <span style={{color:'rgba(200,80,80,0.7)'}}>*</span></div>
+          <input value={clientName} onChange={e=>setClientName(e.target.value)} placeholder="Your full name" style={{width:'100%',padding:'11px 14px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.18)',borderRadius:10,color:'#e8dcc8',fontSize:14,fontFamily:"'Jost',sans-serif",outline:'none'}}/>
+        </div>
+        <div style={{marginBottom:20}}>
+          <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.45)',marginBottom:5}}>Email (optional)</div>
+          <input value={clientEmail} onChange={e=>setClientEmail(e.target.value)} placeholder="you@email.com" type="email" style={{width:'100%',padding:'11px 14px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.18)',borderRadius:10,color:'#e8dcc8',fontSize:14,fontFamily:"'Jost',sans-serif",outline:'none'}}/>
+        </div>
+
+        <div style={{marginBottom:20,padding:'16px 18px',background:'rgba(201,169,110,0.04)',border:'1px solid rgba(201,169,110,0.12)',borderRadius:14}}>
+          <div style={{fontSize:14,fontWeight:500,color:'#e8dcc8',marginBottom:6,fontFamily:"'Jost',sans-serif"}}>{txt?.title}</div>
+          <div style={{fontSize:13,fontFamily:"'Cormorant Garamond',serif",color:'rgba(232,220,200,0.65)',lineHeight:1.7,marginBottom:12}}>{txt?.q}</div>
+          <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",letterSpacing:'0.08em',textTransform:'uppercase',color:'rgba(201,169,110,0.4)',marginBottom:5}}>Your response (optional)</div>
+          <textarea value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="Leave blank if not applicable" rows={3} style={{width:'100%',padding:'9px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.1)',borderRadius:8,color:'#e8dcc8',fontSize:13,fontFamily:"'Jost',sans-serif",marginBottom:12,outline:'none'}}/>
+          <label style={{display:'flex',alignItems:'flex-start',gap:10,cursor:'pointer'}}>
+            <input type="checkbox" checked={agreed} onChange={e=>setAgreed(e.target.checked)} style={{marginTop:3,accentColor:acc}}/>
+            <span style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.7)',lineHeight:1.5}}>I have read and understood the above, and I agree</span>
+          </label>
+        </div>
+
+        {err&&<div style={{marginBottom:14,padding:'10px 14px',background:'rgba(200,80,80,0.08)',border:'1px solid rgba(200,80,80,0.2)',borderRadius:8,fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(220,140,140,0.9)'}}>{err}</div>}
+
+        <button onClick={submit} disabled={!agreed||!clientName.trim()||submitting} style={{width:'100%',padding:'14px 0',background:(agreed&&clientName.trim())?`linear-gradient(135deg,${acc},#7a4f0e)`:'rgba(201,169,110,0.1)',border:'none',borderRadius:20,cursor:(agreed&&clientName.trim())?'pointer':'not-allowed',color:(agreed&&clientName.trim())?'#0c0a08':'rgba(232,220,200,0.25)',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase'}}>
+          {submitting?'Submitting…':'✓ Submit & Sign'}
+        </button>
+        <div style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.3)',textAlign:'center',marginTop:10}}>
+          Digitally signed by {clientName||'…'} · {new Date().toLocaleDateString()} · Secured by Concierge AI
+        </div>
+      </>}
+    </div>
+  </div>;
+}
 
 function LegalFormModal({forms, profile, profileId, lang, onClose, onComplete}){
   const L=lang||'en';
@@ -3703,6 +4074,10 @@ function BusinessPagePreview({data, lang, onStartChat, onBack}){
 }
 
 function App(){
+  // Render form page directly when URL matches /forms/[slug]/[formType]
+  const _pathParts=window.location.pathname.replace(/^\//,'').split('/');
+  if(_pathParts[0]==='forms'&&_pathParts[1]&&_pathParts[2])return <FormPage/>;
+
   const[view,setView]=useState(()=>localStorage.getItem('ownerToken')?'owner-dashboard':null);
   const[prof,setProf]=useState(null);
   const[prompt,setPrompt]=useState(null);
