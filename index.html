@@ -1157,16 +1157,8 @@ var lettersStarted=false;
 function finishIntro(){
   if(introDone)return;introDone=true;
   if(introRaf)cancelAnimationFrame(introRaf);
-  if(brandEl)brandEl.style.opacity='0';
-  if(titleWrap)titleWrap.style.opacity='0';
-  /* brave-star-persistent removed — no central orb */
-  // Dark-to-dark fade — no white flash
-  introEl.style.transition='opacity 0.3s ease';
-  introEl.style.opacity='0';
-  setTimeout(function(){
-    introEl.style.display='none';
-    document.body.classList.add('intro-done');
-  },300);
+  introEl.style.display='none';
+  document.body.classList.add('intro-done');
   startBgRender();
 }
 
