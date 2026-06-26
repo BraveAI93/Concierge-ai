@@ -3225,7 +3225,7 @@ function Chat({profile,systemPrompt,profileId,onBack,lang}){
           {qas.map(q=><button key={q.label} className="qb" onClick={()=>send(q.msg)} style={{padding:'9px 11px',background:'rgba(201,169,110,0.045)',border:'1px solid rgba(201,169,110,0.1)',borderRadius:20,cursor:'pointer',color:'#e8dcc8',textAlign:'left',fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:400,lineHeight:1.4,transition:'all 0.2s'}}>{q.label}</button>)}
         </div>
         <button onClick={()=>send(L==='it'?"Non trovo quello che cerco — puoi aiutarmi?":"I can't find what I need — can you help?")} style={{width:'100%',padding:'11px 15px',background:'rgba(201,169,110,0.04)',border:'1px dashed rgba(201,169,110,0.2)',borderRadius:10,cursor:'pointer',display:'flex',alignItems:'center',gap:10,transition:'opacity 0.2s'}} onMouseOver={e=>e.currentTarget.style.opacity='0.7'} onMouseOut={e=>e.currentTarget.style.opacity='1'}>
-          <div style={{width:28,height:28,borderRadius:7,background:'rgba(201,169,110,0.09)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,flexShrink:0}}>✧</div>
+          <div style={{width:28,height:28,borderRadius:'50%',background:'rgba(201,169,110,0.09)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:13,flexShrink:0}}>✧</div>
           <div style={{textAlign:'left'}}>
             <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:500,color:acc}}>{TL.cantFind}</div>
             <div style={{fontSize:11,fontFamily:"'Jost',sans-serif",fontWeight:300,color:'rgba(232,220,200,0.32)',marginTop:1}}>{TL.tellGoals}</div>
@@ -3248,14 +3248,14 @@ function Chat({profile,systemPrompt,profileId,onBack,lang}){
 
       <div style={{paddingBottom:20,paddingTop:messages.length>0&&alerts.length===0?15:0}}>
         {messages.map((m,i)=><div key={i} className="ma" style={{marginBottom:11,display:'flex',flexDirection:m.role==='user'?'row-reverse':'row',alignItems:'flex-end',gap:7}}>
-          {m.role==='assistant'&&<div style={{width:24,height:24,borderRadius:6,flexShrink:0,marginBottom:2,background:m._blocked?'rgba(180,60,60,0.26)':P.gradient,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10}}>{m._blocked?'⚑':P.emoji}</div>}
+          {m.role==='assistant'&&<div style={{width:24,height:24,borderRadius:'50%',flexShrink:0,marginBottom:2,background:m._blocked?'rgba(180,60,60,0.26)':P.gradient,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10}}>{m._blocked?'⚑':P.emoji}</div>}
           <div style={{maxWidth:'75%',padding:'9px 13px',borderRadius:m.role==='user'?'13px 13px 4px 13px':'13px 13px 13px 4px',background:m.role==='user'?P.gradient:m._blocked?'rgba(180,60,60,0.06)':'rgba(255,255,255,0.03)',border:m.role==='user'?'none':m._blocked?'1px solid rgba(180,60,60,0.14)':'1px solid rgba(201,169,110,0.07)',color:m.role==='user'?'#0c0a08':m._blocked?'#b08080':'#e8dcc8',fontSize:15,lineHeight:1.72,fontFamily:m.role==='user'?"'Jost',sans-serif":"'Cormorant Garamond',serif",fontWeight:400,letterSpacing:m.role==='user'?'0.01em':'0.02em',whiteSpace:'pre-wrap',fontStyle:m._blocked?'italic':'normal'}}>
             {m.content}
             {m._blocked&&<div style={{marginTop:3,fontSize:9,fontFamily:"'Jost',sans-serif",color:'rgba(180,120,120,0.4)',letterSpacing:'0.07em',textTransform:'uppercase'}}>— blocked by {P.name}</div>}
           </div>
         </div>)}
         {loading&&<div className="ma" style={{display:'flex',alignItems:'flex-end',gap:7,marginBottom:11}}>
-          <div style={{width:24,height:24,borderRadius:6,background:P.gradient,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10}}>{P.emoji}</div>
+          <div style={{width:24,height:24,borderRadius:'50%',background:P.gradient,display:'flex',alignItems:'center',justifyContent:'center',fontSize:10}}>{P.emoji}</div>
           <div style={{padding:'9px 13px',borderRadius:'13px 13px 13px 4px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(201,169,110,0.07)'}}><Dots color={acc}/></div>
         </div>}
         {turns>=MAX_TURNS&&<div style={{textAlign:'center',padding:'16px 0',fontStyle:'italic',color:'rgba(232,220,200,0.25)',fontSize:14}}>{TL.demoEnd} <span style={{color:acc,cursor:'pointer'}} onClick={onBack}>{TL.tryAnother}</span></div>}
@@ -3295,7 +3295,7 @@ function Chat({profile,systemPrompt,profileId,onBack,lang}){
           disabled={turns>=MAX_TURNS} rows={1}
           style={{flex:1,background:'transparent',border:'none',color:'#e8dcc8',fontSize:15,fontFamily:"'Jost',sans-serif",fontWeight:300,letterSpacing:'0.02em',lineHeight:1.5,maxHeight:88,overflowY:'auto'}}
           onInput={e=>{e.target.style.height='auto';e.target.style.height=Math.min(e.target.scrollHeight,88)+'px';}}/>
-        <button onClick={()=>send()} disabled={loading||!input.trim()||turns>=MAX_TURNS} style={{width:31,height:31,borderRadius:7,flexShrink:0,background:input.trim()&&!loading&&turns<MAX_TURNS?P.gradient:'rgba(201,169,110,0.08)',border:'none',cursor:input.trim()&&!loading&&turns<MAX_TURNS?'pointer':'default',color:input.trim()&&!loading&&turns<MAX_TURNS?'#0c0a08':'rgba(201,169,110,0.2)',fontSize:13,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.2s'}}>↑</button>
+        <button onClick={()=>send()} disabled={loading||!input.trim()||turns>=MAX_TURNS} style={{width:31,height:31,borderRadius:'50%',flexShrink:0,background:input.trim()&&!loading&&turns<MAX_TURNS?P.gradient:'rgba(201,169,110,0.08)',border:'none',cursor:input.trim()&&!loading&&turns<MAX_TURNS?'pointer':'default',color:input.trim()&&!loading&&turns<MAX_TURNS?'#0c0a08':'rgba(201,169,110,0.2)',fontSize:13,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',transition:'all 0.2s'}}>↑</button>
       </div>
       <div style={{display:'flex',justifyContent:'space-between',marginTop:5,padding:'0 1px'}}>
         <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.12)',letterSpacing:'0.07em',textTransform:'uppercase'}}>{TL.powered}</div>
@@ -3400,7 +3400,7 @@ function generateBusinessPage(data, lang) {
     .link-btn:hover{background:rgba(201,169,110,0.08);border-color:rgba(201,169,110,0.25);transform:translateY(-1px)}
     .link-btn.primary{background:linear-gradient(135deg,${accent},#7a4f0e);border:none;color:#0c0a08;font-weight:600}
     .link-btn.primary:hover{opacity:0.88}
-    .link-icon{width:36px;height:36px;border-radius:9px;background:rgba(201,169,110,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+    .link-icon{width:36px;height:36px;border-radius:50%;background:rgba(201,169,110,0.1);display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
     .link-btn.primary .link-icon{background:rgba(0,0,0,0.15)}
     .link-title{font-size:13px;font-weight:500;letter-spacing:0.02em}
     .link-sub{font-size:10px;font-weight:300;opacity:0.65;margin-top:1px}
