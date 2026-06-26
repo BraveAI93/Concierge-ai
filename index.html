@@ -530,9 +530,8 @@
   <div id="owner-footer-link" style="display:none;text-align:center;margin-top:12px;padding-bottom:8px">
     <span onclick="window.goToOwnerArea&&window.goToOwnerArea()" style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(201,169,110,0.28);cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid rgba(201,169,110,0.18);padding-bottom:1px;transition:color 0.2s" onmouseover="this.style.color='rgba(201,169,110,0.55)'" onmouseout="this.style.color='rgba(201,169,110,0.28)'">Dashboard</span>
   </div>
-  <!-- Hidden admin gate — invisible ✦ at page bottom -->
   <div style="text-align:center;padding-bottom:18px;margin-top:4px">
-    <span onclick="(function(){var p=window.prompt('');if(p&&p.trim()==='brave2025'){window.loadOwner&&window.loadOwner();}})()" style="font-size:11px;color:rgba(201,169,110,0.08);cursor:default;user-select:none;font-family:'Jost',sans-serif;transition:color 0.3s" onmouseover="this.style.color='rgba(201,169,110,0.22)';this.style.cursor='pointer'" onmouseout="this.style.color='rgba(201,169,110,0.08)';this.style.cursor='default'" title="">✦</span>
+    <span onclick="window.goToAdminDashboard&&window.goToAdminDashboard()" style="font-size:10px;color:#c9a96e;opacity:0.3;cursor:pointer;user-select:none;font-family:'Jost',sans-serif">✦</span>
   </div>
 </div>
 
@@ -4251,6 +4250,9 @@ function App(){
   window.goToOwnerArea=()=>{
     _go(()=>{setView(ownerToken?'owner-dashboard':'owner-auth');document.getElementById('landing').style.display='none';document.getElementById('app').style.display='block';});
   };
+  window.goToAdminDashboard=()=>{
+    _go(()=>{setView('admin-dashboard');document.getElementById('landing').style.display='none';document.getElementById('app').style.display='block';});
+  };
 
   const back=()=>_go(()=>{setView(null);document.getElementById('landing').style.display='flex';document.getElementById('app').style.display='none';});
   window._appNavBack=back;
@@ -4265,7 +4267,7 @@ function App(){
     <div style={{fontSize:28,color:'#c9a96e',animation:'bravePulse 1.8s ease-in-out infinite',textShadow:'0 0 20px rgba(201,169,110,0.6)'}}>✦</div>
     <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.4)',letterSpacing:'0.1em',textTransform:'uppercase'}}>Loading your concierge…</div>
   </div>;
-  if(view==='admin')return <AdminDashboard onBack={back}/>;
+  if(view==='admin'||view==='admin-dashboard')return <AdminDashboard onBack={back}/>;
   if(view==='owner-auth')return <OwnerAuth onBack={back} onAuthed={(token,slug)=>{
     localStorage.setItem('cai_owner_token',token);
     localStorage.setItem('cai_owner_slug',slug||'');
