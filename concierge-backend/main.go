@@ -478,8 +478,8 @@ func sendWelcomeEmail(name, email, slug string) {
 	if fromEmail == "" {
 		fromEmail = "onboarding@resend.dev"
 	}
-	publicURL := fmt.Sprintf("https://concierge-ai-gamma.vercel.app/%s", slug)
-	dashboardURL := "https://concierge-ai-gamma.vercel.app"
+	publicURL := fmt.Sprintf("https://bravebybruno.com/%s", slug)
+	dashboardURL := "https://bravebybruno.com"
 	firstName := name
 	html := fmt.Sprintf(`<!DOCTYPE html>
 <html lang="en">
@@ -488,73 +488,92 @@ func sendWelcomeEmail(name, email, slug string) {
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Your Concierge is live</title>
 </head>
-<body style="margin:0;padding:0;background-color:#0c0a08;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
-<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0c0a08;min-height:100vh;">
-<tr><td align="center" style="padding:40px 16px;">
+<body style="margin:0;padding:0;background-color:#0a0a0a;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0a0a0a;min-height:100vh;">
+<tr><td align="center" style="padding:48px 16px 40px;">
 <table width="100%%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
 
-  <!-- Logo -->
-  <tr><td align="center" style="padding-bottom:32px;">
-    <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:#c9a96e;">✦ BRAVE BY BRUNO</div>
+  <!-- Header -->
+  <tr><td align="center" style="padding-bottom:36px;">
+    <div style="font-size:13px;letter-spacing:0.26em;text-transform:uppercase;color:#c9a96e;font-weight:600;">✦ THE CONCIERGE</div>
   </td></tr>
 
   <!-- Card -->
-  <tr><td style="background:linear-gradient(160deg,#141210,#0e0c0a);border:1px solid rgba(201,169,110,0.2);border-radius:20px;padding:40px 36px;box-shadow:0 0 60px rgba(201,169,110,0.06),0 24px 60px rgba(0,0,0,0.6);">
+  <tr><td style="background:#111010;border:1px solid rgba(201,169,110,0.18);border-radius:24px;padding:44px 40px 40px;box-shadow:0 0 80px rgba(201,169,110,0.05),0 32px 80px rgba(0,0,0,0.7);">
 
-    <!-- Greeting -->
-    <div style="font-size:26px;font-weight:400;color:#e8dcc8;margin-bottom:8px;letter-spacing:0.01em;">Welcome, %s.</div>
-    <div style="font-size:14px;color:rgba(232,220,200,0.45);font-weight:300;letter-spacing:0.03em;margin-bottom:32px;">Your AI concierge is live and ready for clients.</div>
+    <!-- H1 -->
+    <h1 style="margin:0 0 10px;font-size:32px;font-weight:700;color:#ffffff;letter-spacing:-0.01em;line-height:1.15;">Welcome, %s!</h1>
+    <p style="margin:0 0 36px;font-size:15px;color:rgba(255,255,255,0.38);font-weight:300;line-height:1.6;">Your AI concierge is live and ready for clients.</p>
 
-    <!-- Divider -->
-    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,169,110,0.25),transparent);margin-bottom:28px;"></div>
+    <!-- Gold divider -->
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,169,110,0.3),transparent);margin-bottom:36px;"></div>
 
-    <!-- Public link -->
-    <div style="margin-bottom:24px;">
-      <div style="font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:rgba(201,169,110,0.5);margin-bottom:10px;">Your public link — share with clients</div>
-      <a href="%s" style="display:inline-block;background:linear-gradient(135deg,#c9a96e,#7a4f0e);color:#0c0a08;text-decoration:none;padding:12px 22px;border-radius:50px;font-size:13px;font-weight:700;letter-spacing:0.05em;word-break:break-all;">%s</a>
+    <!-- Primary CTA: Share with clients -->
+    <div style="margin-bottom:14px;">
+      <a href="%s" style="display:block;background:linear-gradient(135deg,#c9a96e,#8a5a10);color:#0a0a0a;text-decoration:none;padding:15px 28px;border-radius:50px;font-size:14px;font-weight:700;letter-spacing:0.06em;text-align:center;text-transform:uppercase;">Share with clients →</a>
+    </div>
+    <div style="text-align:center;margin-bottom:36px;">
+      <span style="font-size:12px;color:rgba(201,169,110,0.45);word-break:break-all;">%s</span>
     </div>
 
-    <!-- Dashboard link -->
-    <div style="margin-bottom:32px;">
-      <div style="font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:rgba(201,169,110,0.5);margin-bottom:10px;">Your dashboard — manage leads &amp; settings</div>
-      <a href="%s" style="display:inline-block;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.25);color:#c9a96e;text-decoration:none;padding:11px 22px;border-radius:50px;font-size:13px;font-weight:500;letter-spacing:0.04em;">Open Dashboard →</a>
-      <div style="font-size:11px;color:rgba(232,220,200,0.25);margin-top:8px;font-weight:300;">Login with this email and the password you set during setup.</div>
+    <!-- Secondary CTA: Dashboard -->
+    <div style="margin-bottom:40px;text-align:center;">
+      <a href="%s" style="display:inline-block;background:transparent;border:1px solid rgba(201,169,110,0.3);color:#c9a96e;text-decoration:none;padding:12px 28px;border-radius:50px;font-size:13px;font-weight:500;letter-spacing:0.05em;">Open my dashboard →</a>
     </div>
 
-    <!-- Divider -->
-    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,169,110,0.15),transparent);margin-bottom:28px;"></div>
+    <!-- Gold divider -->
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,169,110,0.18),transparent);margin-bottom:36px;"></div>
 
     <!-- Next steps -->
-    <div style="margin-bottom:8px;">
-      <div style="font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:rgba(201,169,110,0.5);margin-bottom:16px;">Your next steps</div>
-      <table cellpadding="0" cellspacing="0" border="0" width="100%%">
-        <tr><td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
-          <span style="color:#c9a96e;font-size:14px;margin-right:12px;">01</span>
-          <span style="font-size:13px;color:rgba(232,220,200,0.7);font-weight:300;">Share your link with your first client</span>
-        </td></tr>
-        <tr><td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
-          <span style="color:#c9a96e;font-size:14px;margin-right:12px;">02</span>
-          <span style="font-size:13px;color:rgba(232,220,200,0.7);font-weight:300;">Connect Google Calendar in your dashboard</span>
-        </td></tr>
-        <tr><td style="padding:10px 0;">
-          <span style="color:#c9a96e;font-size:14px;margin-right:12px;">03</span>
-          <span style="font-size:13px;color:rgba(232,220,200,0.7);font-weight:300;">Customise your Brave PA in Settings → ✦ Brave PA</span>
-        </td></tr>
-      </table>
-    </div>
+    <div style="font-size:10px;font-weight:600;letter-spacing:0.16em;text-transform:uppercase;color:rgba(201,169,110,0.5);margin-bottom:20px;">Your next steps</div>
+    <table cellpadding="0" cellspacing="0" border="0" width="100%%">
+      <tr><td style="padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%%"><tr>
+          <td width="36" style="vertical-align:top;padding-top:1px;">
+            <div style="width:24px;height:24px;border-radius:50%%;background:rgba(201,169,110,0.12);border:1px solid rgba(201,169,110,0.25);text-align:center;line-height:24px;font-size:10px;font-weight:700;color:#c9a96e;">1</div>
+          </td>
+          <td>
+            <div style="font-size:14px;color:#ffffff;font-weight:500;margin-bottom:2px;">Share your link</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.35);font-weight:300;">Send it to clients, add it to your Instagram bio, put it everywhere.</div>
+          </td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:14px 0;border-bottom:1px solid rgba(255,255,255,0.05);">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%%"><tr>
+          <td width="36" style="vertical-align:top;padding-top:1px;">
+            <div style="width:24px;height:24px;border-radius:50%%;background:rgba(201,169,110,0.12);border:1px solid rgba(201,169,110,0.25);text-align:center;line-height:24px;font-size:10px;font-weight:700;color:#c9a96e;">2</div>
+          </td>
+          <td>
+            <div style="font-size:14px;color:#ffffff;font-weight:500;margin-bottom:2px;">Upload your photos</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.35);font-weight:300;">Add images and videos to your profile — Edit Profile → Upload media.</div>
+          </td>
+        </tr></table>
+      </td></tr>
+      <tr><td style="padding:14px 0;">
+        <table cellpadding="0" cellspacing="0" border="0" width="100%%"><tr>
+          <td width="36" style="vertical-align:top;padding-top:1px;">
+            <div style="width:24px;height:24px;border-radius:50%%;background:rgba(201,169,110,0.12);border:1px solid rgba(201,169,110,0.25);text-align:center;line-height:24px;font-size:10px;font-weight:700;color:#c9a96e;">3</div>
+          </td>
+          <td>
+            <div style="font-size:14px;color:#ffffff;font-weight:500;margin-bottom:2px;">Connect your calendar</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.35);font-weight:300;">Link Google Calendar so your AI can manage bookings automatically.</div>
+          </td>
+        </tr></table>
+      </td></tr>
+    </table>
 
   </td></tr>
 
-  <!-- Social footer -->
-  <tr><td align="center" style="padding-top:28px;padding-bottom:8px;">
-    <a href="https://www.instagram.com/bravebybruno" style="text-decoration:none;">
-      <span style="font-size:11px;color:rgba(201,169,110,0.45);letter-spacing:0.1em;">@bravebybruno</span>
+  <!-- Instagram footer -->
+  <tr><td align="center" style="padding-top:32px;padding-bottom:10px;">
+    <a href="https://www.instagram.com/bravebybruno" style="text-decoration:none;display:inline-flex;align-items:center;gap:6px;">
+      <span style="font-size:12px;color:rgba(201,169,110,0.5);letter-spacing:0.1em;">@bravebybruno</span>
     </a>
   </td></tr>
 
   <!-- Powered by -->
-  <tr><td align="center" style="padding-bottom:32px;">
-    <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(201,169,110,0.22);">Powered by Brave by Bruno</div>
+  <tr><td align="center" style="padding-bottom:40px;">
+    <div style="font-size:11px;letter-spacing:0.14em;text-transform:uppercase;color:#c9a96e;font-weight:500;">Powered by Brave by Bruno</div>
   </td></tr>
 
 </table>
