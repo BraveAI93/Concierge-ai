@@ -143,6 +143,10 @@ func verifyStripeSignature(payload []byte, sigHeader, secret string) bool {
 // ── Stripe Connect onboarding ─────────────────────────────────
 
 func handleStripeOnboard(c *gin.Context) {
+	if os.Getenv("STRIPE_SECRET_KEY") == "" {
+		c.JSON(200, gin.H{"connected": false, "reason": "not_configured"})
+		return
+	}
 	slug, ok := authenticateToken(c)
 	if !ok {
 		c.JSON(401, gin.H{"error": "Unauthorized"})
@@ -199,7 +203,9 @@ func handleStripeOnboard(c *gin.Context) {
 	}
 
 	p.StripeAccountID = accountID
-	db.UpdateProfile(*p)
+	if err := db.UpdateProfile(*p); err != nil {
+		fmt.Printf("Warning: could not save stripe_account_id for %s: %v\n", slug, err)
+	}
 
 	linkBody, err := stripePost("account_links", url.Values{
 		"account":     {accountID},

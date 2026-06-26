@@ -54,7 +54,7 @@ type Profile struct {
 	GoogleRefreshToken  string    `json:"google_refresh_token"`
 	DigestFrequency     string    `json:"digest_frequency"` // "none","biweekly","weekly","bimonthly","monthly"
 	DigestLastSent      time.Time `json:"digest_last_sent"`
-	StripeAccountID     string    `json:"stripe_account_id"`
+	StripeAccountID     string    `json:"stripe_account_id,omitempty"`
 	CreatedAt           time.Time `json:"created_at"`
 }
 
