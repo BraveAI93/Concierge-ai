@@ -99,6 +99,11 @@ func main() {
 	r.GET("/owner/booking-prefs", handleGetBookingPrefs)
 	r.POST("/owner/booking-prefs", handleSaveBookingPrefs)
 
+	// Multi-profile support
+	r.GET("/owner/profiles", handleGetOwnerProfiles)
+	r.POST("/owner/profiles", handleAddOwnerProfile)
+	r.POST("/owner/switch-profile", handleSwitchProfile)
+
 	// Stripe payments
 	r.POST("/stripe/onboard", handleStripeOnboard)
 	r.GET("/stripe/status", handleStripeStatus)
@@ -924,4 +929,97 @@ func handleSaveBookingPrefs(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"status": "ok"})
+}
+
+// ─── MULTI-PROFILE ─────────────────────────────────
+
+func handleGetOwnerProfiles(c *gin.Context) {
+	slug, ok := authenticateToken(c)
+	if !ok {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	owner, err := db.GetProfile(slug)
+	if err != nil || owner.Email == "" {
+		c.JSON(200, gin.H{"profiles": []interface{}{}})
+		return
+	}
+	profiles, err := db.GetProfilesByEmail(owner.Email)
+	if err != nil {
+		c.JSON(200, gin.H{"profiles": []interface{}{}})
+		return
+	}
+	for i := range profiles {
+		profiles[i].PasswordHash = ""
+		profiles[i].PasswordSalt = ""
+	}
+	c.JSON(200, gin.H{"profiles": profiles})
+}
+
+func handleAddOwnerProfile(c *gin.Context) {
+	slug, ok := authenticateToken(c)
+	if !ok {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	owner, err := db.GetProfile(slug)
+	if err != nil {
+		c.JSON(404, gin.H{"error": "Owner profile not found"})
+		return
+	}
+	var p db.Profile
+	if err := c.ShouldBindJSON(&p); err != nil {
+		c.JSON(400, gin.H{"error": "Invalid JSON: " + err.Error()})
+		return
+	}
+	if p.Slug == "" {
+		c.JSON(400, gin.H{"error": "Slug required"})
+		return
+	}
+	p.ID = uuid.New().String()
+	p.CreatedAt = time.Now()
+	p.Email = owner.Email
+	p.PasswordHash = owner.PasswordHash
+	p.PasswordSalt = owner.PasswordSalt
+	if err := db.SaveProfile(p); err != nil {
+		c.JSON(500, gin.H{"error": "Could not save profile", "detail": err.Error()})
+		return
+	}
+	token := generateToken()
+	if err := db.SaveSession(db.Session{Token: token, Slug: p.Slug, CreatedAt: time.Now()}); err != nil {
+		c.JSON(500, gin.H{"error": "Could not create session"})
+		return
+	}
+	c.JSON(200, gin.H{"status": "ok", "slug": p.Slug, "token": token})
+}
+
+func handleSwitchProfile(c *gin.Context) {
+	currentSlug, ok := authenticateToken(c)
+	if !ok {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	owner, err := db.GetProfile(currentSlug)
+	if err != nil || owner.Email == "" {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	var req struct {
+		Slug string `json:"slug"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil || req.Slug == "" {
+		c.JSON(400, gin.H{"error": "Slug required"})
+		return
+	}
+	target, err := db.GetProfile(req.Slug)
+	if err != nil || target.Email != owner.Email {
+		c.JSON(403, gin.H{"error": "Profile not linked to your account"})
+		return
+	}
+	token := generateToken()
+	if err := db.SaveSession(db.Session{Token: token, Slug: target.Slug, CreatedAt: time.Now()}); err != nil {
+		c.JSON(500, gin.H{"error": "Could not create session"})
+		return
+	}
+	c.JSON(200, gin.H{"token": token, "slug": target.Slug})
 }

@@ -283,6 +283,19 @@ func GetAllActiveProfiles() ([]Profile, error) {
 	return profiles, nil
 }
 
+func GetProfilesByEmail(email string) ([]Profile, error) {
+	u := fmt.Sprintf("%s/rest/v1/profiles?email=eq.%s&select=*&order=created_at.asc", supabaseURL(), url.QueryEscape(email))
+	b, err := getMany(u)
+	if err != nil {
+		return nil, err
+	}
+	var profiles []Profile
+	if err := json.Unmarshal(b, &profiles); err != nil {
+		return nil, err
+	}
+	return profiles, nil
+}
+
 func GetProfileByEmail(email string) (*Profile, error) {
 	u := fmt.Sprintf("%s/rest/v1/profiles?email=eq.%s&select=*", supabaseURL(), url.QueryEscape(email))
 	b, err := getMany(u)

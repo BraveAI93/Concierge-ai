@@ -2067,7 +2067,7 @@ function OwnerAuth({onBack, onAuthed}){
 }
 
 // ── OWNER PERSONAL DASHBOARD ────────────────────
-function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoaded}){
+function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoaded, onAddProfile, onSwitchProfile}){
   const[profile,setProfile]=useState(null);
   const[leads,setLeads]=useState([]);
   const[convCount,setConvCount]=useState(0);
@@ -2100,6 +2100,16 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoa
   const NOTIF_DEFAULTS={newLead:true,hotLead:true,newBooking:true,newMessage:false,dailyBriefing:false,soundEnabled:true,soundStyle:'subtle'};
   const[notifPrefs,setNotifPrefs]=useState(()=>{try{const s=localStorage.getItem('cai_notif_prefs');return s?{...NOTIF_DEFAULTS,...JSON.parse(s)}:NOTIF_DEFAULTS;}catch(e){return NOTIF_DEFAULTS;}});
   const updateNotif=(key,val)=>{const u={...notifPrefs,[key]:val};setNotifPrefs(u);localStorage.setItem('cai_notif_prefs',JSON.stringify(u));};
+  const[ownerProfiles,setOwnerProfiles]=useState([]);
+  const[profilesLoading,setProfilesLoading]=useState(false);
+
+  useEffect(()=>{
+    setProfilesLoading(true);
+    fetch(`${BACKEND_URL}/owner/profiles`,{headers:{Authorization:`Bearer ${token}`}})
+      .then(r=>r.ok?r.json():{profiles:[]})
+      .then(d=>{setOwnerProfiles(d.profiles||[]);setProfilesLoading(false);})
+      .catch(()=>setProfilesLoading(false));
+  },[token]);
 
   useEffect(()=>{
     Promise.all([
@@ -2255,7 +2265,7 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoa
 
       {/* Tabs */}
       <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:20}}>
-        {[['overview','📊 Overview'],['bookings','📅 Bookings'+(pendingBookings>0?` (${pendingBookings})`:'')],['notes','📝 Notes'],['news','📰 Insights'],['settings','⚙️ Settings']].map(([t,label])=>
+        {[['overview','📊 Overview'],['bookings','📅 Bookings'+(pendingBookings>0?` (${pendingBookings})`:'')],['notes','📝 Notes'],['news','📰 Insights'],['profiles','✦ Profiles'],['settings','⚙️ Settings']].map(([t,label])=>
           <button key={t} onClick={()=>setActiveTab(t)} style={tabBtn(t)}>{label}</button>
         )}
       </div>
@@ -2573,6 +2583,37 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoa
         <button onClick={onLogout} style={{width:'100%',padding:'12px 0',background:'rgba(200,80,80,0.08)',border:'1px solid rgba(200,80,80,0.2)',borderRadius:20,cursor:'pointer',color:'rgba(220,140,140,0.7)',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:500}}>
           Logout
         </button>
+      </>}
+
+      {/* ── PROFILES TAB ── */}
+      {activeTab==='profiles'&&<>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+          <div style={{...sectionLabel,marginTop:0,marginBottom:0}}>My Profiles</div>
+          <button onClick={onAddProfile} style={{padding:'7px 18px',background:'linear-gradient(135deg,#c9a96e,#7a4f0e)',border:'none',borderRadius:20,cursor:'pointer',color:'#0c0a08',fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:700,letterSpacing:'0.05em'}}>+ New Profile</button>
+        </div>
+        {profilesLoading&&<div style={{textAlign:'center',padding:'28px 0',color:'rgba(201,169,110,0.4)',fontSize:13,fontFamily:"'Jost',sans-serif"}}>Loading profiles…</div>}
+        {ownerProfiles.map(p=>(
+          <div key={p.slug} style={{...card,display:'flex',alignItems:'center',gap:12,marginBottom:10}}>
+            <div style={{flex:1,minWidth:0}}>
+              <div style={{fontSize:14,fontWeight:500,color:'#e8dcc8',marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div>
+              <div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.6)',marginBottom:1}}>/{p.slug}</div>
+              <div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.32)'}}>{p.profession||''}{p.business&&p.business!==p.name?` · ${p.business}`:''}</div>
+            </div>
+            <div style={{display:'flex',flexDirection:'column',gap:6,flexShrink:0}}>
+              {p.slug===slug
+                ?<span style={{padding:'5px 12px',background:'rgba(201,169,110,0.07)',border:'1px solid rgba(201,169,110,0.18)',borderRadius:20,fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.5)',textAlign:'center',letterSpacing:'0.06em',textTransform:'uppercase'}}>Active</span>
+                :<button onClick={()=>onSwitchProfile&&onSwitchProfile(p.slug)} style={{padding:'5px 12px',background:'rgba(201,169,110,0.1)',border:'1px solid rgba(201,169,110,0.3)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'#c9a96e'}}>Switch →</button>
+              }
+              <a href={`https://concierge-ai-gamma.vercel.app/${p.slug}`} target="_blank" rel="noopener noreferrer" style={{padding:'5px 12px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:20,fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)',textDecoration:'none',textAlign:'center'}}>View ↗</a>
+            </div>
+          </div>
+        ))}
+        {!profilesLoading&&ownerProfiles.length===0&&(
+          <div style={{...card,textAlign:'center',padding:'32px 18px'}}>
+            <div style={{fontSize:13,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.3)',marginBottom:14}}>No profiles yet — create your first one.</div>
+            <button onClick={onAddProfile} style={{padding:'9px 22px',background:'linear-gradient(135deg,#c9a96e,#7a4f0e)',border:'none',borderRadius:20,cursor:'pointer',color:'#0c0a08',fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:700}}>+ New Profile</button>
+          </div>
+        )}
       </>}
 
     </div>
@@ -3774,6 +3815,21 @@ function App(){
     setOwnerToken(null);setOwnerSlug(null);
     _go(()=>{setView(null);document.getElementById('landing').style.display='flex';document.getElementById('app').style.display='none';});
   };
+  const switchProfile=async(targetSlug)=>{
+    const tok=ownerToken||localStorage.getItem('cai_owner_token');
+    try{
+      const r=await fetch(`${BACKEND_URL}/owner/switch-profile`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${tok}`},body:JSON.stringify({slug:targetSlug})});
+      const d=await r.json().catch(()=>({}));
+      if(r.ok&&d.token){
+        localStorage.setItem('cai_owner_token',d.token);
+        localStorage.setItem('cai_owner_slug',d.slug);
+        localStorage.setItem('ownerToken',d.token);
+        setOwnerToken(d.token);
+        setOwnerSlug(d.slug);
+        setView('owner-dashboard');
+      }
+    }catch(e){}
+  };
 
   if(loadingProfile)return <div style={{minHeight:'100vh',background:'#0c0a08',display:'flex',alignItems:'center',justifyContent:'center',flexDirection:'column',gap:12}}>
     <div style={{fontSize:28,color:'#c9a96e',animation:'bravePulse 1.8s ease-in-out infinite',textShadow:'0 0 20px rgba(201,169,110,0.6)'}}>✦</div>
@@ -3792,7 +3848,7 @@ function App(){
   // Use localStorage as synchronous fallback in case React batch renders view before ownerToken state is flushed
   const _tok=ownerToken||localStorage.getItem('cai_owner_token');
   const _slg=ownerSlug||localStorage.getItem('cai_owner_slug');
-  if(view==='owner-dashboard'&&_tok)return <><OwnerDashboard token={_tok} slug={_slg} onBack={back} onLogout={ownerLogout} onEditProfile={()=>setView('owner-edit')} onDataLoaded={(p,l,c)=>setPaData({profile:p,leads:l,convCount:c})}/><BravePAv2 token={_tok} slug={_slg} profile={paData.profile} leads={paData.leads} convCount={paData.convCount}/></>;
+  if(view==='owner-dashboard'&&_tok)return <><OwnerDashboard token={_tok} slug={_slg} onBack={back} onLogout={ownerLogout} onEditProfile={()=>setView('owner-edit')} onDataLoaded={(p,l,c)=>setPaData({profile:p,leads:l,convCount:c})} onAddProfile={()=>setView('add-profile')} onSwitchProfile={switchProfile}/><BravePAv2 token={_tok} slug={_slg} profile={paData.profile} leads={paData.leads} convCount={paData.convCount}/></>;
   if(view==='owner-edit'&&_tok)return <><OwnerEditProfile token={_tok} slug={_slg} lang={lang} onBack={()=>setView('owner-dashboard')} onSaved={()=>setView('owner-dashboard')}/><BravePAv2 token={_tok} slug={_slg} profile={paData.profile} leads={paData.leads} convCount={paData.convCount}/></>;
   if(view==='preview'&&onboardData)return <BusinessPagePreview
     data={onboardData}
@@ -3800,6 +3856,26 @@ function App(){
     onStartChat={()=>setView('chat')}
     onBack={back}
   />;
+  if(view==='add-profile'&&_tok)return <Onboarding lang={lang} onBack={()=>setView('owner-dashboard')} onComplete={async(data)=>{
+    const sp=buildPrompt(data,lang);
+    const newSlug=data.handle||((data.name||'me').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')+'-'+Math.random().toString(36).slice(2,6));
+    try{
+      const r=await fetch(`${BACKEND_URL}/owner/profiles`,{method:'POST',
+        headers:{'Content-Type':'application/json',Authorization:`Bearer ${_tok}`},
+        body:JSON.stringify({slug:newSlug,name:data.name,business:data.biz||data.name,profession:data.profession||'Professional',location:data.loc||'',system_prompt:sp,profile_data:JSON.stringify(data),accent:'#c9a96e',active:true})});
+      const d=await r.json().catch(()=>({}));
+      if(r.ok&&d.token){
+        localStorage.setItem('cai_owner_token',d.token);
+        localStorage.setItem('cai_owner_slug',d.slug||newSlug);
+        localStorage.setItem('ownerToken',d.token);
+        setOwnerToken(d.token);
+        setOwnerSlug(d.slug||newSlug);
+      } else if(!r.ok){
+        alert(`Could not save profile: ${d.error||r.status}`);
+      }
+    }catch(e){alert(`Could not save profile: ${e.message}`);}
+    setView('owner-dashboard');
+  }}/>;
   if(view==='onboard')return <Onboarding lang={lang} onBack={back} onComplete={async(data)=>{
     const sp=buildPrompt(data,lang);
     const slug=data.handle||((data.name||'me').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')+'-'+Math.random().toString(36).slice(2,6));
