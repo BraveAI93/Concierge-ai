@@ -467,22 +467,93 @@ func sendWelcomeEmail(name, email, slug string) {
 		fromEmail = "onboarding@resend.dev"
 	}
 	publicURL := fmt.Sprintf("https://concierge-ai-gamma.vercel.app/%s", slug)
-	dashboardHint := "https://concierge-ai-gamma.vercel.app (tap 'My Profile Login')"
-	html := fmt.Sprintf(`
-		<h2>Welcome to Concierge AI, %s!</h2>
-		<p>Your AI concierge is live. Here's everything you need:</p>
-		<p><strong>Your public link (share this with clients):</strong><br>
-		<a href="%s">%s</a></p>
-		<p><strong>Your dashboard (manage your profile, see leads):</strong><br>
-		%s<br>
-		Login with this email and the password you chose during setup.</p>
-		<p>Save this email — it has everything you need to find your way back.</p>
-		<p>— Concierge AI</p>
-	`, name, publicURL, publicURL, dashboardHint)
+	dashboardURL := "https://concierge-ai-gamma.vercel.app"
+	firstName := name
+	html := fmt.Sprintf(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Your Concierge is live</title>
+</head>
+<body style="margin:0;padding:0;background-color:#0c0a08;font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;">
+<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0c0a08;min-height:100vh;">
+<tr><td align="center" style="padding:40px 16px;">
+<table width="100%%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+
+  <!-- Logo -->
+  <tr><td align="center" style="padding-bottom:32px;">
+    <div style="font-family:'Helvetica Neue',Helvetica,Arial,sans-serif;font-size:11px;font-weight:600;letter-spacing:0.22em;text-transform:uppercase;color:#c9a96e;">✦ BRAVE BY BRUNO</div>
+  </td></tr>
+
+  <!-- Card -->
+  <tr><td style="background:linear-gradient(160deg,#141210,#0e0c0a);border:1px solid rgba(201,169,110,0.2);border-radius:20px;padding:40px 36px;box-shadow:0 0 60px rgba(201,169,110,0.06),0 24px 60px rgba(0,0,0,0.6);">
+
+    <!-- Greeting -->
+    <div style="font-size:26px;font-weight:400;color:#e8dcc8;margin-bottom:8px;letter-spacing:0.01em;">Welcome, %s.</div>
+    <div style="font-size:14px;color:rgba(232,220,200,0.45);font-weight:300;letter-spacing:0.03em;margin-bottom:32px;">Your AI concierge is live and ready for clients.</div>
+
+    <!-- Divider -->
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,169,110,0.25),transparent);margin-bottom:28px;"></div>
+
+    <!-- Public link -->
+    <div style="margin-bottom:24px;">
+      <div style="font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:rgba(201,169,110,0.5);margin-bottom:10px;">Your public link — share with clients</div>
+      <a href="%s" style="display:inline-block;background:linear-gradient(135deg,#c9a96e,#7a4f0e);color:#0c0a08;text-decoration:none;padding:12px 22px;border-radius:50px;font-size:13px;font-weight:700;letter-spacing:0.05em;word-break:break-all;">%s</a>
+    </div>
+
+    <!-- Dashboard link -->
+    <div style="margin-bottom:32px;">
+      <div style="font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:rgba(201,169,110,0.5);margin-bottom:10px;">Your dashboard — manage leads &amp; settings</div>
+      <a href="%s" style="display:inline-block;background:rgba(201,169,110,0.08);border:1px solid rgba(201,169,110,0.25);color:#c9a96e;text-decoration:none;padding:11px 22px;border-radius:50px;font-size:13px;font-weight:500;letter-spacing:0.04em;">Open Dashboard →</a>
+      <div style="font-size:11px;color:rgba(232,220,200,0.25);margin-top:8px;font-weight:300;">Login with this email and the password you set during setup.</div>
+    </div>
+
+    <!-- Divider -->
+    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(201,169,110,0.15),transparent);margin-bottom:28px;"></div>
+
+    <!-- Next steps -->
+    <div style="margin-bottom:8px;">
+      <div style="font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:rgba(201,169,110,0.5);margin-bottom:16px;">Your next steps</div>
+      <table cellpadding="0" cellspacing="0" border="0" width="100%%">
+        <tr><td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+          <span style="color:#c9a96e;font-size:14px;margin-right:12px;">01</span>
+          <span style="font-size:13px;color:rgba(232,220,200,0.7);font-weight:300;">Share your link with your first client</span>
+        </td></tr>
+        <tr><td style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,0.04);">
+          <span style="color:#c9a96e;font-size:14px;margin-right:12px;">02</span>
+          <span style="font-size:13px;color:rgba(232,220,200,0.7);font-weight:300;">Connect Google Calendar in your dashboard</span>
+        </td></tr>
+        <tr><td style="padding:10px 0;">
+          <span style="color:#c9a96e;font-size:14px;margin-right:12px;">03</span>
+          <span style="font-size:13px;color:rgba(232,220,200,0.7);font-weight:300;">Customise your Brave PA in Settings → ✦ Brave PA</span>
+        </td></tr>
+      </table>
+    </div>
+
+  </td></tr>
+
+  <!-- Social footer -->
+  <tr><td align="center" style="padding-top:28px;padding-bottom:8px;">
+    <a href="https://www.instagram.com/bravebybruno" style="text-decoration:none;">
+      <span style="font-size:11px;color:rgba(201,169,110,0.45);letter-spacing:0.1em;">@bravebybruno</span>
+    </a>
+  </td></tr>
+
+  <!-- Powered by -->
+  <tr><td align="center" style="padding-bottom:32px;">
+    <div style="font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(201,169,110,0.22);">Powered by Brave by Bruno</div>
+  </td></tr>
+
+</table>
+</td></tr>
+</table>
+</body>
+</html>`, firstName, publicURL, publicURL, dashboardURL)
 	body := map[string]interface{}{
-		"from":    "Concierge AI <" + fromEmail + ">",
+		"from":    "Brave by Bruno <" + fromEmail + ">",
 		"to":      []string{email},
-		"subject": "Your Concierge AI is live — save this email",
+		"subject": "✦ Your Concierge is live, " + firstName,
 		"html":    html,
 	}
 	b, _ := json.Marshal(body)
