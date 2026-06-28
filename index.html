@@ -4817,8 +4817,8 @@ function App(){
   },[lang]);
 
   const[loadingProfile,setLoadingProfile]=useState(false);
-  const[ownerToken,setOwnerToken]=useState(()=>localStorage.getItem('cai_owner_token')||null);
-  const[ownerSlug,setOwnerSlug]=useState(()=>localStorage.getItem('cai_owner_slug')||null);
+  const[ownerToken,setOwnerToken]=useState(()=>localStorage.getItem('ownerToken')||localStorage.getItem('cai_owner_token')||null);
+  const[ownerSlug,setOwnerSlug]=useState(()=>{try{const _p=localStorage.getItem('ownerProfile');if(_p){const _j=JSON.parse(_p);if(_j.slug)return _j.slug;}}catch(e){}return localStorage.getItem('cai_owner_slug')||null;});
   const[paData,setPaData]=useState({profile:null,leads:[],convCount:0});
 
   // Restore session immediately on mount if both ownerToken and ownerProfile exist in localStorage
