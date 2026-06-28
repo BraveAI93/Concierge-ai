@@ -4868,12 +4868,12 @@ function App(){
             document.open();document.write(pageHtml);document.close();
             return;
           } else {
-            if(l)l.style.display='flex';if(a)a.style.display='none';
+            if(!localStorage.getItem('ownerToken')){if(l)l.style.display='flex';if(a)a.style.display='none';}
           }
         })
         .catch(()=>{
           setLoadingProfile(false);
-          if(l)l.style.display='flex';if(a)a.style.display='none';
+          if(!localStorage.getItem('ownerToken')){if(l)l.style.display='flex';if(a)a.style.display='none';}
         });
     }
   },[]);
