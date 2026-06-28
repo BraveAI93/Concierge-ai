@@ -3459,13 +3459,60 @@ function OwnerEditProfile({token, slug, lang, onBack, onSaved}){
 }
 
 // ── ONBOARDING ─────────────────────────────────
+// Returns ordered step IDs for the active profession mode(s).
+// null = show all steps (no mode selected yet).
+function getActiveStepIds(modes){
+  if(!modes||!modes.length)return null;
+  const hasBB=modes.some(m=>m.includes('B&B'));
+  const hasPerformer=modes.some(m=>m.includes('Performer'));
+  const hasCreator=modes.some(m=>m.includes('Creator'));
+  const hasWellness=modes.some(m=>m.includes('Wellness'));
+  const hasChef=modes.some(m=>m.includes('Chef')||m.includes('Hospitality'));
+  const hasGeneral=modes.some(m=>m.includes('Consultant')||m.includes('Educator')||m.includes('Trades'));
+  const common=['modes','basics','tone','ex'];
+  const tail=['handle','account'];
+  let mid=[];
+  if(hasBB&&!hasWellness&&!hasPerformer&&!hasCreator){
+    // B&B: property → location → legal → contact → media → extra
+    mid=['bb','location','legal','contact','media','extra'];
+  } else if(hasWellness&&!hasPerformer&&!hasCreator){
+    // Therapist/Massage: services → location → sensitive → legal → contact → media → extra
+    mid=['svcs','location','sensitive','legal','contact','media','extra'];
+  } else if(hasPerformer&&!hasCreator&&!hasWellness){
+    // Performer/Dancer: acts → perform details → media → sensitive → contact → extra
+    mid=['svcs','perform','media','sensitive','contact','extra'];
+  } else if(hasCreator&&!hasPerformer&&!hasWellness){
+    // Creator: creator details → media → sensitive → contact → extra
+    mid=['creator','media','sensitive','contact','extra'];
+  } else {
+    // Multi-mode or generic: union of relevant steps in logical order
+    const s=new Set();
+    if(hasWellness||hasChef||hasGeneral||hasPerformer)s.add('svcs');
+    if(hasPerformer)s.add('perform');
+    if(hasCreator)s.add('creator');
+    if(hasBB)s.add('bb');
+    if(hasWellness||hasChef||hasGeneral||hasBB)s.add('location');
+    s.add('sensitive');
+    if(hasWellness||hasBB)s.add('legal');
+    s.add('contact');s.add('media');s.add('extra');
+    ['svcs','perform','creator','bb','location','sensitive','legal','contact','media','extra']
+      .forEach(id=>{if(s.has(id))mid.push(id);});
+  }
+  return [...common,...mid,...tail];
+}
+
 function Onboarding({onComplete,onBack,lang}){
   const[step,setStep]=useState(0);const[data,setData]=useState({});const[services,setServices]=useState([{name:'',durNum:'',durUnit:'min',priceNum:'',currency:'£',desc:''}]);
   const[handle,setHandle]=useState('');const[handleStatus,setHandleStatus]=useState('');const[handleTouched,setHandleTouched]=useState(false);
   const[geoStatus,setGeoStatus]=useState('');
   const[obUploading,setObUploading]=useState(false);const[obUploadPct,setObUploadPct]=useState(0);const[mediaUploads,setMediaUploads]=useState([]);
   const[svcImporting,setSvcImporting]=useState(false);const[svcPreview,setSvcPreview]=useState(null);
-  const cur=STEPS[step];const total=STEPS.length;const L=lang||'en';
+  const L=lang||'en';
+  const _activeIds=getActiveStepIds(data.modes||[]);
+  const _stepDefs=_activeIds?_activeIds.map(id=>STEPS.find(s=>s.id===id)).filter(Boolean):STEPS;
+  const total=_stepDefs.length;
+  const safeStep=Math.min(step,total-1);
+  const cur=_stepDefs[safeStep];
   const set=(k,v)=>setData(d=>({...d,[k]:v}));
   const tog=(f,v)=>{const a=data[f]||[];set(f,a.includes(v)?a.filter(x=>x!==v):[...a,v]);};
 
@@ -3581,7 +3628,7 @@ function Onboarding({onComplete,onBack,lang}){
   const next=()=>{
     if(cur.type==='services')set('services',services.filter(s=>s.name.trim()));
     if(cur.id==='media'&&mediaUploads.length>0)set('media_gallery',[...(data.media_gallery||[]),...mediaUploads]);
-    if(step<total-1)setStep(s=>s+1);
+    if(safeStep<total-1)setStep(safeStep+1);
     else onComplete({...data,services:services.filter(s=>s.name.trim()),handle:handle,media_gallery:[...(data.media_gallery||[]),...mediaUploads]});
   };
   const chip=(label,active,onClick)=><button key={label} onClick={onClick} style={{padding:'7px 12px',borderRadius:20,cursor:'pointer',fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:active?500:300,border:active?'1px solid #c9a96e':'1px solid rgba(201,169,110,0.16)',background:active?'rgba(201,169,110,0.15)':'rgba(201,169,110,0.04)',color:active?'#e8c878':'rgba(232,220,200,0.52)',transition:'all 0.15s',marginBottom:4}}>{label}</button>;
@@ -3590,12 +3637,12 @@ function Onboarding({onComplete,onBack,lang}){
     <div style={{width:'100%',maxWidth:490}}>
       <div style={{textAlign:'center',marginBottom:24}}>
         <div style={{fontSize:11,fontFamily:"'Jost',sans-serif",fontWeight:300,letterSpacing:'0.18em',textTransform:'uppercase',color:'rgba(201,169,110,0.42)',marginBottom:5}}>✦ The Conc<span className="concierge-brand"><span style={{visibility:'hidden'}}>i</span><span className="concierge-idot"/></span>erge</div>
-        <div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.28)',letterSpacing:'0.07em'}}>Step {step+1} / {total}</div>
+        <div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.28)',letterSpacing:'0.07em'}}>Step {safeStep+1} / {total}</div>
       </div>
       <div style={{height:2,background:'rgba(201,169,110,0.1)',borderRadius:2,marginBottom:22}}>
-        <div style={{height:'100%',width:`${(step/total)*100}%`,background:'linear-gradient(90deg,#c9a96e,#e8c878)',borderRadius:2,transition:'width 0.4s ease'}}/>
+        <div style={{height:'100%',width:`${(safeStep/Math.max(total-1,1))*100}%`,background:'linear-gradient(90deg,#c9a96e,#e8c878)',borderRadius:2,transition:'width 0.4s ease'}}/>
       </div>
-      <div key={step} style={{animation:'fadeUp 0.3s ease forwards',background:'rgba(12,10,8,0.78)',border:'1px solid rgba(201,169,110,0.2)',borderRadius:20,padding:'24px 22px',marginBottom:11,backdropFilter:'blur(18px)',boxShadow:'0 0 32px rgba(201,169,110,0.07),0 12px 40px rgba(0,0,0,0.5)'}}>
+      <div key={safeStep} style={{animation:'fadeUp 0.3s ease forwards',background:'rgba(12,10,8,0.78)',border:'1px solid rgba(201,169,110,0.2)',borderRadius:20,padding:'24px 22px',marginBottom:11,backdropFilter:'blur(18px)',boxShadow:'0 0 32px rgba(201,169,110,0.07),0 12px 40px rgba(0,0,0,0.5)'}}>
         <div style={{fontSize:20,fontWeight:500,color:'#e8dcc8',marginBottom:5}}>{typeof cur.title==='object'?cur.title[L]:cur.title}</div>
         <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:300,color:'rgba(232,220,200,0.4)',lineHeight:1.6,marginBottom:17}}>{typeof cur.sub==='object'?cur.sub[L]:cur.sub}</div>
         {cur.type==='chips'&&<div style={{display:'flex',flexWrap:'wrap',gap:7}}>{cur.options.map(o=>chip(o,data[cur.field]===o,()=>set(cur.field,o)))}</div>}
@@ -3792,9 +3839,9 @@ function Onboarding({onComplete,onBack,lang}){
         </div>}
       </div>
       <div style={{display:'flex',gap:8}}>
-        {step>0&&<button onClick={()=>setStep(s=>s-1)} style={{padding:'10px 16px',background:'none',border:'1px solid rgba(201,169,110,0.12)',borderRadius:20,cursor:'pointer',color:'rgba(232,220,200,0.35)',fontSize:12,fontFamily:"'Jost',sans-serif"}}>{L==='it'?'Indietro':'Back'}</button>}
+        {safeStep>0&&<button onClick={()=>setStep(Math.max(0,safeStep-1))} style={{padding:'10px 16px',background:'none',border:'1px solid rgba(201,169,110,0.12)',borderRadius:20,cursor:'pointer',color:'rgba(232,220,200,0.35)',fontSize:12,fontFamily:"'Jost',sans-serif"}}>{L==='it'?'Indietro':'Back'}</button>}
         <button onClick={next} disabled={!canNext()} style={{flex:1,padding:'11px 0',background:canNext()?'linear-gradient(135deg,#c9a96e,#8c5e14)':'rgba(201,169,110,0.09)',border:'none',borderRadius:20,cursor:canNext()?'pointer':'default',color:canNext()?'#0c0a08':'rgba(201,169,110,0.25)',fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:600,letterSpacing:'0.07em',textTransform:'uppercase',transition:'all 0.2s'}}>
-          {step===total-1?(L==='it'?'Lancia il tuo Concierge ✦':'Launch My Concierge ✦'):(L==='it'?'Continua →':'Continue →')}
+          {safeStep===total-1?(L==='it'?'Lancia il tuo Concierge ✦':'Launch My Concierge ✦'):(L==='it'?'Continua →':'Continue →')}
         </button>
       </div>
       <div style={{textAlign:'center',marginTop:12}}>
