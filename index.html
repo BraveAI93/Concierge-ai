@@ -4802,7 +4802,7 @@ function App(){
   const _pathParts=window.location.pathname.replace(/^\//,'').split('/');
   if(_pathParts[0]==='forms'&&_pathParts[1]&&_pathParts[2])return <FormPage/>;
 
-  const[view,setView]=useState(()=>{const _t=localStorage.getItem('ownerToken')||localStorage.getItem('cai_owner_token');const _p=localStorage.getItem('ownerProfile');return(_t&&_p)?'owner-dashboard':null;});
+  const[view,setView]=useState(()=>{const _t=localStorage.getItem('ownerToken')||localStorage.getItem('cai_owner_token');return _t?'owner-dashboard':null;});
   const[prof,setProf]=useState(null);
   const[prompt,setPrompt]=useState(null);
   const[profId,setProfId]=useState(null);
