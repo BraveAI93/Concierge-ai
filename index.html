@@ -562,7 +562,7 @@
 (function(){
   var tok=localStorage.getItem('ownerToken')||localStorage.getItem('cai_owner_token');
   var prof=localStorage.getItem('ownerProfile');
-  if(tok&&prof){
+  if(tok){
     window._ownerSessionActive=true;
     var intro=document.getElementById('intro-screen');
     if(intro)intro.style.display='none';
