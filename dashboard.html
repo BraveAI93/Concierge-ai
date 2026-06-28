@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Dashboard — The Concierge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:#0c0a08;color:#e8dcc8;font-family:'Cormorant Garamond',Georgia,serif;min-height:100vh}
+    @keyframes bravePulse{0%,100%{opacity:1;box-shadow:0 0 6px 3px rgba(201,169,110,0.9),0 0 18px 8px rgba(201,169,110,0.35)}50%{opacity:0.7;box-shadow:0 0 12px 6px rgba(201,169,110,1),0 0 32px 14px rgba(201,169,110,0.55)}}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+    .dash-glass{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+    .dash-glass:hover{transform:translateY(-2px);box-shadow:0 16px 48px rgba(0,0,0,0.55),0 0 0 1px rgba(255,215,0,0.1),0 0 24px rgba(201,169,110,0.09)!important;border-color:rgba(255,215,0,0.28)!important}
+    .dash-stat{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;cursor:default}
+    .dash-stat:hover{transform:translateY(-4px);box-shadow:0 20px 56px rgba(0,0,0,0.6),0 0 32px rgba(201,169,110,0.15)!important;border-color:rgba(255,215,0,0.35)!important}
+    .news-item{cursor:pointer;transition:background .2s,border-color .2s}
+    .news-item:hover{background:rgba(255,255,255,0.04)!important;border-color:rgba(255,215,0,0.22)!important}
+    .news-body{overflow:hidden;transition:max-height .32s cubic-bezier(.22,1,.36,1),opacity .25s ease}
+    .news-chevron{display:inline-block;transition:transform .25s ease;font-size:10px;color:rgba(201,169,110,0.4);margin-left:6px;vertical-align:middle}
+    .news-chevron.open{transform:rotate(180deg)}
+  </style>
+  <script>
+    // Synchronous token check — redirect before any render if no session
+    (function(){
+      var token = localStorage.getItem('ownerToken') || localStorage.getItem('cai_owner_token');
+      if(!token) { window.location.replace('/theconcierge'); }
+    })();
+  </script>
+</head>
+<body>
+<div id="app"></div>
+
+<script type="text/babel" data-presets="react,env">
+const {useState, useEffect, useRef, useCallback, useMemo} = React;
+const BACKEND_URL = 'https://concierge-backend-80rb.onrender.com';
+
+const LEGAL_FORM_FIELDS = {
+  "Health & medical disclosure": {en:{title:"Health & Medical Disclosure",q:"Please disclose any relevant medical conditions, medications, or health concerns."},it:{title:"Dichiarazione Sanitaria",q:"Indica eventuali condizioni mediche, farmaci o problemi di salute rilevanti."}},
+  "Injury / allergy declaration": {en:{title:"Injury & Allergy Declaration",q:"List any current injuries, allergies (incl. essential oils/products), or areas to avoid."},it:{title:"Dichiarazione Infortuni e Allergie",q:"Elenca infortuni in corso, allergie (incl. oli essenziali/prodotti) o zone da evitare."}},
+  "Pregnancy disclosure": {en:{title:"Pregnancy Disclosure",q:"Are you currently pregnant? If yes, please note how many weeks."},it:{title:"Dichiarazione Gravidanza",q:"Sei attualmente incinta? Se sì, indica la settimana."}},
+  "Image & usage rights release": {en:{title:"Image & Usage Rights Release",q:"I grant permission for photos/videos taken during this session to be used for promotional purposes."},it:{title:"Liberatoria Diritti di Immagine",q:"Autorizzo l'uso di foto/video per scopi promozionali."}},
+  "Content collaboration NDA": {en:{title:"Content Collaboration NDA",q:"I agree to keep details of this collaboration confidential."},it:{title:"NDA Collaborazione Contenuti",q:"Accetto di mantenere riservati i dettagli di questa collaborazione."}},
+  "ID / age verification": {en:{title:"ID & Age Verification",q:"Please confirm your full legal name and date of birth."},it:{title:"Verifica Identità ed Età",q:"Conferma il tuo nome legale completo e data di nascita."}},
+  "Property damage deposit terms": {en:{title:"Property Damage Deposit Terms",q:"I understand a deposit may be retained in case of damage to the property."},it:{title:"Termini Deposito Cauzionale",q:"Comprendo che un deposito potrebbe essere trattenuto in caso di danni."}},
+  "Cancellation policy agreement": {en:{title:"Cancellation Policy Agreement",q:"I have read and agree to the cancellation policy."},it:{title:"Accordo Politica di Cancellazione",q:"Ho letto e accetto la politica di cancellazione."}},
+  "Data processing consent (GDPR)": {en:{title:"Data Processing Consent (GDPR)",q:"I consent to my personal data being processed for the purpose of this booking."},it:{title:"Consenso Trattamento Dati (GDPR)",q:"Acconsento al trattamento dei miei dati personali per questa prenotazione."}},
+};
+const FORM_SLUGS = {
+  "health-disclosure":"Health & medical disclosure","injury-allergy":"Injury / allergy declaration",
+  "pregnancy":"Pregnancy disclosure","image-rights":"Image & usage rights release",
+  "nda":"Content collaboration NDA","id-verification":"ID / age verification",
+  "damage-deposit":"Property damage deposit terms","cancellation-policy":"Cancellation policy agreement",
+  "gdpr-consent":"Data processing consent (GDPR)",
+};
+const FORM_KEY_TO_SLUG = Object.fromEntries(Object.entries(FORM_SLUGS).map(([s,k])=>[k,s]));
+
+const PA_PERSONALITIES = {
+  professional:{label:'Professional',style:'Clear, direct, no fluff. Professional but warm.'},
+  creative:{label:'Creative',style:'Enthusiastic, full of ideas, thinks outside the box.'},
+  calm:{label:'Calm',style:'Measured, reassuring, helps prioritise and de-stress.'},
+  direct:{label:'Direct',style:'Ultra-concise. Bullet points. Action items. Zero waffle.'},
+};
+
+function buildBravePAPrompt(profile, paConfig, businessData) {
+  const name = paConfig?.paName || 'Brave PA';
+  const ownerName = profile?.name?.split(' ')[0] || 'there';
+  const personality = PA_PERSONALITIES[paConfig?.personality || 'professional'];
+  const leads = businessData?.leads || [];
+  const hotLeads = leads.filter(l => l.score === 'hot');
+  const convCount = businessData?.convCount || 0;
+  const services = businessData?.services || [];
+  const hour = new Date().getHours();
+  const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+  const servicesList = services.filter(s=>s.name).map(s=>`${s.name}${s.priceNum?` (${s.currency||'£'}${s.priceNum})`:''}`).join(', ');
+  return `You are ${name}, the personal AI assistant for ${ownerName}.\nPERSONALITY: ${personality.style}\nBUSINESS: ${profile?.business||profile?.name||'Independent professional'}, ${profile?.location||'London'}\nLeads: ${leads.length} total, ${hotLeads.length} hot\nServices: ${servicesList||'not specified'}\nBe proactive, helpful, and personalised.`;
+}
+
+function generateProactiveMessage(businessData, paConfig) {
+  const leads = businessData?.leads || [];
+  const hotLeads = leads.filter(l => l.score === 'hot');
+  const hour = new Date().getHours();
+  if(hour>=7&&hour<9){
+    if(hotLeads.length>0) return {msg:`Good morning! You have ${hotLeads.length} hot lead${hotLeads.length>1?'s':''} from overnight.`,priority:'high'};
+    return {msg:'Good morning! Ready to make today count?',priority:'normal'};
+  }
+  if(hotLeads.length>0&&Math.random()>0.6) return {msg:`🔥 ${hotLeads.length} hot lead${hotLeads.length>1?'s need':' needs'} attention.`,priority:'high'};
+  return null;
+}
+
+function getQuickActions(businessData, hour) {
+  const leads = businessData?.leads || [];
+  const hotLeads = leads.filter(l=>l.score==='hot');
+  const actions = [];
+  if(hotLeads.length>0) actions.push({label:`🔥 Follow up ${hotLeads.length} hot lead${hotLeads.length>1?'s':''}`,msg:`Help me follow up with my hot leads.`});
+  if(hour>=7&&hour<10) actions.push({label:'☀️ Morning briefing',msg:'Give me a morning briefing.'});
+  actions.push({label:"📅 What's on today?",msg:"What do I have today?"});
+  actions.push({label:'💡 Business ideas',msg:'Give me 3 ideas to grow my business.'});
+  return actions.slice(0,4);
+}
+
+function BravePASettings({slug, onConfigChange}) {
+  const [config, setConfig] = useState({paName:'Brave PA',personality:'professional',proactiveAlerts:true,morningBriefing:true,soundEnabled:true,soundStyle:'subtle'});
+  const [saved, setSaved] = useState(false);
+  useEffect(()=>{const s=localStorage.getItem(`brave_pa_config_${slug}`);if(s)try{setConfig(p=>({...p,...JSON.parse(s)}));}catch(e){};},[slug]);
+  const save=()=>{localStorage.setItem(`brave_pa_config_${slug}`,JSON.stringify(config));onConfigChange&&onConfigChange(config);setSaved(true);setTimeout(()=>setSaved(false),2000);};
+  const gold='#C9A96E',cream='#E8DCC8',dark='#0C0A08';
+  const sL={fontSize:10,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.12em',textTransform:'uppercase',color:'rgba(201,169,110,0.45)',marginBottom:10,marginTop:20};
+  const card={background:'rgba(255,255,255,0.025)',border:'1px solid rgba(201,169,110,0.1)',borderRadius:13,padding:'16px 18px',marginBottom:12};
+  const Toggle=({value,onChange})=><div onClick={onChange} style={{width:40,height:22,borderRadius:11,background:value?gold:'rgba(255,255,255,0.1)',position:'relative',cursor:'pointer',transition:'background 0.2s',flexShrink:0}}><div style={{position:'absolute',top:3,left:value?20:3,width:16,height:16,borderRadius:'50%',background:'white',transition:'left 0.2s',boxShadow:'0 1px 4px rgba(0,0,0,0.3)'}}/></div>;
+  return <div>
+    <div style={sL}>✦ Your PA</div>
+    <div style={card}>
+      <div style={{fontSize:11,color:'rgba(201,169,110,0.5)',marginBottom:6,fontFamily:"'Jost',sans-serif"}}>PA Name</div>
+      <input value={config.paName} onChange={e=>setConfig({...config,paName:e.target.value})} style={{width:'100%',padding:'8px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.15)',borderRadius:8,color:cream,fontSize:13,fontFamily:"'Jost',sans-serif",outline:'none'}}/>
+    </div>
+    <div style={sL}>Personality</div>
+    <div style={{display:'flex',gap:8,flexWrap:'wrap',marginBottom:16}}>
+      {Object.entries(PA_PERSONALITIES).map(([key,p])=><button key={key} onClick={()=>setConfig({...config,personality:key})} style={{padding:'7px 14px',borderRadius:8,border:'1px solid',cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",background:config.personality===key?'rgba(201,169,110,0.15)':'transparent',borderColor:config.personality===key?'rgba(201,169,110,0.4)':'rgba(255,255,255,0.08)',color:config.personality===key?gold:'rgba(232,220,200,0.38)'}}>{p.label}</button>)}
+    </div>
+    <div style={sL}>Notifications</div>
+    <div style={card}>
+      {[['proactiveAlerts','Proactive PA messages'],['morningBriefing','Morning briefing'],['soundEnabled','Sound on']].map(([key,label])=><div key={key} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'8px 0',borderBottom:'1px solid rgba(255,255,255,0.04)'}}><span style={{fontSize:13,color:cream,fontFamily:"'Jost',sans-serif"}}>{label}</span><Toggle value={config[key]} onChange={()=>setConfig({...config,[key]:!config[key]})}/></div>)}
+    </div>
+    <button onClick={save} style={{padding:'10px 20px',background:`linear-gradient(135deg,${gold},#7a4f0e)`,border:'none',borderRadius:10,cursor:'pointer',color:dark,fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:600}}>{saved?'✓ Saved':'Save PA Settings'}</button>
+  </div>;
+}
+
+function BravePAv2({token,slug,profile,leads,convCount}) {
+  const [mode,setMode]=useState('bubble');
+  const [messages,setMessages]=useState([]);
+  const [input,setInput]=useState('');
+  const [loading,setLoading]=useState(false);
+  const [paConfig,setPAConfig]=useState({paName:'Brave PA',personality:'professional',proactiveAlerts:true,morningBriefing:true,soundEnabled:true});
+  const [unread,setUnread]=useState(0);
+  const [proactive,setProactive]=useState(null);
+  const [activeTab,setActiveTab]=useState('chat');
+  const [tasks,setTasks]=useState([]);
+  const bottomRef=useRef(null);
+  const inputRef=useRef(null);
+  const pdata=useMemo(()=>{try{return JSON.parse(profile?.profile_data||'{}');}catch(e){return {};}}, [profile]);
+  const businessData={leads:leads||[],convCount:convCount||0,services:pdata.services||[]};
+  useEffect(()=>{const s=localStorage.getItem(`brave_pa_config_${slug}`);if(s)try{setPAConfig(p=>({...p,...JSON.parse(s)}));}catch(e){};},[slug]);
+  useEffect(()=>{
+    if(!profile||messages.length>0)return;
+    const hour=new Date().getHours();
+    const greeting=hour<12?'Good morning':hour<17?'Good afternoon':'Good evening';
+    const firstName=profile.name?.split(' ')[0]||'';
+    const hotLeads=(leads||[]).filter(l=>l.score==='hot');
+    let intro=`${greeting}${firstName?`, ${firstName}`:''}! I'm ${paConfig.paName} — your personal assistant. `;
+    if(hotLeads.length>0)intro+=`You have ${hotLeads.length} hot lead${hotLeads.length>1?'s':''} waiting. `;
+    intro+=`What do you need?`;
+    setMessages([{role:'assistant',content:intro,time:new Date(),type:'text'}]);
+  },[profile]);
+  useEffect(()=>{
+    if(!profile||!paConfig.proactiveAlerts)return;
+    const timer=setTimeout(()=>{const msg=generateProactiveMessage(businessData,paConfig);if(msg){setProactive(msg);if(mode==='bubble')setUnread(p=>p+1);setTimeout(()=>setProactive(null),12000);}},4000);
+    return()=>clearTimeout(timer);
+  },[profile,leads]);
+  useEffect(()=>{bottomRef.current?.scrollIntoView({behavior:'smooth'});},[messages]);
+  const sendMessage=async(text)=>{
+    const t=(text||input).trim();if(!t||loading)return;
+    setInput('');
+    const userMsg={role:'user',content:t,time:new Date()};
+    const newMessages=[...messages,userMsg];
+    setMessages(newMessages);setLoading(true);
+    try{
+      const systemPrompt=buildBravePAPrompt(profile,paConfig,businessData);
+      const apiMessages=newMessages.filter(m=>!m.type||m.type==='text').map(m=>({role:m.role==='assistant'?'assistant':'user',content:m.content}));
+      const response=await fetch(`${BACKEND_URL}/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:apiMessages,system_prompt:systemPrompt,profile_id:slug||'brave-pa',session_id:`brave-pa-${slug}`})});
+      const data=await response.json();
+      setMessages(p=>[...p,{role:'assistant',content:data.reply||"I'm on it.",time:new Date(),type:'text'}]);
+    }catch(e){setMessages(p=>[...p,{role:'assistant',content:'Connection blip — try again.',time:new Date(),type:'text'}]);}
+    setLoading(false);setTimeout(()=>inputRef.current?.focus(),100);
+  };
+  const addTask=(text)=>{const t={id:Date.now(),text,done:false};const u=[...tasks,t];setTasks(u);localStorage.setItem(`brave_pa_tasks_${slug}`,JSON.stringify(u));};
+  const toggleTask=(id)=>{const u=tasks.map(t=>t.id===id?{...t,done:!t.done}:t);setTasks(u);localStorage.setItem(`brave_pa_tasks_${slug}`,JSON.stringify(u));};
+  const openPA=()=>{setMode('floating');setUnread(0);setProactive(null);setTimeout(()=>inputRef.current?.focus(),300);};
+  const closePA=()=>setMode('bubble');
+  const toggleFullscreen=()=>setMode(mode==='fullscreen'?'floating':'fullscreen');
+  const gold='#C9A96E',dark='#0C0A08',cream='#E8DCC8';
+  const quickActions=getQuickActions(businessData,new Date().getHours());
+  if(!token||!profile)return null;
+  const isFullscreen=mode==='fullscreen';
+  return <>
+    <style>{`@keyframes paSlideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}@keyframes paPulse{0%,100%{box-shadow:0 6px 24px rgba(201,169,110,0.45)}50%{box-shadow:0 6px 32px rgba(201,169,110,0.7),0 0 0 6px rgba(201,169,110,0.1)}}@keyframes paBounce{0%,60%,100%{transform:translateY(0)}30%{transform:translateY(-5px)}}`}</style>
+    <div style={{position:'fixed',bottom:24,right:20,zIndex:9999,display:'flex',flexDirection:'column',alignItems:'flex-end',gap:8}}>
+      {proactive&&mode==='bubble'&&<div style={{background:'rgba(12,10,8,0.97)',border:`1px solid ${gold}`,borderRadius:14,padding:'14px 16px',maxWidth:260,fontFamily:"'Jost',sans-serif",fontSize:13,color:cream,lineHeight:1.6,boxShadow:'0 12px 40px rgba(0,0,0,0.6)',animation:'paSlideUp 0.4s ease'}}><div style={{fontSize:9,color:'rgba(201,169,110,0.5)',letterSpacing:'0.12em',textTransform:'uppercase',marginBottom:8}}>✦ {paConfig.paName}</div>{proactive.msg}<button onClick={openPA} style={{display:'block',marginTop:10,fontSize:11,color:gold,background:'none',border:'none',cursor:'pointer',padding:0,fontFamily:"'Jost',sans-serif"}}>Reply →</button></div>}
+      <button onClick={openPA} style={{width:56,height:56,borderRadius:'50%',background:`linear-gradient(135deg,${gold},#7a4f0e)`,border:'none',cursor:'pointer',boxShadow:`0 6px 24px rgba(201,169,110,0.45),0 0 0 ${unread>0?'3px':'0px'} rgba(201,169,110,0.3)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22,color:dark,position:'relative',animation:unread>0?'paPulse 2s infinite':'none'}}>
+        ✦{unread>0&&<div style={{position:'absolute',top:-3,right:-3,width:20,height:20,borderRadius:'50%',background:'#e07a6e',color:'white',fontSize:10,fontWeight:700,display:'flex',alignItems:'center',justifyContent:'center',border:`2px solid ${dark}`}}>{unread}</div>}
+      </button>
+    </div>
+    {mode!=='bubble'&&<div style={{position:'fixed',...(isFullscreen?{inset:0,borderRadius:0,maxWidth:'100vw'}:{bottom:88,right:16,width:Math.min(360,window.innerWidth-32),height:Math.min(560,window.innerHeight-120),borderRadius:20}),background:dark,border:'1px solid rgba(201,169,110,0.2)',boxShadow:'0 24px 80px rgba(0,0,0,0.9)',display:'flex',flexDirection:'column',zIndex:9998,overflow:'hidden',fontFamily:"'Jost',sans-serif"}}>
+      <div style={{padding:'14px 16px',borderBottom:'1px solid rgba(201,169,110,0.1)',background:'rgba(201,169,110,0.04)',flexShrink:0,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
+        <div style={{display:'flex',alignItems:'center',gap:10}}>
+          <div style={{width:36,height:36,borderRadius:'50%',background:`linear-gradient(135deg,${gold},#7a4f0e)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,color:dark}}>✦</div>
+          <div><div style={{fontSize:14,fontWeight:500,color:cream}}>{paConfig.paName}</div><div style={{fontSize:10,color:loading?gold:'rgba(100,200,100,0.7)'}}>{loading?'✦ thinking...':'● online'}</div></div>
+        </div>
+        <div style={{display:'flex',gap:6}}>
+          <button onClick={toggleFullscreen} style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'4px 8px',cursor:'pointer',color:'rgba(201,169,110,0.6)',fontSize:12}}>{isFullscreen?'⊡':'⊞'}</button>
+          <button onClick={closePA} style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:6,padding:'4px 8px',cursor:'pointer',color:'rgba(232,220,200,0.4)',fontSize:14}}>×</button>
+        </div>
+      </div>
+      <div style={{display:'flex',borderBottom:'1px solid rgba(255,255,255,0.06)',flexShrink:0}}>
+        {[['chat','💬 Chat'],['tasks','✓ Tasks']].map(([tab,label])=><button key={tab} onClick={()=>setActiveTab(tab)} style={{flex:1,padding:'8px 4px',background:'transparent',border:'none',borderBottom:`2px solid ${activeTab===tab?gold:'transparent'}`,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:activeTab===tab?gold:'rgba(232,220,200,0.35)'}}>{label}</button>)}
+      </div>
+      {activeTab==='chat'&&<>
+        <div style={{flex:1,overflowY:'auto',padding:'14px 12px',display:'flex',flexDirection:'column',gap:14}}>
+          {messages.map((msg,i)=><div key={i} style={{display:'flex',flexDirection:msg.role==='user'?'row-reverse':'row',gap:8,alignItems:'flex-end'}}>
+            {msg.role==='assistant'&&<div style={{width:26,height:26,borderRadius:'50%',background:`linear-gradient(135deg,${gold},#7a4f0e)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,flexShrink:0,color:dark}}>✦</div>}
+            <div style={{maxWidth:'82%'}}><div style={{background:msg.role==='user'?'rgba(201,169,110,0.12)':'rgba(255,255,255,0.04)',border:`1px solid ${msg.role==='user'?'rgba(201,169,110,0.2)':'rgba(255,255,255,0.06)'}`,borderRadius:msg.role==='user'?'16px 16px 4px 16px':'16px 16px 16px 4px',padding:'10px 13px',fontSize:13,color:cream,lineHeight:1.65,whiteSpace:'pre-wrap'}}>{msg.content}</div></div>
+          </div>)}
+          {loading&&<div style={{display:'flex',gap:8,alignItems:'flex-end'}}><div style={{width:26,height:26,borderRadius:'50%',background:`linear-gradient(135deg,${gold},#7a4f0e)`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:11,color:dark}}>✦</div><div style={{background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:'16px 16px 16px 4px',padding:'12px 16px'}}><div style={{display:'flex',gap:5}}>{[0,1,2].map(i=><div key={i} style={{width:7,height:7,borderRadius:'50%',background:gold,animation:`paBounce 1.2s ${i*0.2}s infinite ease-in-out`}}/>)}</div></div></div>}
+          {messages.length<=2&&!loading&&<div style={{marginTop:4}}><div style={{fontSize:9,color:'rgba(201,169,110,0.35)',letterSpacing:'0.12em',textTransform:'uppercase',marginBottom:10}}>Suggested</div><div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:7}}>{quickActions.map((a,i)=><button key={i} onClick={()=>sendMessage(a.msg)} style={{background:'rgba(201,169,110,0.05)',border:'1px solid rgba(201,169,110,0.12)',borderRadius:10,padding:'9px 10px',cursor:'pointer',fontSize:11,color:'rgba(201,169,110,0.7)',textAlign:'left',fontFamily:"'Jost',sans-serif",lineHeight:1.4}}>{a.label}</button>)}</div></div>}
+          <div ref={bottomRef}/>
+        </div>
+        <div style={{padding:'10px 12px',borderTop:'1px solid rgba(255,255,255,0.06)',display:'flex',gap:8,alignItems:'flex-end',background:'rgba(0,0,0,0.3)',flexShrink:0}}>
+          <textarea ref={inputRef} value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}} placeholder={`Ask ${paConfig.paName} anything...`} rows={1} style={{flex:1,background:'rgba(255,255,255,0.05)',border:'1px solid rgba(201,169,110,0.12)',borderRadius:12,padding:'9px 13px',color:cream,fontSize:13,fontFamily:"'Jost',sans-serif",resize:'none',outline:'none',maxHeight:100,overflowY:'auto',lineHeight:1.5}}/>
+          <button onClick={()=>sendMessage()} disabled={!input.trim()||loading} style={{width:38,height:38,borderRadius:'50%',flexShrink:0,background:input.trim()&&!loading?`linear-gradient(135deg,${gold},#7a4f0e)`:'rgba(255,255,255,0.05)',border:'none',cursor:input.trim()&&!loading?'pointer':'default',color:input.trim()&&!loading?dark:'rgba(255,255,255,0.15)',fontSize:16,display:'flex',alignItems:'center',justifyContent:'center'}}>→</button>
+        </div>
+      </>}
+      {activeTab==='tasks'&&<div style={{flex:1,overflowY:'auto',padding:14,display:'flex',flexDirection:'column',gap:10}}>
+        <input placeholder="Add a task..." onKeyDown={e=>{if(e.key==='Enter'&&e.target.value.trim()){addTask(e.target.value.trim());e.target.value='';}}} style={{padding:'8px 12px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(201,169,110,0.12)',borderRadius:10,color:cream,fontSize:13,fontFamily:"'Jost',sans-serif",outline:'none'}}/>
+        {tasks.length===0&&<div style={{fontSize:12,color:'rgba(232,220,200,0.3)',textAlign:'center',marginTop:20}}>No tasks yet.</div>}
+        {tasks.map(task=><div key={task.id} onClick={()=>toggleTask(task.id)} style={{display:'flex',alignItems:'center',gap:10,padding:'10px 12px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',borderRadius:10,cursor:'pointer',opacity:task.done?0.5:1}}>
+          <div style={{width:18,height:18,borderRadius:'50%',border:`1.5px solid ${task.done?gold:'rgba(201,169,110,0.3)'}`,background:task.done?gold:'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0,fontSize:10,color:dark}}>{task.done?'✓':''}</div>
+          <span style={{fontSize:13,color:cream,textDecoration:task.done?'line-through':'none',fontFamily:"'Jost',sans-serif"}}>{task.text}</span>
+        </div>)}
+      </div>}
+    </div>}
+  </>;
+}
+
+function OwnerDashboard({token,slug,onBack,onLogout,onEditProfile,onDataLoaded,onAddProfile,onSwitchProfile}){
+  const[profile,setProfile]=useState(null);
+  const[leads,setLeads]=useState([]);
+  const[convCount,setConvCount]=useState(0);
+  const[loading,setLoading]=useState(true);
+  const[activeTab,setActiveTab]=useState('overview');
+  const[calConnected,setCalConnected]=useState(false);
+  const[calLoading,setCalLoading]=useState(false);
+  const[bookingRequests,setBookingRequests]=useState([]);
+  const[respondingId,setRespondingId]=useState(null);
+  const[respondStatus,setRespondStatus]=useState('accepted');
+  const[respondReply,setRespondReply]=useState('');
+  const[respondCounter,setRespondCounter]=useState('');
+  const[notes,setNotes]=useState([]);
+  const[newNote,setNewNote]=useState('');
+  const[newNoteType,setNewNoteType]=useState('personal');
+  const[newNoteClient,setNewNoteClient]=useState('');
+  const[editNoteId,setEditNoteId]=useState(null);
+  const[editNoteContent,setEditNoteContent]=useState('');
+  const[news,setNews]=useState([]);
+  const[newsDate,setNewsDate]=useState('');
+  const[newsLoading,setNewsLoading]=useState(false);
+  const[digestFreq,setDigestFreq]=useState('none');
+  const[digestSaving,setDigestSaving]=useState(false);
+  const NOTIF_DEFAULTS={newLead:true,hotLead:true,newBooking:true,newMessage:false,dailyBriefing:false,soundEnabled:true,soundStyle:'subtle'};
+  const[notifPrefs,setNotifPrefs]=useState(()=>{try{const s=localStorage.getItem('cai_notif_prefs');return s?{...NOTIF_DEFAULTS,...JSON.parse(s)}:NOTIF_DEFAULTS;}catch(e){return NOTIF_DEFAULTS;}});
+  const updateNotif=(key,val)=>{const u={...notifPrefs,[key]:val};setNotifPrefs(u);localStorage.setItem('cai_notif_prefs',JSON.stringify(u));};
+  const[ownerProfiles,setOwnerProfiles]=useState([]);
+  const[profilesLoading,setProfilesLoading]=useState(false);
+  const[formSubmissions,setFormSubmissions]=useState([]);
+  const[formSubsLoading,setFormSubsLoading]=useState(false);
+  const[copiedFormSlug,setCopiedFormSlug]=useState('');
+
+  useEffect(()=>{
+    setProfilesLoading(true);
+    fetch(`${BACKEND_URL}/owner/profiles`,{headers:{Authorization:`Bearer ${token}`}})
+      .then(r=>r.ok?r.json():{profiles:[]}).then(d=>{setOwnerProfiles(d.profiles||[]);setProfilesLoading(false);}).catch(()=>setProfilesLoading(false));
+  },[token]);
+
+  useEffect(()=>{
+    if(activeTab!=='forms')return;
+    setFormSubsLoading(true);
+    fetch(`${BACKEND_URL}/owner/form-submissions`,{headers:{Authorization:`Bearer ${token}`}})
+      .then(r=>r.ok?r.json():{submissions:[]}).then(d=>{setFormSubmissions(d.submissions||[]);setFormSubsLoading(false);}).catch(()=>setFormSubsLoading(false));
+  },[activeTab,token]);
+
+  useEffect(()=>{
+    Promise.all([
+      fetch(`${BACKEND_URL}/owner/profile`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():null),
+      fetch(`${BACKEND_URL}/owner/leads`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():{leads:[]}),
+      fetch(`${BACKEND_URL}/owner/conversations`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():{count:0}),
+      fetch(`${BACKEND_URL}/owner/bookings`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():{bookings:[]}),
+      fetch(`${BACKEND_URL}/owner/notes`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():{notes:[]}),
+      fetch(`${BACKEND_URL}/owner/news`,{headers:{Authorization:`Bearer ${token}`}}).then(r=>r.ok?r.json():{items:null,date:''}),
+    ]).then(([p,l,c,br,nt,nw])=>{
+      setProfile(p);setLeads(l.leads||[]);setConvCount(c.count||0);setBookingRequests(br.bookings||[]);setNotes(nt.notes||[]);
+      if(p)setDigestFreq(p.digest_frequency||'none');
+      if(nw.items){try{setNews(JSON.parse(nw.items));setNewsDate(nw.date);}catch(e){setNews([]);}}
+      else if(p){generateNewsNow(p);}
+      if(onDataLoaded)onDataLoaded(p,l.leads||[],c.count||0);
+      setLoading(false);
+    }).catch(()=>setLoading(false));
+    const params=new URLSearchParams(window.location.search);
+    if(params.get('cal')==='connected'){setCalConnected(true);window.history.replaceState({},'',window.location.pathname);}
+  },[token]);
+
+  const hotLeads=leads.filter(l=>l.score==='hot').length;
+  const warmLeads=leads.filter(l=>l.score==='warm').length;
+  const coldLeads=leads.filter(l=>l.score==='cold'||!l.score).length;
+  const pendingBookings=bookingRequests.filter(b=>b.status==='pending').length;
+  const avgPrice=(()=>{try{const pd=JSON.parse(profile?.profile_data||'{}');const svcs=pd.services||[];const prices=svcs.filter(s=>s.priceNum).map(s=>parseFloat(s.priceNum));return prices.length?prices.reduce((a,b)=>a+b,0)/prices.length:0;}catch(e){return 0;}})();
+  const projRevenue=Math.round(hotLeads*avgPrice);
+
+  const connectCalendar=()=>{setCalLoading(true);localStorage.setItem('cai_owner_token',token);window.location.href=`${BACKEND_URL}/auth/google?Authorization=Bearer+${encodeURIComponent(token)}`;};
+  const disconnectCalendar=async()=>{await fetch(`${BACKEND_URL}/auth/google/disconnect`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}});setCalConnected(false);};
+  const respondBooking=async(id)=>{const body={status:respondStatus,owner_reply:respondReply,counter_slot:respondCounter};await fetch(`${BACKEND_URL}/owner/bookings/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify(body)});setBookingRequests(brs=>brs.map(b=>b.id===id?{...b,...body}:b));setRespondingId(null);setRespondReply('');setRespondCounter('');setRespondStatus('accepted');};
+  const addNote=async()=>{if(!newNote.trim())return;const r=await fetch(`${BACKEND_URL}/owner/notes`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({content:newNote,note_type:newNoteType,client_id:newNoteClient})});const d=await r.json();setNotes(ns=>[{id:d.id,content:newNote,note_type:newNoteType,client_id:newNoteClient,created_at:new Date().toISOString(),updated_at:new Date().toISOString()},...ns]);setNewNote('');setNewNoteClient('');};
+  const saveEditNote=async(id)=>{await fetch(`${BACKEND_URL}/owner/notes/${id}`,{method:'PATCH',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({content:editNoteContent})});setNotes(ns=>ns.map(n=>n.id===id?{...n,content:editNoteContent}:n));setEditNoteId(null);};
+  const deleteNote=async(id)=>{await fetch(`${BACKEND_URL}/owner/notes/${id}`,{method:'DELETE',headers:{Authorization:`Bearer ${token}`}});setNotes(ns=>ns.filter(n=>n.id!==id));};
+  const saveDigestFreq=async()=>{setDigestSaving(true);await fetch(`${BACKEND_URL}/owner/digest-prefs`,{method:'PUT',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({frequency:digestFreq})});setDigestSaving(false);};
+  const generateNewsNow=async(profileOverride)=>{
+    setNewsLoading(true);
+    try{
+      const activeProfile=profileOverride||profile;
+      const pd=JSON.parse(activeProfile?.profile_data||'{}');
+      const services=(pd.services||[]).filter(s=>s.name).map(s=>s.name).join(', ');
+      const r=await fetch(`${BACKEND_URL}/chat`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile_id:slug,session_id:`news-gen-${Date.now()}`,system_prompt:'You are a market intelligence assistant. Respond only with valid JSON array, no markdown.',messages:[{role:'user',content:`Generate 3 short news items relevant to a ${activeProfile?.profession||'professional'} in ${activeProfile?.location||'London'} offering: ${services}. Return JSON array: [{"title":"...","summary":"...","relevance":"..."}]`}]})});
+      const d=await r.json();
+      const parsed=JSON.parse((d.reply||'[]').replace(/```json|```/g,'').trim());
+      setNews(parsed);const today=new Date().toISOString().slice(0,10);setNewsDate(today);
+      await fetch(`${BACKEND_URL}/owner/news`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({items:JSON.stringify(parsed),date:today})});
+    }catch(e){setNews([]);}
+    setNewsLoading(false);
+  };
+
+  const[expandedNews,setExpandedNews]=useState(new Set());
+  const toggleNews=(i)=>setExpandedNews(prev=>{const s=new Set(prev);s.has(i)?s.delete(i):s.add(i);return s;});
+
+  const sectionLabel={fontSize:10,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.12em',textTransform:'uppercase',color:'rgba(201,169,110,0.5)',marginBottom:12,marginTop:24};
+  const card={background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,215,0,0.15)',borderRadius:20,padding:'24px',marginBottom:12,backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',boxShadow:'0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05)'};
+  const tabBtn=(t)=>({padding:'7px 14px',borderRadius:20,border:'1px solid',cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.05em',transition:'all 0.2s',background:activeTab===t?'rgba(201,169,110,0.15)':'rgba(255,255,255,0.02)',borderColor:activeTab===t?'rgba(201,169,110,0.45)':'rgba(255,255,255,0.07)',color:activeTab===t?'#c9a96e':'rgba(232,220,200,0.38)',boxShadow:activeTab===t?'0 0 14px rgba(201,169,110,0.2)':'none'});
+
+  if(loading)return <div style={{minHeight:'100vh',background:'#0c0a08',display:'flex',alignItems:'center',justifyContent:'center'}}><div style={{fontSize:28,color:'#c9a96e',animation:'bravePulse 1.8s ease-in-out infinite',textShadow:'0 0 20px rgba(201,169,110,0.6)'}}>✦</div></div>;
+
+  return <div style={{minHeight:'100vh',background:'#0c0a08',padding:'20px 16px 60px',fontFamily:"'Cormorant Garamond',Georgia,serif",color:'#e8dcc8'}}>
+    <div style={{maxWidth:680,margin:'0 auto'}}>
+      <div className="dash-glass" style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,padding:'16px 20px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,215,0,0.15)',borderRadius:20,backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',boxShadow:'0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05)'}}>
+        <div>
+          <div style={{fontFamily:"'Jost',sans-serif",fontWeight:500,fontSize:14,letterSpacing:'0.08em',textTransform:'uppercase',color:'#e8dcc8'}}>{profile?.name||'My'} <span style={{letterSpacing:'0.04em'}}>Dashboard</span></div>
+          <div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.45)',marginTop:2}}>{profile?.profession||''} · <span style={{color:'rgba(201,169,110,0.65)'}}>/{slug}</span></div>
+        </div>
+        <div style={{display:'flex',gap:8}}>
+          <button onClick={onBack} style={{padding:'7px 13px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.09)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.38)'}}>← Back</button>
+          <button onClick={onLogout} style={{padding:'7px 13px',background:'rgba(200,80,80,0.08)',border:'1px solid rgba(200,80,80,0.2)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(220,140,140,0.7)'}}>Logout</button>
+        </div>
+      </div>
+
+      <button onClick={onEditProfile} style={{width:'100%',padding:'12px 0',background:'linear-gradient(135deg,#c9a96e,#7a4f0e)',border:'none',borderRadius:20,cursor:'pointer',color:'#0c0a08',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:700,letterSpacing:'0.07em',textTransform:'uppercase',marginBottom:16}}>✏️ Edit My Profile</button>
+
+      <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:20}}>
+        {[['overview','📊 Overview'],['bookings','📅 Bookings'+(pendingBookings>0?` (${pendingBookings})`:'')],['notes','📝 Notes'],['forms','📋 Forms'],['news','📰 Insights'],['profiles','✦ Profiles'],['settings','⚙️ Settings']].map(([t,label])=>
+          <button key={t} onClick={()=>setActiveTab(t)} style={tabBtn(t)}>{label}</button>
+        )}
+      </div>
+
+      {activeTab==='overview'&&<>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:16}}>
+          {[[convCount,'💬','Conversations','rgba(201,169,110,0.07)','rgba(201,169,110,0.22)','#c9a96e'],[leads.length,'🎯','Total Leads','rgba(201,169,110,0.07)','rgba(201,169,110,0.22)','#c9a96e'],[hotLeads,'🔥','Hot Leads','rgba(224,122,110,0.1)','rgba(224,122,110,0.3)','#e07a6e']].map(([v,icon,label,bg,bdr,numColor])=>
+            <div key={label} className="dash-stat" style={{background:bg,border:`1px solid ${bdr}`,borderRadius:20,padding:'20px 10px 16px',textAlign:'center',backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',boxShadow:'0 8px 32px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.06)'}}>
+              <div style={{fontSize:22,marginBottom:8,lineHeight:1}}>{icon}</div>
+              <div style={{fontSize:38,fontWeight:300,color:numColor,lineHeight:1,textShadow:`0 0 24px ${numColor}66,0 2px 8px rgba(0,0,0,0.7)`,marginBottom:6}}>{v}</div>
+              <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.5)',textTransform:'uppercase',letterSpacing:'0.1em'}}>{label}</div>
+            </div>
+          )}
+        </div>
+        <div className="dash-glass" style={{...card,background:'rgba(201,169,110,0.06)',border:'1px solid rgba(201,169,110,0.18)',marginBottom:16}}>
+          <div style={sectionLabel}>Lead Temperature</div>
+          <div style={{display:'flex',gap:24,marginTop:4,alignItems:'center'}}>
+            {[[hotLeads,'#e07a6e','🔥 hot'],[warmLeads,'#e0b56e','🌤 warm'],[coldLeads,'#8ea6c9','❄️ cold']].map(([v,color,label],i)=><React.Fragment key={label}>{i>0&&<div style={{width:1,height:32,background:'rgba(201,169,110,0.12)'}}/>}<div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3}}><span style={{color,fontSize:28,fontWeight:300,lineHeight:1}}>{v}</span><span style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)',letterSpacing:'0.06em'}}>{label}</span></div></React.Fragment>)}
+          </div>
+        </div>
+        {avgPrice>0&&<div className="dash-glass" style={{...card,background:'rgba(100,180,80,0.05)',border:'1px solid rgba(100,180,80,0.2)',marginBottom:16}}>
+          <div style={sectionLabel}>Revenue Projection</div>
+          <div style={{fontSize:40,fontWeight:300,color:'#7aba6a',lineHeight:1,marginBottom:8}}>{projRevenue>0?`£${projRevenue}`:'-'}</div>
+          <div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.32)'}}>{hotLeads} hot lead{hotLeads!==1?'s':''} × avg £{Math.round(avgPrice)}</div>
+        </div>}
+        <div className="dash-glass" style={{...card,background:'rgba(110,120,201,0.06)',border:'1px solid rgba(110,120,201,0.2)',marginBottom:16}}>
+          <div style={sectionLabel}>AI Advice</div>
+          <div style={{fontSize:13,color:'rgba(232,220,200,0.65)',lineHeight:1.7,marginTop:4}}>
+            {hotLeads>0&&<div style={{marginBottom:8}}>🔥 You have {hotLeads} hot lead{hotLeads!==1?'s':''} — follow up within 24 hours.</div>}
+            {!calConnected&&<div style={{marginBottom:8}}>📅 Connect Google Calendar so your concierge can propose real availability.</div>}
+            {leads.length===0&&convCount===0&&<div>✦ Share your public link to start getting enquiries.</div>}
+          </div>
+        </div>
+        <div className="dash-glass" style={card}>
+          <div style={sectionLabel}>Recent Leads</div>
+          {leads.length===0&&<div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.3)'}}>No leads yet — share your link to start receiving enquiries.</div>}
+          {leads.slice(0,8).map(l=><div key={l.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 0',borderBottom:'1px solid rgba(255,255,255,0.04)'}}>
+            <div><div style={{fontSize:13,fontFamily:"'Jost',sans-serif",color:'#e8dcc8'}}>{l.name||'Anonymous'}</div><div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.3)'}}>{l.email||'No email'}</div></div>
+            <span style={{padding:'3px 9px',borderRadius:10,fontSize:10,fontFamily:"'Jost',sans-serif",fontWeight:600,background:l.score==='hot'?'rgba(224,122,110,0.15)':l.score==='warm'?'rgba(224,181,110,0.15)':'rgba(142,166,201,0.15)',color:l.score==='hot'?'#e07a6e':l.score==='warm'?'#e0b56e':'#8ea6c9'}}>{l.score||'cold'}</span>
+          </div>)}
+        </div>
+        <div className="dash-glass" style={card}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
+            <div style={sectionLabel}>Latest Insights</div>
+            {newsDate&&<div style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.3)'}}>Updated {newsDate}</div>}
+          </div>
+          {news.length===0&&<div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.3)',marginBottom:10}}>No insights yet.<button onClick={()=>{setActiveTab('news');generateNewsNow();}} style={{marginLeft:8,padding:'4px 10px',background:'transparent',border:'1px solid rgba(201,169,110,0.25)',borderRadius:20,cursor:'pointer',fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.6)'}}>Generate now</button></div>}
+          {news.slice(0,3).map((item,i)=>{const open=expandedNews.has(`ov-${i}`);return <div key={i} className="news-item" onClick={()=>toggleNews(`ov-${i}`)} style={{padding:'11px 10px',borderRadius:10,marginBottom:4,background:open?'rgba(255,255,255,0.04)':'transparent',border:'1px solid transparent',userSelect:'none'}}><div style={{fontSize:9,fontFamily:"'Jost',sans-serif",letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.4)',marginBottom:4}}>{item.relevance}</div><div style={{fontSize:13,color:'#e8dcc8',lineHeight:1.4,display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}><span>{item.title}</span><span className={`news-chevron${open?' open':''}`}>▾</span></div><div className="news-body" style={{maxHeight:open?'200px':'0px',opacity:open?1:0}}><div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.52)',lineHeight:1.6,paddingTop:8}}>{item.summary}</div></div></div>;})}
+        </div>
+      </>}
+
+      {activeTab==='bookings'&&<>
+        <div style={{...card,background:calConnected?'rgba(100,180,80,0.05)':'rgba(201,169,110,0.04)',border:`1px solid ${calConnected?'rgba(100,180,80,0.2)':'rgba(201,169,110,0.15)'}`,marginBottom:16}}>
+          <div style={sectionLabel}>Google Calendar</div>
+          {calConnected?<div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}><div style={{fontSize:13,color:'rgba(100,200,80,0.8)',fontFamily:"'Jost',sans-serif"}}>✓ Connected</div><button onClick={disconnectCalendar} style={{padding:'6px 12px',background:'rgba(200,80,80,0.1)',border:'1px solid rgba(200,80,80,0.2)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(220,140,140,0.7)'}}>Disconnect</button></div>
+          :<div><div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.45)',marginBottom:12,lineHeight:1.6}}>Connect Google Calendar so your concierge can propose real available slots.</div><button onClick={connectCalendar} disabled={calLoading} style={{padding:'10px 18px',background:'linear-gradient(135deg,#c9a96e,#7a4f0e)',border:'none',borderRadius:20,cursor:'pointer',color:'#0c0a08',fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:600}}>{calLoading?'Connecting...':'📅 Connect Google Calendar'}</button></div>}
+        </div>
+        <div style={sectionLabel}>Booking Requests</div>
+        {bookingRequests.length===0&&<div style={{...card,fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.3)'}}>No booking requests yet.</div>}
+        {bookingRequests.map(br=><div key={br.id} style={{...card,border:`1px solid ${br.status==='pending'?'rgba(201,169,110,0.25)':br.status==='accepted'?'rgba(100,180,80,0.2)':'rgba(200,80,80,0.15)'}`}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:10}}>
+            <div><div style={{fontSize:14,fontFamily:"'Jost',sans-serif",fontWeight:500,color:'#e8dcc8'}}>{br.client_name||'Client'}</div><div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)'}}>{br.client_email}</div></div>
+            <span style={{padding:'3px 9px',borderRadius:8,fontSize:10,fontFamily:"'Jost',sans-serif",fontWeight:600,background:br.status==='pending'?'rgba(201,169,110,0.15)':br.status==='accepted'?'rgba(100,180,80,0.15)':'rgba(200,80,80,0.12)',color:br.status==='pending'?'#c9a96e':br.status==='accepted'?'#7aba6a':'#e07a6e'}}>{br.status}</span>
+          </div>
+          <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.55)',marginBottom:4}}>📋 {br.service_name}</div>
+          <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.55)',marginBottom:2}}>🗓 Primary: <strong style={{color:'#e8dcc8'}}>{br.primary_slot}</strong></div>
+          {br.backup_slot&&<div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)',marginBottom:8}}>🔄 Backup: {br.backup_slot}</div>}
+          {br.message&&<div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)',fontStyle:'italic',marginBottom:10}}>"{br.message}"</div>}
+          {br.status==='pending'&&respondingId!==br.id&&<div style={{display:'flex',gap:8,marginTop:8}}>
+            <button onClick={()=>{setRespondingId(br.id);setRespondStatus('accepted');}} style={{flex:1,padding:'8px 0',background:'rgba(100,180,80,0.15)',border:'1px solid rgba(100,180,80,0.3)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'#7aba6a',fontWeight:600}}>✅ Accept</button>
+            <button onClick={()=>{setRespondingId(br.id);setRespondStatus('counter');}} style={{flex:1,padding:'8px 0',background:'rgba(201,169,110,0.08)',border:'1px solid rgba(201,169,110,0.2)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'#c9a96e'}}>🔄 Counter</button>
+            <button onClick={()=>{setRespondingId(br.id);setRespondStatus('declined');}} style={{flex:1,padding:'8px 0',background:'rgba(200,80,80,0.08)',border:'1px solid rgba(200,80,80,0.2)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(220,140,140,0.7)'}}>❌ Decline</button>
+          </div>}
+          {respondingId===br.id&&<div style={{marginTop:10,padding:'12px',background:'rgba(255,255,255,0.03)',borderRadius:10}}>
+            {respondStatus==='counter'&&<input value={respondCounter} onChange={e=>setRespondCounter(e.target.value)} placeholder="e.g. Thursday 15 Jan at 3pm" style={{width:'100%',padding:'8px 11px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.18)',borderRadius:8,color:'#e8dcc8',fontSize:12,fontFamily:"'Jost',sans-serif",marginBottom:8}}/>}
+            <textarea value={respondReply} onChange={e=>setRespondReply(e.target.value)} placeholder="Personal message to client..." rows={2} style={{width:'100%',padding:'8px 11px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.12)',borderRadius:8,color:'#e8dcc8',fontSize:12,fontFamily:"'Jost',sans-serif",marginBottom:8}}/>
+            <div style={{display:'flex',gap:8}}>
+              <button onClick={()=>respondBooking(br.id)} style={{flex:1,padding:'9px 0',background:'linear-gradient(135deg,#c9a96e,#7a4f0e)',border:'none',borderRadius:20,cursor:'pointer',color:'#0c0a08',fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:600}}>Send Response</button>
+              <button onClick={()=>setRespondingId(null)} style={{padding:'9px 14px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.35)'}}>Cancel</button>
+            </div>
+          </div>}
+        </div>)}
+      </>}
+
+      {activeTab==='notes'&&<>
+        <div style={sectionLabel}>Add a Note</div>
+        <div style={{...card,marginBottom:16}}>
+          <div style={{display:'flex',gap:8,marginBottom:10}}>
+            {[['personal','📝 Personal'],['client','👤 Client']].map(([t,label])=><button key={t} onClick={()=>setNewNoteType(t)} style={{padding:'6px 12px',borderRadius:20,border:'1px solid',cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",background:newNoteType===t?'rgba(201,169,110,0.15)':'transparent',borderColor:newNoteType===t?'rgba(201,169,110,0.4)':'rgba(255,255,255,0.08)',color:newNoteType===t?'#c9a96e':'rgba(232,220,200,0.38)'}}>{label}</button>)}
+          </div>
+          {newNoteType==='client'&&<input value={newNoteClient} onChange={e=>setNewNoteClient(e.target.value)} placeholder="Client email or identifier" style={{width:'100%',padding:'8px 11px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.15)',borderRadius:20,color:'#e8dcc8',fontSize:12,fontFamily:"'Jost',sans-serif",marginBottom:8}}/>}
+          <textarea value={newNote} onChange={e=>setNewNote(e.target.value)} placeholder={newNoteType==='client'?'Notes on this client...':'Personal note, reminder, observation...'} rows={3} style={{width:'100%',padding:'9px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.12)',borderRadius:20,color:'#e8dcc8',fontSize:13,fontFamily:"'Cormorant Garamond',serif",lineHeight:1.6,marginBottom:10}}/>
+          <button onClick={addNote} disabled={!newNote.trim()} style={{padding:'9px 18px',background:'linear-gradient(135deg,#c9a96e,#7a4f0e)',border:'none',borderRadius:20,cursor:'pointer',color:'#0c0a08',fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:600}}>Save Note</button>
+        </div>
+        {notes.length===0&&<div style={{...card,fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.3)'}}>No notes yet.</div>}
+        {notes.map(n=><div key={n.id} style={{...card,border:`1px solid ${n.note_type==='client'?'rgba(110,143,201,0.2)':'rgba(201,169,110,0.1)'}`}}>
+          <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}>
+            <span style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:n.note_type==='client'?'rgba(110,143,201,0.7)':'rgba(201,169,110,0.45)',textTransform:'uppercase',letterSpacing:'0.08em'}}>{n.note_type==='client'?`👤 ${n.client_id||'Client'}':'📝 Personal'}</span>
+            <div style={{display:'flex',gap:8}}><span onClick={()=>{setEditNoteId(n.id);setEditNoteContent(n.content);}} style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.4)',cursor:'pointer',textDecoration:'underline'}}>edit</span><span onClick={()=>deleteNote(n.id)} style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(200,80,80,0.4)',cursor:'pointer',textDecoration:'underline'}}>delete</span></div>
+          </div>
+          {editNoteId===n.id?<div><textarea value={editNoteContent} onChange={e=>setEditNoteContent(e.target.value)} rows={3} style={{width:'100%',padding:'9px 12px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(201,169,110,0.2)',borderRadius:20,color:'#e8dcc8',fontSize:13,fontFamily:"'Cormorant Garamond',serif",lineHeight:1.6,marginBottom:8}}/><div style={{display:'flex',gap:8}}><button onClick={()=>saveEditNote(n.id)} style={{padding:'7px 14px',background:'linear-gradient(135deg,#c9a96e,#7a4f0e)',border:'none',borderRadius:20,cursor:'pointer',color:'#0c0a08',fontSize:11,fontFamily:"'Jost',sans-serif",fontWeight:600}}>Save</button><button onClick={()=>setEditNoteId(null)} style={{padding:'7px 12px',background:'transparent',border:'1px solid rgba(255,255,255,0.08)',borderRadius:20,cursor:'pointer',color:'rgba(232,220,200,0.35)',fontSize:11,fontFamily:"'Jost',sans-serif"}}>Cancel</button></div></div>
+          :<div style={{fontSize:13,color:'rgba(232,220,200,0.7)',lineHeight:1.65,fontFamily:"'Cormorant Garamond',serif"}}>{n.content}</div>}
+          <div style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.25)',marginTop:8}}>{new Date(n.updated_at).toLocaleDateString()}</div>
+        </div>)}
+      </>}
+
+      {activeTab==='news'&&<>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
+          <div style={sectionLabel}>Market Intelligence</div>
+          <button onClick={generateNewsNow} disabled={newsLoading} style={{padding:'7px 13px',background:'rgba(201,169,110,0.08)',border:'1px solid rgba(201,169,110,0.2)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'#c9a96e'}}>{newsLoading?'Generating...':'↻ Refresh'}</button>
+        </div>
+        {newsDate&&<div style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.3)',marginBottom:12}}>Last updated: {newsDate}</div>}
+        {news.length===0&&!newsLoading&&<div style={{...card,fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.3)',lineHeight:1.6}}>No insights yet. Click Refresh to generate.</div>}
+        {newsLoading&&<div style={{...card,textAlign:'center',padding:'24px'}}><div style={{fontSize:20,color:'#c9a96e',animation:'pulse 1.5s infinite',marginBottom:8}}>✦</div><div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.4)'}}>Scanning the market for you...</div></div>}
+        {news.map((item,i)=>{const open=expandedNews.has(`nt-${i}`);return <div key={i} className="news-item dash-glass" onClick={()=>toggleNews(`nt-${i}`)} style={{...card,background:open?'rgba(255,255,255,0.07)':'rgba(255,255,255,0.03)',marginBottom:8,cursor:'pointer',userSelect:'none'}}><div style={{fontSize:9,fontFamily:"'Jost',sans-serif",letterSpacing:'0.12em',textTransform:'uppercase',color:'rgba(201,169,110,0.45)',marginBottom:6}}>{item.relevance}</div><div style={{fontSize:15,color:'#e8dcc8',lineHeight:1.4,display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}><span>{item.title}</span><span className={`news-chevron${open?' open':''}`} style={{fontSize:12,flexShrink:0}}>▾</span></div><div className="news-body" style={{maxHeight:open?'300px':'0px',opacity:open?1:0}}><div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.55)',lineHeight:1.7,paddingTop:10,borderTop:'1px solid rgba(255,215,0,0.08)',marginTop:10}}>{item.summary}</div></div></div>;})}
+        <div className="dash-glass" style={{...card,background:'rgba(201,169,110,0.05)',border:'1px solid rgba(201,169,110,0.18)',marginTop:24}}>
+          <div style={sectionLabel}>Email Digest</div>
+          <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:12}}>{[['none','Off'],['biweekly','Twice/week'],['weekly','Weekly'],['bimonthly','Bi-monthly'],['monthly','Monthly']].map(([v,label])=><button key={v} onClick={()=>setDigestFreq(v)} style={{padding:'6px 12px',borderRadius:20,border:'1px solid',cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",background:digestFreq===v?'rgba(201,169,110,0.15)':'transparent',borderColor:digestFreq===v?'rgba(201,169,110,0.4)':'rgba(255,255,255,0.08)',color:digestFreq===v?'#c9a96e':'rgba(232,220,200,0.38)'}}>{label}</button>)}</div>
+          <button onClick={saveDigestFreq} disabled={digestSaving} style={{padding:'8px 16px',background:'linear-gradient(135deg,#c9a96e,#7a4f0e)',border:'none',borderRadius:20,cursor:'pointer',color:'#0c0a08',fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:600}}>{digestSaving?'Saving...':'Save preference'}</button>
+        </div>
+      </>}
+
+      {activeTab==='settings'&&<>
+        <BravePASettings slug={slug} onConfigChange={()=>{}}/>
+        <div style={sectionLabel}>Notifications &amp; Sound</div>
+        <div style={{...card,marginBottom:16}}>
+          {[['newLead','New lead notification','🔔'],['hotLead','Hot lead alert','🔥'],['newBooking','New booking request','📅'],['newMessage','New message','💬'],['dailyBriefing','Daily briefing','📊']].map(([key,label,icon])=>{
+            const on=notifPrefs[key];
+            return <div key={key} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'11px 0',borderBottom:'1px solid rgba(201,169,110,0.07)'}}>
+              <div style={{display:'flex',alignItems:'center',gap:10}}><span style={{fontSize:15,lineHeight:1}}>{icon}</span><span style={{fontSize:13,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.75)'}}>{label}</span></div>
+              <div onClick={()=>updateNotif(key,!on)} style={{width:40,height:22,borderRadius:20,cursor:'pointer',position:'relative',transition:'background 0.2s',background:on?'rgba(201,169,110,0.45)':'rgba(255,255,255,0.07)',border:'1px solid',borderColor:on?'rgba(201,169,110,0.5)':'rgba(255,255,255,0.1)'}}><div style={{position:'absolute',top:2,left:on?18:2,width:16,height:16,borderRadius:'50%',transition:'left 0.2s,background 0.2s',background:on?'#c9a96e':'rgba(255,255,255,0.22)',boxShadow:on?'0 0 6px rgba(201,169,110,0.7)':'none'}}/></div>
+            </div>;
+          })}
+        </div>
+        <div style={sectionLabel}>Your Public Link</div>
+        <div style={{...card,marginBottom:16}}>
+          <div style={{fontSize:13,fontFamily:"'Jost',sans-serif",color:'#c9a96e',wordBreak:'break-all',marginBottom:10}}>https://concierge-ai-gamma.vercel.app/{slug}</div>
+          <button onClick={()=>navigator.clipboard?.writeText(`https://concierge-ai-gamma.vercel.app/${slug}`)} style={{padding:'7px 14px',background:'rgba(201,169,110,0.08)',border:'1px solid rgba(201,169,110,0.2)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'#c9a96e'}}>📋 Copy link</button>
+        </div>
+        <div style={sectionLabel}>Account</div>
+        <div style={{...card,marginBottom:16}}>
+          <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.45)',marginBottom:4}}>Email: {profile?.email||'—'}</div>
+          <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.45)'}}>Handle: /{slug}</div>
+        </div>
+        <button onClick={onLogout} style={{width:'100%',padding:'12px 0',background:'rgba(200,80,80,0.08)',border:'1px solid rgba(200,80,80,0.2)',borderRadius:20,cursor:'pointer',color:'rgba(220,140,140,0.7)',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:500}}>Logout</button>
+      </>}
+
+      {activeTab==='forms'&&(()=>{
+        const pdata=(()=>{try{return JSON.parse(profile?.profile_data||'{}');}catch(e){return {};}})();
+        const myForms=pdata.legalForms||[];
+        const origin=window.location.origin;
+        const copyFormLink=(formKey)=>{const fSlug=FORM_KEY_TO_SLUG[formKey];if(!fSlug)return;navigator.clipboard?.writeText(`${origin}/forms/${slug}/${fSlug}`).catch(()=>{});setCopiedFormSlug(fSlug);setTimeout(()=>setCopiedFormSlug(''),2200);};
+        return <>
+          <div style={sectionLabel}>Sendable Form Links</div>
+          {myForms.length===0?<div style={{...card,textAlign:'center',padding:'22px 18px'}}><div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.35)',lineHeight:1.7}}>No legal forms configured yet.<br/>Edit your profile and select forms under "Client consent & legal".</div></div>
+          :<div style={{marginBottom:20}}>{myForms.map(formKey=>{const fSlug=FORM_KEY_TO_SLUG[formKey];if(!fSlug)return null;const def=LEGAL_FORM_FIELDS[formKey];const title=def?.en?.title||formKey;const formUrl=`${origin}/forms/${slug}/${fSlug}`;const copied=copiedFormSlug===fSlug;return <div key={formKey} style={{...card,marginBottom:8,padding:'13px 16px'}}><div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10,flexWrap:'wrap'}}><div><div style={{fontSize:13,fontFamily:"'Jost',sans-serif",color:'#e8dcc8',fontWeight:500,marginBottom:3}}>{title}</div><div style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.4)',wordBreak:'break-all'}}>{formUrl}</div></div><div style={{display:'flex',gap:6,flexShrink:0}}><button onClick={()=>copyFormLink(formKey)} style={{padding:'6px 13px',background:copied?'rgba(100,190,120,0.15)':'rgba(201,169,110,0.08)',border:'1px solid',borderColor:copied?'rgba(100,190,120,0.35)':'rgba(201,169,110,0.2)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:copied?'rgba(140,210,150,0.9)':'#c9a96e',whiteSpace:'nowrap'}}>{copied?'✓ Copied':'📋 Copy link'}</button><button onClick={()=>window.open(formUrl,'_blank')} style={{padding:'6px 11px',background:'transparent',border:'1px solid rgba(201,169,110,0.12)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.45)'}}>👁</button></div></div></div>;})}</div>}
+          <div style={sectionLabel}>Client Responses</div>
+          {formSubsLoading?<div style={{textAlign:'center',padding:'24px 0',color:'rgba(201,169,110,0.4)',fontSize:13,fontFamily:"'Jost',sans-serif"}}>Loading…</div>
+          :formSubmissions.length===0?<div style={{...card,textAlign:'center',padding:'22px 18px'}}><div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.35)'}}>No responses yet.</div></div>
+          :<div>{formSubmissions.map(sub=>{let resp={};try{resp=JSON.parse(sub.responses||'{}');}catch(e){}const def=LEGAL_FORM_FIELDS[FORM_SLUGS[sub.form_type]];const title=def?.en?.title||sub.form_type;return <div key={sub.id} style={{...card,marginBottom:8,padding:'13px 16px'}}><div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}><div><div style={{fontSize:13,fontFamily:"'Jost',sans-serif",color:'#e8dcc8',fontWeight:500}}>{sub.client_name}</div>{sub.client_email&&<div style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.45)',marginTop:1}}>{sub.client_email}</div>}</div><div style={{fontSize:9,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.4)',textAlign:'right',flexShrink:0}}><div>{title}</div><div>{new Date(sub.submitted_at).toLocaleDateString()}</div></div></div>{resp.answer&&<div style={{fontSize:12,fontFamily:"'Cormorant Garamond',serif",color:'rgba(232,220,200,0.65)',lineHeight:1.6,padding:'8px 10px',background:'rgba(255,255,255,0.03)',borderRadius:8,borderLeft:'2px solid rgba(201,169,110,0.2)'}}>{resp.answer}</div>}{resp.agreed&&<div style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(100,210,140,0.7)',marginTop:6}}>✓ Agreed & signed</div>}</div>;})}</div>}
+        </>;
+      })()}
+
+      {activeTab==='profiles'&&<>
+        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+          <div style={{...sectionLabel,marginTop:0,marginBottom:0}}>My Profiles</div>
+          <button onClick={onAddProfile} style={{padding:'7px 18px',background:'linear-gradient(135deg,#c9a96e,#7a4f0e)',border:'none',borderRadius:20,cursor:'pointer',color:'#0c0a08',fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:700,letterSpacing:'0.05em'}}>+ New Profile</button>
+        </div>
+        {profilesLoading&&<div style={{textAlign:'center',padding:'28px 0',color:'rgba(201,169,110,0.4)',fontSize:13,fontFamily:"'Jost',sans-serif"}}>Loading profiles…</div>}
+        {ownerProfiles.map(p=><div key={p.slug} style={{...card,display:'flex',alignItems:'center',gap:12,marginBottom:10}}>
+          <div style={{flex:1,minWidth:0}}><div style={{fontSize:14,fontWeight:500,color:'#e8dcc8',marginBottom:2,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{p.name}</div><div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.6)',marginBottom:1}}>/{p.slug}</div><div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.32)'}}>{p.profession||''}</div></div>
+          <div style={{display:'flex',flexDirection:'column',gap:6,flexShrink:0}}>
+            {p.slug===slug?<span style={{padding:'5px 12px',background:'rgba(201,169,110,0.07)',border:'1px solid rgba(201,169,110,0.18)',borderRadius:20,fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.5)',textAlign:'center',letterSpacing:'0.06em',textTransform:'uppercase'}}>Active</span>:<button onClick={()=>onSwitchProfile&&onSwitchProfile(p.slug)} style={{padding:'5px 12px',background:'rgba(201,169,110,0.1)',border:'1px solid rgba(201,169,110,0.3)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'#c9a96e'}}>Switch →</button>}
+            <a href={`https://concierge-ai-gamma.vercel.app/${p.slug}`} target="_blank" rel="noopener noreferrer" style={{padding:'5px 12px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:20,fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)',textDecoration:'none',textAlign:'center'}}>View ↗</a>
+          </div>
+        </div>)}
+        {!profilesLoading&&ownerProfiles.length===0&&<div style={{...card,textAlign:'center',padding:'32px 18px'}}><div style={{fontSize:13,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.3)',marginBottom:14}}>No profiles yet.</div><button onClick={onAddProfile} style={{padding:'9px 22px',background:'linear-gradient(135deg,#c9a96e,#7a4f0e)',border:'none',borderRadius:20,cursor:'pointer',color:'#0c0a08',fontSize:12,fontFamily:"'Jost',sans-serif",fontWeight:700}}>+ New Profile</button></div>}
+      </>}
+    </div>
+  </div>;
+}
+
+function App() {
+  const token = localStorage.getItem('ownerToken') || localStorage.getItem('cai_owner_token');
+  const slug  = localStorage.getItem('cai_owner_slug') || '';
+
+  const logout = () => {
+    ['ownerToken','cai_owner_token','ownerProfile','cai_owner_slug'].forEach(k=>localStorage.removeItem(k));
+    window.location.replace('/theconcierge');
+  };
+
+  const [paData, setPaData] = useState({profile:null, leads:[], convCount:0});
+
+  return <>
+    <OwnerDashboard
+      token={token}
+      slug={slug}
+      onBack={()=>window.location.href='/theconcierge'}
+      onLogout={logout}
+      onEditProfile={()=>window.location.href='/theconcierge'}
+      onDataLoaded={(p,l,c)=>setPaData({profile:p,leads:l,convCount:c})}
+      onAddProfile={()=>window.location.href='/theconcierge'}
+      onSwitchProfile={async(targetSlug)=>{
+        try{
+          const r=await fetch(`${BACKEND_URL}/owner/switch-profile`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({slug:targetSlug})});
+          const d=await r.json().catch(()=>({}));
+          if(r.ok&&d.token){
+            localStorage.setItem('cai_owner_token',d.token);localStorage.setItem('cai_owner_slug',d.slug);
+            localStorage.setItem('ownerToken',d.token);localStorage.setItem('ownerProfile',JSON.stringify({slug:d.slug}));
+            window.location.reload();
+          }
+        }catch(e){}
+      }}
+    />
+    <BravePAv2 token={token} slug={slug} profile={paData.profile} leads={paData.leads} convCount={paData.convCount}/>
+  </>;
+}
+
+ReactDOM.createRoot(document.getElementById('app')).render(<App/>);
+</script>
+</body>
+</html>
