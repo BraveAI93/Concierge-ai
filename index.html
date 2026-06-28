@@ -560,6 +560,8 @@
 <script>
 (function(){
   var token = localStorage.getItem('ownerToken') || localStorage.getItem('cai_owner_token');
+  var path = window.location.pathname.replace(/^\/theconcierge/, '').replace(/^\//, '');
+  if(path === 'onboarding') { window.__INITIAL_VIEW__ = 'onboard'; return; }
   if(token) {
     document.addEventListener('DOMContentLoaded', function(){
       var introEl = document.getElementById('intro-screen');
@@ -4819,6 +4821,19 @@ function App(){
   }
 
   const [view, setView] = React.useState(window.__INITIAL_VIEW__ || 'landing');
+  const VIEW_PATHS={'owner-dashboard':'dashboard','onboard':'onboarding'};
+  const go=useCallback((v)=>{setView(v);const p=v?(VIEW_PATHS[v]||v):'';window.history.pushState({view:v},'',p?'/theconcierge/'+p:'/theconcierge');},[]);
+  useEffect(()=>{
+    const onPop=()=>{
+      const path=window.location.pathname.replace(/^\/theconcierge/,'').replace(/^\//,'');
+      const tok=localStorage.getItem('ownerToken')||localStorage.getItem('cai_owner_token');
+      if(path==='dashboard'&&tok){setView('owner-dashboard');}
+      else if(path==='onboarding'){setView('onboard');}
+      else{setView(null);const l=document.getElementById('landing');const a=document.getElementById('app');if(l)l.style.display='flex';if(a)a.style.display='none';}
+    };
+    window.addEventListener('popstate',onPop);
+    return()=>window.removeEventListener('popstate',onPop);
+  },[]);
   const[prof,setProf]=useState(null);
   const[prompt,setPrompt]=useState(null);
   const[profId,setProfId]=useState(null);
@@ -4855,7 +4870,7 @@ function App(){
     const path=window.location.pathname.replace(/^\/theconcierge/,'').replace(/^\//,'').replace(/\.html$/,'');
     if(path && path!=='dashboard' && path!=='' && !DEMOS[path]) return; // don't interfere with profile URL loading
     if(view===null || view==='owner-auth' || view==='owner-dashboard' || view==='landing'){
-      setView('owner-dashboard');
+      go('owner-dashboard');
       const l=document.getElementById('landing');const a=document.getElementById('app');
       if(l)l.style.display='none';if(a)a.style.display='block';
       if(window.updateAuthBtn) window.updateAuthBtn();
@@ -4910,23 +4925,23 @@ function App(){
     // Demos bypass the consent gate — consent is for real client pages only
     if(id!=='onboard')sessionStorage.setItem('cai_consent','demo-'+Date.now());
     _go(()=>{
-      if(id==='onboard'){setView('onboard');document.getElementById('landing').style.display='none';document.getElementById('app').style.display='block';return;}
+      if(id==='onboard'){go('onboard');document.getElementById('landing').style.display='none';document.getElementById('app').style.display='block';return;}
       const d=DEMOS[id];if(!d)return;
-      setProf(d);setPrompt(d.systemPrompt);setProfId(id);setView('chat');
+      setProf(d);setPrompt(d.systemPrompt);setProfId(id);go('chat');
       document.getElementById('landing').style.display='none';document.getElementById('app').style.display='block';
     });
   };
   window.loadOwner=()=>{
-    _go(()=>{setView('admin');document.getElementById('landing').style.display='none';document.getElementById('app').style.display='block';});
+    _go(()=>{go('admin');document.getElementById('landing').style.display='none';document.getElementById('app').style.display='block';});
   };
   window.goToOwnerArea=()=>{
-    _go(()=>{setView(ownerToken?'owner-dashboard':'owner-auth');document.getElementById('landing').style.display='none';document.getElementById('app').style.display='block';});
+    _go(()=>{go(ownerToken?'owner-dashboard':'owner-auth');document.getElementById('landing').style.display='none';document.getElementById('app').style.display='block';});
   };
   window.goToAdminDashboard=()=>{
-    _go(()=>{setView('admin-dashboard');document.getElementById('landing').style.display='none';document.getElementById('app').style.display='block';});
+    _go(()=>{go('admin-dashboard');document.getElementById('landing').style.display='none';document.getElementById('app').style.display='block';});
   };
 
-  const back=()=>_go(()=>{setView(null);document.getElementById('landing').style.display='flex';document.getElementById('app').style.display='none';});
+  const back=()=>_go(()=>{go(null);document.getElementById('landing').style.display='flex';document.getElementById('app').style.display='none';});
   window._appNavBack=back;
   const ownerLogout=()=>{
     localStorage.removeItem('cai_owner_token');
@@ -4934,7 +4949,7 @@ function App(){
     localStorage.removeItem('ownerToken');
     localStorage.removeItem('ownerProfile');
     setOwnerToken(null);setOwnerSlug(null);
-    _go(()=>{setView(null);document.getElementById('landing').style.display='flex';document.getElementById('app').style.display='none';});
+    _go(()=>{go(null);document.getElementById('landing').style.display='flex';document.getElementById('app').style.display='none';});
   };
   const switchProfile=async(targetSlug)=>{
     const tok=ownerToken||localStorage.getItem('cai_owner_token');
@@ -4948,7 +4963,7 @@ function App(){
         localStorage.setItem('ownerProfile',JSON.stringify({slug:d.slug}));
         setOwnerToken(d.token);
         setOwnerSlug(d.slug);
-        setView('owner-dashboard');
+        go('owner-dashboard');
       }
     }catch(e){}
   };
@@ -4970,15 +4985,15 @@ function App(){
   // Use localStorage as synchronous fallback in case React batch renders view before ownerToken state is flushed
   const _tok=ownerToken||localStorage.getItem('cai_owner_token');
   const _slg=ownerSlug||localStorage.getItem('cai_owner_slug');
-  if(view==='owner-dashboard'&&_tok)return <><OwnerDashboard token={_tok} slug={_slg} onBack={back} onLogout={ownerLogout} onEditProfile={()=>setView('owner-edit')} onDataLoaded={(p,l,c)=>setPaData({profile:p,leads:l,convCount:c})} onAddProfile={()=>setView('add-profile')} onSwitchProfile={switchProfile}/><BravePAv2 token={_tok} slug={_slg} profile={paData.profile} leads={paData.leads} convCount={paData.convCount}/></>;
-  if(view==='owner-edit'&&_tok)return <><OwnerEditProfile token={_tok} slug={_slg} lang={lang} onBack={()=>setView('owner-dashboard')} onSaved={()=>setView('owner-dashboard')}/><BravePAv2 token={_tok} slug={_slg} profile={paData.profile} leads={paData.leads} convCount={paData.convCount}/></>;
+  if(view==='owner-dashboard'&&_tok)return <><OwnerDashboard token={_tok} slug={_slg} onBack={back} onLogout={ownerLogout} onEditProfile={()=>go('owner-edit')} onDataLoaded={(p,l,c)=>setPaData({profile:p,leads:l,convCount:c})} onAddProfile={()=>go('add-profile')} onSwitchProfile={switchProfile}/><BravePAv2 token={_tok} slug={_slg} profile={paData.profile} leads={paData.leads} convCount={paData.convCount}/></>;
+  if(view==='owner-edit'&&_tok)return <><OwnerEditProfile token={_tok} slug={_slg} lang={lang} onBack={()=>go('owner-dashboard')} onSaved={()=>go('owner-dashboard')}/><BravePAv2 token={_tok} slug={_slg} profile={paData.profile} leads={paData.leads} convCount={paData.convCount}/></>;
   if(view==='preview'&&onboardData)return <BusinessPagePreview
     data={onboardData}
     lang={lang}
-    onStartChat={()=>setView('chat')}
+    onStartChat={()=>go('chat')}
     onBack={back}
   />;
-  if(view==='add-profile'&&_tok)return <Onboarding lang={lang} onBack={()=>setView('owner-dashboard')} onComplete={async(data)=>{
+  if(view==='add-profile'&&_tok)return <Onboarding lang={lang} onBack={()=>go('owner-dashboard')} onComplete={async(data)=>{
     const sp=buildPrompt(data,lang);
     const newSlug=data.handle||((data.name||'me').toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'')+'-'+Math.random().toString(36).slice(2,6));
     try{
@@ -4997,7 +5012,7 @@ function App(){
         alert(`Could not save profile: ${d.error||r.status}`);
       }
     }catch(e){alert(`Could not save profile: ${e.message}`);}
-    setView('owner-dashboard');
+    go('owner-dashboard');
   }}/>;
   if(view==='onboard')return <Onboarding lang={lang} onBack={back} onComplete={async(data)=>{
     const sp=buildPrompt(data,lang);
@@ -5039,7 +5054,7 @@ function App(){
     setPrompt(sp);
     setProfId(slug);
     setOnboardData(data);
-    if(signupSucceeded){window.location.href='/theconcierge/dashboard';}else{setView('preview');}
+    if(signupSucceeded){window.location.href='/theconcierge/dashboard';}else{go('preview');}
   }}/>;
   if(view==='chat'&&prof)return <Chat profile={prof} systemPrompt={prompt} profileId={profId} onBack={back} lang={lang}/>;
   return null;

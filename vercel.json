@@ -1,8 +1,6 @@
 {
   "rewrites": [
-    { "source": "/theconcierge/dashboard", "destination": "/dashboard.html" },
-    { "source": "/theconcierge/(.*)", "destination": "/index.html" },
-    { "source": "/theconcierge", "destination": "/index.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/theconcierge/:path*", "destination": "/index.html" },
+    { "source": "/:path*", "destination": "/index.html" }
   ]
 }
