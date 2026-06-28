@@ -558,6 +558,22 @@
 <div id="app"></div>
 
 <script>
+// ── EARLY OWNER SESSION CHECK — runs synchronously before React mounts ──
+(function(){
+  var tok=localStorage.getItem('ownerToken')||localStorage.getItem('cai_owner_token');
+  var prof=localStorage.getItem('ownerProfile');
+  if(tok&&prof){
+    window._ownerSessionActive=true;
+    var intro=document.getElementById('intro-screen');
+    if(intro)intro.style.display='none';
+    document.body.classList.add('intro-done');
+    var app=document.getElementById('app');
+    var landing=document.getElementById('landing');
+    if(app)app.style.display='block';
+    if(landing)landing.style.display='none';
+  }
+})();
+
 // Language state
 window._lang = 'en';
 const T = {
@@ -950,6 +966,7 @@ window.addEventListener('resize', function() {
 })();
 (function initLangPopup() {
   if (localStorage.getItem('lang_selected')) return;
+  if (window._ownerSessionActive) return;
   function showLangPopup() {
     setTimeout(function() {
       document.getElementById('lang-popup').style.display = 'flex';
@@ -1190,7 +1207,7 @@ if(!isRoot||!introEl){
   document.body.classList.add('intro-done');
   startBgRender();return;
 }
-if(sessionStorage.getItem('cai_intro_v9')){
+if(sessionStorage.getItem('cai_intro_v9')||window._ownerSessionActive){
   introEl.style.display='none';document.body.classList.add('intro-done');
   startBgRender();return;
 }
@@ -1688,7 +1705,7 @@ function initHeroSparkles(){
 function initIntro2D(){
   var introEl2=document.getElementById('intro-screen');
   if(!introEl2){document.body.classList.add('intro-done');return;}
-  if(sessionStorage.getItem('cai_intro_v9')){introEl2.style.display='none';document.body.classList.add('intro-done');return;}
+  if(sessionStorage.getItem('cai_intro_v9')||window._ownerSessionActive){introEl2.style.display='none';document.body.classList.add('intro-done');return;}
   sessionStorage.setItem('cai_intro_v9','1');
   setTimeout(function(){introEl2.style.display='none';document.body.classList.add('intro-done');},6500);
 }
@@ -4880,6 +4897,7 @@ function App(){
   if(view==='owner-auth')return <OwnerAuth onBack={back} onAuthed={(token,slug)=>{
     localStorage.setItem('cai_owner_token',token);
     localStorage.setItem('cai_owner_slug',slug||'');
+    localStorage.setItem('ownerToken',token);
     localStorage.setItem('ownerProfile',JSON.stringify({slug:slug||''}));
     setOwnerToken(token);
     setOwnerSlug(slug);
