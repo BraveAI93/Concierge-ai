@@ -384,7 +384,7 @@
       </h2>
     </div>
     <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:24px;flex-wrap:wrap">
-      <div onclick="window.location.href='/j-styling'" style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(120,160,100,0.1);border:1px solid rgba(120,160,100,0.22);border-radius:20px;font-size:10px;font-family:'Jost',sans-serif;color:#7a9e6e;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">
+      <div onclick="window.location.href='/theconcierge/j-styling'" style="display:inline-flex;align-items:center;gap:6px;padding:4px 12px;background:rgba(120,160,100,0.1);border:1px solid rgba(120,160,100,0.22);border-radius:20px;font-size:10px;font-family:'Jost',sans-serif;color:#7a9e6e;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">
         <div style="width:5px;height:5px;border-radius:50%;background:#7a9e6e;animation:pulse 2s infinite"></div>Live Demo
       </div>
     </div>
@@ -1200,7 +1200,7 @@ if(shootCv){
    INTRO CHECK
 ═══════════════════════════════════════════════════════════ */
 var introEl=document.getElementById('intro-screen');
-var isRoot=!window.location.pathname.replace(/^\//,'').replace(/\.html$/,'');
+var isRoot=!window.location.pathname.replace(/^\//,'').replace(/\.html$/,'')||window.location.pathname.replace(/\/$/,'')==='/theconcierge';
 
 if(!isRoot||!introEl){
   if(introEl)introEl.style.display='none';
@@ -3880,7 +3880,7 @@ const FORM_SLUGS = {
 const FORM_KEY_TO_SLUG = Object.fromEntries(Object.entries(FORM_SLUGS).map(([s,k])=>[k,s]));
 
 function FormPage(){
-  const parts=window.location.pathname.replace(/^\//,'').split('/');
+  const parts=window.location.pathname.replace(/^\/theconcierge/,'').replace(/^\//,'').split('/');
   // parts: ["forms", slug, formTypeSlug]
   const profileSlug=parts[1]||'';
   const formTypeSlug=parts[2]||'';
@@ -4698,7 +4698,7 @@ function BusinessPagePreview({data, lang, onStartChat, onBack}){
   const bg = '#0c0a08';
   const text = '#e8dcc8';
   const cardBg = 'rgba(255,255,255,0.025)';
-  const publicURL = data._slug ? `${window.location.origin}/${data._slug}` : window.location.href;
+  const publicURL = data._slug ? `${window.location.origin}/theconcierge/${data._slug}` : window.location.href;
 
   return <div style={{minHeight:'100vh',background:bg,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'24px 16px',fontFamily:"'Cormorant Garamond',serif",color:text}}>
     <div style={{width:'100%',maxWidth:440}}>
@@ -4799,7 +4799,7 @@ function BusinessPagePreview({data, lang, onStartChat, onBack}){
 
 function App(){
   // Render form page directly when URL matches /forms/[slug]/[formType]
-  const _pathParts=window.location.pathname.replace(/^\//,'').split('/');
+  const _pathParts=window.location.pathname.replace(/^\/theconcierge/,'').replace(/^\//,'').split('/');
   if(_pathParts[0]==='forms'&&_pathParts[1]&&_pathParts[2])return <FormPage/>;
 
   const[view,setView]=useState(()=>{const _t=localStorage.getItem('ownerToken')||localStorage.getItem('cai_owner_token');return _t?'owner-dashboard':null;});
@@ -4835,7 +4835,7 @@ function App(){
   // Auto-navigate to dashboard when token is set (handles post-signup black screen + page refresh)
   useEffect(()=>{
     if(!ownerToken) return;
-    const path=window.location.pathname.replace(/^\//,'').replace(/\.html$/,'');
+    const path=window.location.pathname.replace(/^\/theconcierge/,'').replace(/^\//,'').replace(/\.html$/,'');
     if(path && path!=='' && !DEMOS[path]) return; // don't interfere with profile URL loading
     if(view===null || view==='owner-auth' || view==='owner-dashboard'){
       setView('owner-dashboard');
@@ -4847,7 +4847,7 @@ function App(){
 
   // Load profile from URL slug on startup (e.g. /aprea)
   useEffect(()=>{
-    const path=window.location.pathname.replace(/^\//,'').replace(/\.html$/,'');
+    const path=window.location.pathname.replace(/^\/theconcierge/,'').replace(/^\//,'').replace(/\.html$/,'');
     if(path&&path!=='custom'&&path!==''&&!DEMOS[path]){
       const l=document.getElementById('landing');const a=document.getElementById('app');
       if(l)l.style.display='none';if(a)a.style.display='block';

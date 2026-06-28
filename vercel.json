@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    { "source": "/theconcierge", "destination": "/index.html" },
+    { "source": "/theconcierge/:path*", "destination": "/index.html" },
     { "source": "/((?!.*\\.).*)", "destination": "/index.html" }
   ]
 }
