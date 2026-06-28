@@ -223,25 +223,31 @@
     .action-opt-card:hover{background:rgba(201,169,110,0.09);border-color:rgba(201,169,110,0.45);transform:translateY(-4px);box-shadow:0 10px 30px rgba(201,169,110,0.12)}
     .action-opt-card.primary{background:linear-gradient(135deg,rgba(201,169,110,0.15),rgba(201,169,110,0.05));border-color:rgba(201,169,110,0.4)}
     .action-opt-card.primary:hover{background:linear-gradient(135deg,rgba(201,169,110,0.26),rgba(201,169,110,0.1));border-color:rgba(201,169,110,0.7)}
-    /* ── DEMO TOUR ── */
-    #demo-tour{position:fixed;inset:0;z-index:21000;background:rgba(6,4,2,0.97);backdrop-filter:blur(24px);display:flex;align-items:center;justify-content:center;padding:20px;animation:fadeUp 0.35s ease}
-    .dt-wrap{max-width:480px;width:100%;text-align:center;position:relative}
-    .dt-card{background:rgba(14,10,6,0.99);border:1px solid rgba(201,169,110,0.28);border-radius:24px;padding:48px 38px 38px;box-shadow:0 0 80px rgba(201,169,110,0.08),0 32px 80px rgba(0,0,0,0.85);position:relative;animation:dtSlide 0.32s ease}
-    @keyframes dtSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-    .dt-step-label{font-size:9px;font-family:'Jost',sans-serif;letter-spacing:0.28em;text-transform:uppercase;color:rgba(201,169,110,0.38);margin-bottom:18px}
-    .dt-icon{font-size:46px;margin-bottom:18px;display:block;line-height:1}
-    .dt-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:29px;font-weight:400;color:rgba(232,220,200,0.96);margin-bottom:14px;line-height:1.2}
-    .dt-desc{font-family:'Jost',sans-serif;font-size:13.5px;font-weight:300;color:rgba(232,220,200,0.5);line-height:1.8;margin-bottom:32px}
-    .dt-dots{display:flex;justify-content:center;gap:7px;margin-bottom:28px}
-    .dt-dot{width:6px;height:6px;border-radius:50%;background:rgba(201,169,110,0.18);cursor:pointer;transition:all 0.25s}
-    .dt-dot.active{background:#c9a96e;width:20px;border-radius:3px}
-    .dt-nav{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap}
-    .dt-btn{padding:11px 26px;border-radius:20px;border:1px solid rgba(201,169,110,0.3);background:transparent;color:rgba(201,169,110,0.65);font-size:12px;font-family:'Jost',sans-serif;letter-spacing:0.08em;cursor:pointer;transition:all 0.2s}
-    .dt-btn:hover{border-color:rgba(201,169,110,0.6);color:#e8dcc8;background:rgba(201,169,110,0.06)}
-    .dt-btn.primary{background:linear-gradient(135deg,#c9a96e,#7a4f0e);border-color:transparent;color:#0c0a08;font-weight:600;letter-spacing:0.1em}
-    .dt-btn.primary:hover{box-shadow:0 6px 24px rgba(201,169,110,0.4);transform:translateY(-1px)}
-    .dt-close{position:absolute;top:16px;right:16px;width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:rgba(232,220,200,0.35);font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;line-height:1;padding:0;font-family:sans-serif}
-    .dt-close:hover{background:rgba(255,255,255,0.1);color:#e8dcc8}
+    /* ── SPOTLIGHT TOUR ── */
+    #tour-overlay{position:fixed;inset:0;z-index:50000;pointer-events:all}
+    #tour-spotlight{position:fixed;border-radius:14px;box-shadow:0 0 0 9999px rgba(8,6,4,0.84),0 0 0 2px rgba(201,169,110,0.38),0 0 32px rgba(201,169,110,0.14);pointer-events:all;cursor:pointer;transition:left .38s cubic-bezier(.22,1,.36,1),top .38s cubic-bezier(.22,1,.36,1),width .38s cubic-bezier(.22,1,.36,1),height .38s cubic-bezier(.22,1,.36,1),opacity .3s ease;z-index:50001}
+    #tour-card{position:fixed;z-index:50002;background:rgba(14,10,6,0.99);border:1px solid rgba(201,169,110,0.32);border-radius:20px;padding:24px 22px 18px;max-width:310px;width:calc(100vw - 40px);box-shadow:0 0 60px rgba(201,169,110,0.1),0 20px 60px rgba(0,0,0,0.9);overflow:visible;transition:top .38s cubic-bezier(.22,1,.36,1),bottom .38s cubic-bezier(.22,1,.36,1)}
+    #tour-card::after{content:'';position:absolute;left:50%;transform:translateX(-50%);border:8px solid transparent;pointer-events:none;transition:opacity .2s;opacity:0}
+    #tour-card.arrow-down::after{bottom:-16px;border-top-color:rgba(201,169,110,0.4);opacity:1}
+    #tour-card.arrow-up::after{top:-16px;border-bottom-color:rgba(201,169,110,0.4);opacity:1}
+    .tr-counter{font-size:9px;font-family:'Jost',sans-serif;letter-spacing:.25em;text-transform:uppercase;color:rgba(201,169,110,0.42);margin-bottom:9px}
+    .tr-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:21px;font-weight:500;color:rgba(232,220,200,.96);margin-bottom:7px;line-height:1.2}
+    .tr-desc{font-family:'Jost',sans-serif;font-size:11.5px;font-weight:300;color:rgba(232,220,200,.48);line-height:1.72;margin-bottom:14px}
+    .tr-dots{display:flex;gap:5px;margin-bottom:14px}
+    .tr-dot{width:5px;height:5px;border-radius:50%;background:rgba(201,169,110,.2);cursor:pointer;transition:all .2s;flex-shrink:0}
+    .tr-dot.active{background:#c9a96e;width:14px;border-radius:3px}
+    .tr-nav{display:flex;align-items:center;justify-content:space-between}
+    .tr-skip{font-size:11px;font-family:'Jost',sans-serif;color:rgba(232,220,200,.22);cursor:pointer;background:none;border:none;padding:6px 2px;letter-spacing:.05em;transition:color .2s}
+    .tr-skip:hover{color:rgba(232,220,200,.48)}
+    .tr-next{padding:9px 20px;border-radius:20px;background:linear-gradient(135deg,#c9a96e,#7a4f0e);border:none;color:#0c0a08;font-size:12px;font-family:'Jost',sans-serif;font-weight:600;letter-spacing:.1em;cursor:pointer;transition:all .2s}
+    .tr-next:hover{box-shadow:0 4px 18px rgba(201,169,110,.4);transform:translateY(-1px)}
+    .tr-cta-icon{font-size:36px;color:#c9a96e;margin-bottom:14px;text-align:center}
+    .tr-cta-title{font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;font-weight:400;color:rgba(232,220,200,.96);margin-bottom:8px;line-height:1.2;text-align:center}
+    .tr-cta-desc{font-family:'Jost',sans-serif;font-size:11.5px;font-weight:300;color:rgba(232,220,200,.42);line-height:1.72;margin-bottom:20px;text-align:center}
+    .tr-cta-btn{display:block;width:100%;padding:13px 32px;background:linear-gradient(135deg,#c9a96e,#7a4f0e);border:none;border-radius:30px;color:#0c0a08;font-size:13px;font-family:'Jost',sans-serif;font-weight:700;letter-spacing:.12em;cursor:pointer;box-shadow:0 6px 28px rgba(201,169,110,.4);transition:all .2s;margin-bottom:10px}
+    .tr-cta-btn:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(201,169,110,.5)}
+    .tr-cta-skip{display:block;width:100%;text-align:center;font-size:11px;font-family:'Jost',sans-serif;color:rgba(232,220,200,.22);cursor:pointer;background:none;border:none;letter-spacing:.06em;padding:4px;transition:color .2s}
+    .tr-cta-skip:hover{color:rgba(232,220,200,.45)}
     /* ── LIGHT MODE: LOWER SECTIONS ── */
     body.light-mode #diff-section [style*="color:rgba(232,220,200"],body.light-mode #pricing-section [style*="color:rgba(232,220,200"]{color:rgba(44,31,14,0.78)!important}
     body.light-mode #pricing-section [style*="color:#e8dcc8"]{color:#2c1f0e!important}
@@ -320,21 +326,28 @@
   </div>
 </div>
 
-<!-- DEMO TOUR -->
-<div id="demo-tour" style="display:none">
-  <div class="dt-wrap">
-    <div class="dt-card">
-      <button class="dt-close" onclick="window.closeDemoTour()">&#215;</button>
-      <div class="dt-step-label" id="dt-step">Step 1 of 7</div>
-      <div class="dt-icon" id="dt-icon">✦</div>
-      <div class="dt-title" id="dt-title">Your AI Concierge Page</div>
-      <div class="dt-desc" id="dt-desc">A beautiful, branded page that works for you 24/7. Clients find it, ask questions, and book — while you sleep.</div>
-      <div class="dt-dots" id="dt-dots"></div>
-      <div class="dt-nav">
-        <button class="dt-btn" id="dt-prev" onclick="window.demoTourPrev()" style="display:none">&#8592; Back</button>
-        <button class="dt-btn primary" id="dt-next" onclick="window.demoTourNext()">Next &#8594;</button>
-        <button class="dt-btn primary" id="dt-create" onclick="window.closeDemoTour();window.loadDemo&&window.loadDemo('onboard')" style="display:none">Create yours &#8594;</button>
+<!-- SPOTLIGHT TOUR -->
+<div id="tour-overlay" style="display:none">
+  <div id="tour-spotlight"></div>
+  <div id="tour-card">
+    <!-- Regular step (steps 1–6) -->
+    <div id="tr-regular">
+      <div class="tr-counter" id="tr-step-label">1 of 7</div>
+      <div class="tr-title" id="tr-title-el"></div>
+      <div class="tr-desc" id="tr-desc-el"></div>
+      <div class="tr-dots" id="tr-dots-el"></div>
+      <div class="tr-nav">
+        <button class="tr-skip" onclick="window.closeTour()">Skip tour</button>
+        <button class="tr-next" id="tr-next-btn" onclick="window.tourNext()">Next &#8594;</button>
       </div>
+    </div>
+    <!-- CTA step (step 7) -->
+    <div id="tr-cta-wrap" style="display:none">
+      <div class="tr-cta-icon">✦</div>
+      <div class="tr-cta-title">Ready? Create yours</div>
+      <div class="tr-cta-desc">Join hundreds of solo professionals using The Concierge to win back their time, capture more leads, and grow — in under 5 minutes.</div>
+      <button class="tr-cta-btn" onclick="window.closeTour();window.loadDemo&&window.loadDemo('onboard')">Create yours &#8594;</button>
+      <button class="tr-cta-skip" onclick="window.closeTour()">Maybe later</button>
     </div>
   </div>
 </div>
@@ -452,7 +465,7 @@
         <div style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.35);display:flex;gap:6px"><span style="color:rgba(200,80,80,0.4);flex-shrink:0">✗</span>Burning out from admin</div>
       </div>
       <!-- After -->
-      <div style="background:rgba(100,160,80,0.04);border:1px solid rgba(100,160,80,0.12);border-radius:20px;padding:16px">
+      <div id="diff-after" style="background:rgba(100,160,80,0.04);border:1px solid rgba(100,160,80,0.12);border-radius:20px;padding:16px">
         <div style="font-size:10px;font-family:'Jost',sans-serif;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:rgba(100,180,80,0.6);margin-bottom:10px">With The Concierge</div>
         <div style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.55);margin-bottom:5px;display:flex;gap:6px"><span style="color:rgba(100,180,80,0.6);flex-shrink:0">✓</span>Answered instantly 24/7</div>
         <div style="font-size:11px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(232,220,200,0.55);margin-bottom:5px;display:flex;gap:6px"><span style="color:rgba(100,180,80,0.6);flex-shrink:0">✓</span>Your tone, your rules</div>
@@ -519,8 +532,11 @@
       </span>
     </div>
   </div>
-  <!-- Owner footer link (only shown when logged in) -->
-  <div id="owner-footer-link" style="display:none;text-align:center;margin-top:12px;padding-bottom:8px">
+  <!-- Tour + owner footer links -->
+  <div style="text-align:center;margin-top:12px;padding-bottom:4px">
+    <span onclick="window.startTour&&window.startTour()" style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(201,169,110,0.28);cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid rgba(201,169,110,0.18);padding-bottom:1px;transition:color 0.2s" onmouseover="this.style.color='rgba(201,169,110,0.55)'" onmouseout="this.style.color='rgba(201,169,110,0.28)'">Take a tour</span>
+  </div>
+  <div id="owner-footer-link" style="display:none;text-align:center;margin-top:8px;padding-bottom:8px">
     <span onclick="window.goToOwnerArea&&window.goToOwnerArea()" style="font-size:10px;font-family:'Jost',sans-serif;font-weight:300;color:rgba(201,169,110,0.28);cursor:pointer;letter-spacing:0.1em;text-transform:uppercase;border-bottom:1px solid rgba(201,169,110,0.18);padding-bottom:1px;transition:color 0.2s" onmouseover="this.style.color='rgba(201,169,110,0.55)'" onmouseout="this.style.color='rgba(201,169,110,0.28)'">Dashboard</span>
   </div>
   <div style="text-align:center;padding-bottom:18px;margin-top:4px">
@@ -736,62 +752,191 @@ function pickLang(lang) {
   setLang(lang);
   localStorage.setItem('lang_selected', lang);
   document.getElementById('lang-popup').style.display = 'none';
-  setTimeout(function() {
-    document.getElementById('action-popup').style.display = 'flex';
-  }, 350);
+  if (!localStorage.getItem('tourSeen')) {
+    setTimeout(function() { window.startTour && window.startTour(); }, 500);
+  } else {
+    setTimeout(function() {
+      document.getElementById('action-popup').style.display = 'flex';
+    }, 350);
+  }
 }
 function closeActionPopup() {
   document.getElementById('action-popup').style.display = 'none';
 }
 
-// ── DEMO TOUR ──────────────────────────────────────────────────────────
-var _dtStep = 0;
-var _dtSteps = [
-  { icon: '✦', title: 'Your AI Concierge Page', desc: 'A beautiful, branded page that works for you 24/7. Clients find it, ask questions, and book — while you sleep. No app, no manual replies needed.' },
-  { icon: '💬', title: 'Instant AI Chat', desc: 'Your concierge answers clients instantly in your own voice. It knows your services, pricing, FAQs, and booking flow — handling every enquiry with intelligence and warmth.' },
-  { icon: '🔥', title: 'Automatic Lead Capture', desc: 'Every conversation becomes a lead. Hot prospects are flagged in real time so you know exactly who to follow up with — and when — without lifting a finger.' },
-  { icon: '✦', title: 'Brave PA — Your Personal AI', desc: 'A floating AI assistant in your dashboard. Morning briefings, live web search, message drafting, tasks, and calendar management — built for busy professionals.' },
-  { icon: '📊', title: 'Owner Dashboard', desc: 'One place for everything: leads, bookings, notes, industry news, and your public profile. Your whole business at a glance, always in your pocket.' },
-  { icon: '🔔', title: 'Smart Notifications', desc: 'Get alerted for hot leads, new bookings, and daily briefings at 7am. Choose exactly what you hear and how — your assistant adapts to you, not the other way around.' },
-  { icon: '🎨', title: 'Fully Yours in 3 Minutes', desc: 'Your name, profession, services, photos, pricing, and tone of voice. Set it up once, refine it whenever. A branded page that represents you perfectly and grows with your business.' },
+// ── SPOTLIGHT TOUR ────────────────────────────────────────────────────
+var _tourStep = 0;
+var _tourSteps = [
+  {
+    target: '#demo-grid',
+    title: 'Meet The Concierge',
+    desc: 'Five real professionals — therapist, lawyer, chef, dance teacher, creator. Each has their own AI concierge answering clients around the clock. Click any card to see it live.',
+    place: 'above'
+  },
+  {
+    target: '#hero-sub',
+    title: 'Your AI answers clients 24/7',
+    desc: 'Your concierge knows your services, prices, availability, and tone of voice. It handles every enquiry instantly — so you\'re never unavailable, even at 3am.',
+    place: 'below'
+  },
+  {
+    target: '#diff-section',
+    title: 'Track every lead',
+    desc: 'Every conversation turns into a tracked lead automatically. Hot prospects are flagged in real time — you see who\'s interested, what they asked, and when to follow up.',
+    place: 'above'
+  },
+  {
+    target: '#pricing-section',
+    title: 'Your personal PA',
+    desc: 'Brave PA is your AI chief of staff. Morning briefings, live web search, message drafting, and task management — included across all plans.',
+    place: 'above'
+  },
+  {
+    target: '#own-link',
+    title: 'Setup in 5 minutes',
+    desc: 'Enter your name, services, prices, and personality. The AI builds your full branded concierge page instantly — ready to share via link, QR code, or social.',
+    place: 'above'
+  },
+  {
+    target: '#diff-after',
+    title: 'Always in control',
+    desc: 'Your dashboard shows leads, conversations, bookings, and analytics in one place. Review chats, update your AI, and manage every client relationship from your phone.',
+    place: 'above'
+  },
+  { isCta: true }
 ];
-window.startDemoTour = function() {
-  _dtStep = 0;
-  _renderDemoTour();
-  document.getElementById('demo-tour').style.display = 'flex';
-};
-window.closeDemoTour = function() {
-  document.getElementById('demo-tour').style.display = 'none';
-};
-window.demoTourNext = function() {
-  if (_dtStep < _dtSteps.length - 1) { _dtStep++; _renderDemoTour(); }
-};
-window.demoTourPrev = function() {
-  if (_dtStep > 0) { _dtStep--; _renderDemoTour(); }
-};
-function _renderDemoTour() {
-  var s = _dtSteps[_dtStep];
-  var total = _dtSteps.length;
-  document.getElementById('dt-step').textContent = 'Step ' + (_dtStep + 1) + ' of ' + total;
-  document.getElementById('dt-icon').textContent = s.icon;
-  document.getElementById('dt-title').textContent = s.title;
-  document.getElementById('dt-desc').textContent = s.desc;
-  var dotsEl = document.getElementById('dt-dots');
-  dotsEl.innerHTML = '';
-  for (var i = 0; i < total; i++) {
-    var d = document.createElement('div');
-    d.className = 'dt-dot' + (i === _dtStep ? ' active' : '');
-    (function(idx){ d.onclick = function(){ _dtStep = idx; _renderDemoTour(); }; })(i);
-    dotsEl.appendChild(d);
+
+function _trEl(id){ return document.getElementById(id); }
+
+function _renderTourStep() {
+  var step = _tourSteps[_tourStep];
+  var spotlight = _trEl('tour-spotlight');
+  var card = _trEl('tour-card');
+  var regular = _trEl('tr-regular');
+  var ctaWrap = _trEl('tr-cta-wrap');
+
+  if (step.isCta) {
+    spotlight.style.opacity = '0';
+    spotlight.style.boxShadow = 'none';
+    regular.style.display = 'none';
+    ctaWrap.style.display = 'block';
+    card.className = '';
+    card.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);max-width:340px;width:calc(100vw - 40px);z-index:50002;background:rgba(14,10,6,0.99);border:1px solid rgba(201,169,110,0.32);border-radius:20px;padding:32px 26px;box-shadow:0 0 60px rgba(201,169,110,0.1),0 20px 60px rgba(0,0,0,0.9);overflow:visible';
+    return;
   }
-  var isLast = _dtStep === total - 1;
-  var isFirst = _dtStep === 0;
-  document.getElementById('dt-next').style.display = isLast ? 'none' : 'inline-block';
-  document.getElementById('dt-create').style.display = isLast ? 'inline-block' : 'none';
-  document.getElementById('dt-prev').style.display = isFirst ? 'none' : 'inline-block';
-  var card = document.querySelector('.dt-card');
-  if (card) { card.style.animation = 'none'; card.offsetHeight; card.style.animation = 'dtSlide 0.28s ease'; }
+
+  regular.style.display = 'block';
+  ctaWrap.style.display = 'none';
+
+  _trEl('tr-step-label').textContent = (_tourStep + 1) + ' of ' + _tourSteps.length;
+  _trEl('tr-title-el').textContent = step.title;
+  _trEl('tr-desc-el').textContent = step.desc;
+
+  var dotsEl = _trEl('tr-dots-el');
+  dotsEl.innerHTML = '';
+  _tourSteps.forEach(function(_, i) {
+    var d = document.createElement('div');
+    d.className = 'tr-dot' + (i === _tourStep ? ' active' : '');
+    (function(idx){ d.onclick = function(e){ e.stopPropagation(); _tourStep = idx; _renderTourStep(); }; })(i);
+    dotsEl.appendChild(d);
+  });
+
+  var nextBtn = _trEl('tr-next-btn');
+  nextBtn.textContent = (_tourStep === _tourSteps.length - 2) ? 'Finale →' : 'Next →';
+
+  var targetEl = document.querySelector(step.target);
+  if (!targetEl) { spotlight.style.opacity = '0'; return; }
+
+  var rect = targetEl.getBoundingClientRect();
+  var pad = 12, vw = window.innerWidth, vh = window.innerHeight;
+  var sl = Math.max(4, rect.left - pad);
+  var st = Math.max(4, rect.top - pad);
+  var sw = Math.min(vw - 8, rect.width + pad * 2);
+  var sh = rect.height + pad * 2;
+
+  spotlight.style.left = sl + 'px';
+  spotlight.style.top = st + 'px';
+  spotlight.style.width = sw + 'px';
+  spotlight.style.height = sh + 'px';
+  spotlight.style.opacity = '1';
+  spotlight.style.boxShadow = '0 0 0 9999px rgba(8,6,4,0.84),0 0 0 2px rgba(201,169,110,0.38),0 0 32px rgba(201,169,110,0.14)';
+
+  // Position card above or below spotlight
+  var gap = 16;
+  var cardH = 280;
+  var spaceBelow = vh - (rect.bottom + pad) - gap;
+  var spaceAbove = (rect.top - pad) - gap;
+  var prefer = step.place || 'auto';
+  var placeBelow = (prefer === 'below') ? true : (prefer === 'above') ? false : (spaceBelow >= cardH || spaceBelow > spaceAbove);
+
+  card.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);max-width:310px;width:calc(100vw - 40px);z-index:50002;background:rgba(14,10,6,0.99);border:1px solid rgba(201,169,110,0.32);border-radius:20px;padding:24px 22px 18px;box-shadow:0 0 60px rgba(201,169,110,0.1),0 20px 60px rgba(0,0,0,0.9);overflow:visible;transition:top .38s cubic-bezier(.22,1,.36,1),bottom .38s cubic-bezier(.22,1,.36,1)';
+
+  if (placeBelow) {
+    var topPos = Math.min(rect.bottom + pad + gap, vh - cardH - 8);
+    card.style.top = topPos + 'px';
+    card.style.bottom = 'auto';
+    card.className = 'arrow-up';
+  } else {
+    var botPos = Math.min(vh - (rect.top - pad) + gap, vh - 8);
+    card.style.bottom = botPos + 'px';
+    card.style.top = 'auto';
+    card.className = 'arrow-down';
+  }
 }
+
+window.startTour = window.startDemoTour = function() {
+  _tourStep = 0;
+  _trEl('tour-overlay').style.display = 'block';
+  var firstTarget = _tourSteps[0].target && document.querySelector(_tourSteps[0].target);
+  if (firstTarget) firstTarget.scrollIntoView({behavior:'instant', block:'center'});
+  requestAnimationFrame(function(){ requestAnimationFrame(_renderTourStep); });
+};
+
+window.closeTour = window.closeDemoTour = function() {
+  _trEl('tour-overlay').style.display = 'none';
+  localStorage.setItem('tourSeen', '1');
+  if (window.location.hash === '#tour') history.pushState('', document.title, window.location.pathname + window.location.search);
+};
+
+window.tourNext = window.demoTourNext = function() {
+  if (_tourStep < _tourSteps.length - 1) {
+    _tourStep++;
+    var step = _tourSteps[_tourStep];
+    if (step.target) {
+      var el = document.querySelector(step.target);
+      if (el) el.scrollIntoView({behavior:'instant', block:'center'});
+    }
+    requestAnimationFrame(function(){ requestAnimationFrame(_renderTourStep); });
+  }
+};
+
+// Spotlight click advances tour
+_trEl('tour-spotlight').addEventListener('click', function(e) {
+  e.stopPropagation();
+  window.tourNext();
+});
+
+// Click outside card closes tour
+_trEl('tour-overlay').addEventListener('click', function(e) {
+  if (_trEl('tour-card').contains(e.target)) return;
+  if (e.target === _trEl('tour-spotlight')) return;
+  window.closeTour();
+});
+
+// Reposition on scroll/resize
+window.addEventListener('scroll', function() {
+  if (_trEl('tour-overlay').style.display !== 'none') requestAnimationFrame(_renderTourStep);
+}, {passive:true});
+window.addEventListener('resize', function() {
+  if (_trEl('tour-overlay').style.display !== 'none') _renderTourStep();
+});
+
+// #tour hash support
+(function(){
+  function _hashTour(){ if(window.location.hash==='#tour') setTimeout(window.startTour, 300); }
+  _hashTour();
+  window.addEventListener('hashchange', _hashTour);
+})();
 (function initLangPopup() {
   if (localStorage.getItem('lang_selected')) return;
   function showLangPopup() {
