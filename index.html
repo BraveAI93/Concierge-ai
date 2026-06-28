@@ -4802,7 +4802,9 @@ function App(){
   const _pathParts=window.location.pathname.replace(/^\/theconcierge/,'').replace(/^\//,'').split('/');
   if(_pathParts[0]==='forms'&&_pathParts[1]&&_pathParts[2])return <FormPage/>;
 
-  const[view,setView]=useState(()=>{const _t=localStorage.getItem('ownerToken')||localStorage.getItem('cai_owner_token');return _t?'owner-dashboard':null;});
+  const savedToken = localStorage.getItem('ownerToken') || localStorage.getItem('cai_owner_token');
+  const initialView = savedToken ? 'owner-dashboard' : 'landing';
+  const [view, setView] = React.useState(initialView);
   const[prof,setProf]=useState(null);
   const[prompt,setPrompt]=useState(null);
   const[profId,setProfId]=useState(null);
