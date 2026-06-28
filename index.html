@@ -561,7 +561,7 @@
 (function(){
   var token = localStorage.getItem('ownerToken') || localStorage.getItem('cai_owner_token');
   var path = window.location.pathname.replace(/^\/theconcierge/, '').replace(/^\//, '');
-  if(path === 'onboarding') { window.__INITIAL_VIEW__ = 'onboard'; return; }
+  if(path === 'onboard' || path === 'onboarding') { window.__INITIAL_VIEW__ = 'onboard'; return; }
   if(token) {
     document.addEventListener('DOMContentLoaded', function(){
       var introEl = document.getElementById('intro-screen');
@@ -4815,21 +4815,34 @@ function App(){
   // Render form page directly when URL matches /forms/[slug]/[formType]
   const _pathParts=window.location.pathname.replace(/^\/theconcierge/,'').replace(/^\//,'').split('/');
   if(_pathParts[0]==='forms'&&_pathParts[1]&&_pathParts[2])return <FormPage/>;
-  if(_pathParts[0]==='dashboard'){
+  if(_pathParts[0]==='owner-dashboard'){
     const _tok=localStorage.getItem('ownerToken')||localStorage.getItem('cai_owner_token');
     if(!_tok){window.location.replace('/theconcierge');return null;}
   }
 
   const [view, setView] = React.useState(window.__INITIAL_VIEW__ || 'landing');
-  const VIEW_PATHS={'owner-dashboard':'dashboard','onboard':'onboarding'};
-  const go=useCallback((v)=>{setView(v);const p=v?(VIEW_PATHS[v]||v):'';window.history.pushState({view:v},'',p?'/theconcierge/'+p:'/theconcierge');},[]);
+  const VALID_VIEWS=['owner-dashboard','onboard','owner-auth','owner-edit','chat','admin','admin-dashboard','preview','add-profile'];
+  const AUTH_VIEWS=['owner-dashboard','owner-edit','add-profile'];
+  const go=useCallback((v)=>{setView(v);window.history.pushState({},'',v?'/theconcierge/'+v:'/theconcierge');},[]);
+  // Page-load: restore view from URL segment
+  useEffect(()=>{
+    const seg=window.location.pathname.split('/').filter(Boolean).pop()||'';
+    const tok=localStorage.getItem('ownerToken')||localStorage.getItem('cai_owner_token');
+    if(VALID_VIEWS.includes(seg)){
+      if(!AUTH_VIEWS.includes(seg)||tok) setView(seg);
+    }
+  },[]);
+  // Browser back/forward
   useEffect(()=>{
     const onPop=()=>{
-      const path=window.location.pathname.replace(/^\/theconcierge/,'').replace(/^\//,'');
+      const seg=window.location.pathname.split('/').filter(Boolean).pop()||'';
       const tok=localStorage.getItem('ownerToken')||localStorage.getItem('cai_owner_token');
-      if(path==='dashboard'&&tok){setView('owner-dashboard');}
-      else if(path==='onboarding'){setView('onboard');}
-      else{setView(null);const l=document.getElementById('landing');const a=document.getElementById('app');if(l)l.style.display='flex';if(a)a.style.display='none';}
+      if(VALID_VIEWS.includes(seg)){
+        if(AUTH_VIEWS.includes(seg)&&!tok){setView(null);const l=document.getElementById('landing');const a=document.getElementById('app');if(l)l.style.display='flex';if(a)a.style.display='none';}
+        else setView(seg);
+      } else {
+        setView(null);const l=document.getElementById('landing');const a=document.getElementById('app');if(l)l.style.display='flex';if(a)a.style.display='none';
+      }
     };
     window.addEventListener('popstate',onPop);
     return()=>window.removeEventListener('popstate',onPop);
@@ -4868,7 +4881,7 @@ function App(){
     if(!ownerToken) return;
     window._ownerSessionActive=true;
     const path=window.location.pathname.replace(/^\/theconcierge/,'').replace(/^\//,'').replace(/\.html$/,'');
-    if(path && path!=='dashboard' && path!=='' && !DEMOS[path]) return; // don't interfere with profile URL loading
+    if(path && path!=='owner-dashboard' && path!=='' && !DEMOS[path]) return; // don't interfere with profile URL loading
     if(view===null || view==='owner-auth' || view==='owner-dashboard' || view==='landing'){
       go('owner-dashboard');
       const l=document.getElementById('landing');const a=document.getElementById('app');
@@ -4880,7 +4893,7 @@ function App(){
   // Load profile from URL slug on startup (e.g. /aprea)
   useEffect(()=>{
     const path=window.location.pathname.replace(/^\/theconcierge/,'').replace(/^\//,'').replace(/\.html$/,'');
-    if(path&&path!=='custom'&&path!=='dashboard'&&path!==''&&!DEMOS[path]){
+    if(path&&path!=='custom'&&path!=='owner-dashboard'&&path!=='onboard'&&path!==''&&!DEMOS[path]){
       const l=document.getElementById('landing');const a=document.getElementById('app');
       if(l)l.style.display='none';if(a)a.style.display='block';
       setLoadingProfile(true);
