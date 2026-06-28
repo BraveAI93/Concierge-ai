@@ -1207,7 +1207,7 @@ if(!isRoot||!introEl){
   document.body.classList.add('intro-done');
   startBgRender();return;
 }
-if(sessionStorage.getItem('cai_intro_v9')||window._ownerSessionActive){
+if(window._ownerSessionActive||localStorage.getItem('ownerToken')||sessionStorage.getItem('cai_intro_v9')){
   introEl.style.display='none';document.body.classList.add('intro-done');
   startBgRender();return;
 }
@@ -1705,7 +1705,7 @@ function initHeroSparkles(){
 function initIntro2D(){
   var introEl2=document.getElementById('intro-screen');
   if(!introEl2){document.body.classList.add('intro-done');return;}
-  if(sessionStorage.getItem('cai_intro_v9')||window._ownerSessionActive){introEl2.style.display='none';document.body.classList.add('intro-done');return;}
+  if(window._ownerSessionActive||localStorage.getItem('ownerToken')||sessionStorage.getItem('cai_intro_v9')){introEl2.style.display='none';document.body.classList.add('intro-done');return;}
   sessionStorage.setItem('cai_intro_v9','1');
   setTimeout(function(){introEl2.style.display='none';document.body.classList.add('intro-done');},6500);
 }
@@ -4837,9 +4837,10 @@ function App(){
   // Auto-navigate to dashboard when token is set (handles post-signup black screen + page refresh)
   useEffect(()=>{
     if(!ownerToken) return;
+    window._ownerSessionActive=true;
     const path=window.location.pathname.replace(/^\/theconcierge/,'').replace(/^\//,'').replace(/\.html$/,'');
     if(path && path!=='' && !DEMOS[path]) return; // don't interfere with profile URL loading
-    if(view===null || view==='owner-auth' || view==='owner-dashboard'){
+    if(view===null || view==='owner-auth' || view==='owner-dashboard' || view==='landing'){
       setView('owner-dashboard');
       const l=document.getElementById('landing');const a=document.getElementById('app');
       if(l)l.style.display='none';if(a)a.style.display='block';
