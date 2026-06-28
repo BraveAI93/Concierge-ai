@@ -558,6 +558,18 @@
 <div id="app"></div>
 
 <script>
+(function(){
+  var token = localStorage.getItem('ownerToken') || localStorage.getItem('cai_owner_token');
+  if(token) {
+    document.addEventListener('DOMContentLoaded', function(){
+      var introEl = document.getElementById('intro-screen');
+      var appEl = document.getElementById('app');
+      if(introEl) introEl.style.display='none';
+      if(appEl) appEl.style.display='block';
+    });
+    window.__INITIAL_VIEW__ = 'owner-dashboard';
+  }
+})();
 // ── EARLY OWNER SESSION CHECK — runs synchronously before React mounts ──
 (function(){
   var tok=localStorage.getItem('ownerToken')||localStorage.getItem('cai_owner_token');
@@ -4802,9 +4814,7 @@ function App(){
   const _pathParts=window.location.pathname.replace(/^\/theconcierge/,'').replace(/^\//,'').split('/');
   if(_pathParts[0]==='forms'&&_pathParts[1]&&_pathParts[2])return <FormPage/>;
 
-  const savedToken = localStorage.getItem('ownerToken') || localStorage.getItem('cai_owner_token');
-  const initialView = savedToken ? 'owner-dashboard' : 'landing';
-  const [view, setView] = React.useState(initialView);
+  const [view, setView] = React.useState(window.__INITIAL_VIEW__ || 'landing');
   const[prof,setProf]=useState(null);
   const[prompt,setPrompt]=useState(null);
   const[profId,setProfId]=useState(null);
