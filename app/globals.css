@@ -1,0 +1,33 @@
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#0c0a08;color:#e8dcc8;font-family:'Cormorant Garamond',Georgia,serif;min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:rgba(201,169,110,0.25);border-radius:2px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes bravePulse{0%,100%{opacity:0.6;transform:scale(1)}50%{opacity:1;transform:scale(1.15)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+@keyframes particleFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--px),var(--py)) scale(0)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+@keyframes rotateGlow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes typeDot{0%,80%,100%{opacity:.2;transform:translateY(0)}40%{opacity:1;transform:translateY(-4px)}}
+@keyframes starSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes cardSlide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+@keyframes tourPop{from{opacity:0;transform:scale(0.92)}to{opacity:1;transform:scale(1)}}
+@keyframes introFade{from{opacity:0}to{opacity:1}}
+@keyframes burstRing{0%{transform:scale(0.5);opacity:0.8}100%{transform:scale(2.5);opacity:0}}
+@keyframes bubblePop{0%{opacity:0;transform:scale(0.6) translateY(20px)}70%{transform:scale(1.06) translateY(-2px)}100%{opacity:1;transform:scale(1) translateY(0)}}
+
+.ma{animation:fadeUp 0.25s ease forwards}
+.qb:hover{background:rgba(201,169,110,0.09)!important;border-color:rgba(201,169,110,0.22)!important}
+.turn-bar{height:2px;background:rgba(201,169,110,0.08);border-radius:1px;overflow:hidden}
+.turn-fill{height:100%;background:linear-gradient(90deg,#c9a96e,#e8c878);border-radius:1px;transition:width 0.5s ease}
+
+body.light-mode{background:#f5f0eb;color:#2a1f0e}
+body.light-mode .glass{background:rgba(245,240,235,0.85)!important;border-color:rgba(201,169,110,0.3)!important;color:#2a1f0e!important}
+
+.concierge-brand{position:relative;display:inline-block}
+.concierge-idot{position:absolute;top:-2px;left:50%;transform:translateX(-50%);width:3px;height:3px;background:#c9a96e;border-radius:50%;animation:bravePulse 2s ease-in-out infinite}
