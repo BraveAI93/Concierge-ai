@@ -52,12 +52,7 @@
     .star-btn:hover::after{opacity:1}
     /* Cards float in space */
     .dc:nth-child(1){animation-delay:0.05s}.dc:nth-child(2){animation-delay:0.1s}.dc:nth-child(3){animation-delay:0.15s}.dc:nth-child(4){animation-delay:0.2s}.dc:nth-child(5){animation-delay:0.25s}
-    body.intro-done .dc{animation:cardFromVoid 0.6s cubic-bezier(0.22,1,0.36,1) both}
-    body.intro-done .dc:nth-child(1){animation-delay:0.6s}
-    body.intro-done .dc:nth-child(2){animation-delay:0.75s}
-    body.intro-done .dc:nth-child(3){animation-delay:0.9s}
-    body.intro-done .dc:nth-child(4){animation-delay:1.05s}
-    body.intro-done .dc:nth-child(5){animation-delay:1.2s}
+    body.intro-done .dc{animation:cardFromVoid 0.5s cubic-bezier(0.22,1,0.36,1) both}
 
     .turn-fill{height:100%;border-radius:1px;background:linear-gradient(90deg,#c9a96e,#e8c878);transition:width 0.4s ease}
     /* DASHBOARD */
@@ -81,10 +76,7 @@
     .intro-letter.lt-the{text-shadow:1px 0 2px rgba(255,252,220,0.18),-1px 0 0 rgba(50,32,8,0.35),0 1px 0 rgba(201,169,110,0.25),0 2px 0 rgba(140,95,25,0.15),0 3px 10px rgba(0,0,0,0.88)}
     .intro-letter-reveal{opacity:1!important;transform:translateY(0)!important}
     #brave-star-idot{position:absolute;transform:translate(-50%,-50%);pointer-events:none;color:#fffce8;font-size:0.28em;line-height:1;animation:starPulse 2.4s ease-in-out infinite}
-    /* Landing page — hidden until intro completes, dark-to-dark */
-    #landing{opacity:0}
-    body.intro-done #landing{opacity:1}
-    @keyframes landingIn{from{opacity:0}to{opacity:1}}
+    /* Landing page — always visible; intro canvas (z-index:9999) covers it until dismissed */
     /* Sparkle canvas */
     #sparkle-canvas{position:absolute;inset:0;pointer-events:none;z-index:1}
     /* Brave Star persistent element after intro */
@@ -1158,6 +1150,7 @@ function finishIntro(){
   if(introDone)return;introDone=true;
   if(introRaf)cancelAnimationFrame(introRaf);
   introEl.style.display='none';
+  var lnd=document.getElementById('landing');if(lnd)lnd.style.opacity='1';
   document.body.classList.add('intro-done');
   startBgRender();
 }
@@ -1424,7 +1417,7 @@ function drawIntro(ts){
     ctx.globalAlpha=fadeA;ctx.fillStyle='#0c0a08';ctx.fillRect(0,0,IW,IH);ctx.globalAlpha=1;
     if(brandEl)brandEl.style.opacity='0';
     if(titleWrap&&fadeA>0.3)titleWrap.style.opacity=(1-fadeA).toString();
-    if(fadeA>=1)finishIntro();
+    if(fadeA>=1){finishIntro();return;}
   }
 
   introRaf=requestAnimationFrame(drawIntro);
@@ -1541,12 +1534,12 @@ function initIntro2D(){
   if(!introEl2){document.body.classList.add('intro-done');return;}
   if(sessionStorage.getItem('cai_intro_v9')){introEl2.style.display='none';document.body.classList.add('intro-done');return;}
   sessionStorage.setItem('cai_intro_v9','1');
-  setTimeout(function(){introEl2.style.transition='opacity 0.9s';introEl2.style.opacity='0';setTimeout(function(){introEl2.style.display='none';document.body.classList.add('intro-done');},900);},6500);
+  setTimeout(function(){introEl2.style.display='none';document.body.classList.add('intro-done');},6500);
 }
 
 var bodyWatcher=new MutationObserver(function(){
   if(document.body.classList.contains('intro-done')){
-    bodyWatcher.disconnect();setTimeout(initHeroSparkles,120);
+    bodyWatcher.disconnect();initHeroSparkles();
   }
 });
 bodyWatcher.observe(document.body,{attributes:true,attributeFilter:['class']});
