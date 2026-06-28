@@ -62,6 +62,17 @@
     .export-btn{padding:8px 16px;background:rgba(201,169,110,0.1);border:1px solid rgba(201,169,110,0.25);border-radius:20px;cursor:pointer;font-size:11px;font-family:'Jost',sans-serif;font-weight:500;color:#c9a96e;letter-spacing:0.06em;text-transform:uppercase;transition:all 0.2s}
     .export-btn:hover{background:rgba(201,169,110,0.18)}
 
+    /* ── DASHBOARD GLASSMORPHISM ── */
+    .dash-glass{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease}
+    .dash-glass:hover{transform:translateY(-2px);box-shadow:0 16px 48px rgba(0,0,0,0.55),0 0 0 1px rgba(255,215,0,0.1),0 0 24px rgba(201,169,110,0.09)!important;border-color:rgba(255,215,0,0.28)!important}
+    .dash-stat{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease;cursor:default}
+    .dash-stat:hover{transform:translateY(-4px);box-shadow:0 20px 56px rgba(0,0,0,0.6),0 0 32px rgba(201,169,110,0.15)!important;border-color:rgba(255,215,0,0.35)!important}
+    .news-item{cursor:pointer;transition:background .2s,border-color .2s}
+    .news-item:hover{background:rgba(255,255,255,0.04)!important;border-color:rgba(255,215,0,0.22)!important}
+    .news-body{overflow:hidden;transition:max-height .32s cubic-bezier(.22,1,.36,1),opacity .25s ease}
+    .news-chevron{display:inline-block;transition:transform .25s ease;font-size:10px;color:rgba(201,169,110,0.4);margin-left:6px;vertical-align:middle}
+    .news-chevron.open{transform:rotate(180deg)}
+
     /* ── STAR + INTRO + TRANSITION ── */
     #star-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;display:block}
     #transition-canvas{position:fixed;inset:0;z-index:500;pointer-events:none;display:none}
@@ -2732,8 +2743,11 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoa
     setNewsLoading(false);
   };
 
+  const[expandedNews,setExpandedNews]=useState(new Set());
+  const toggleNews=(i)=>setExpandedNews(prev=>{const s=new Set(prev);s.has(i)?s.delete(i):s.add(i);return s;});
+
   const sectionLabel={fontSize:10,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.12em',textTransform:'uppercase',color:'rgba(201,169,110,0.5)',marginBottom:12,marginTop:24};
-  const card={background:'rgba(12,10,8,0.72)',border:'1px solid rgba(201,169,110,0.16)',borderRadius:20,padding:'16px 18px',marginBottom:12,backdropFilter:'blur(14px)',boxShadow:'0 0 24px rgba(201,169,110,0.06),0 6px 28px rgba(0,0,0,0.45),inset 0 0 16px rgba(201,169,110,0.02)'};
+  const card={background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,215,0,0.15)',borderRadius:20,padding:'24px',marginBottom:12,backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',boxShadow:'0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05)'};
   const tabBtn=(t)=>({padding:'7px 14px',borderRadius:20,border:'1px solid',cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.05em',transition:'all 0.2s',
     background:activeTab===t?'rgba(201,169,110,0.15)':'rgba(255,255,255,0.02)',
     borderColor:activeTab===t?'rgba(201,169,110,0.45)':'rgba(255,255,255,0.07)',
@@ -2748,7 +2762,7 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoa
     <div style={{maxWidth:680,margin:'0 auto'}}>
 
       {/* Header */}
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,padding:'16px 20px',background:'rgba(12,10,8,0.8)',border:'1px solid rgba(201,169,110,0.15)',borderRadius:20,backdropFilter:'blur(20px)',boxShadow:'0 0 30px rgba(201,169,110,0.05)'}}>
+      <div className="dash-glass" style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:20,padding:'16px 20px',background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,215,0,0.15)',borderRadius:20,backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',boxShadow:'0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05)'}}>
         <div>
           <div style={{fontFamily:"'Jost',sans-serif",fontWeight:500,fontSize:14,letterSpacing:'0.08em',textTransform:'uppercase',color:'#e8dcc8'}}>{profile?.name||'My'} <span style={{letterSpacing:'0.04em'}}>Dashboard</span></div>
           <div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.45)',marginTop:2}}>{profile?.profession||''} · <span style={{color:'rgba(201,169,110,0.65)'}}>/{slug}</span></div>
@@ -2773,40 +2787,63 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoa
       {/* ── OVERVIEW TAB ── */}
       {activeTab==='overview'&&<>
         {/* Stats grid */}
-        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:9,marginBottom:16}}>
-          {[[convCount,'💬','Conversations','rgba(201,169,110,0.06)'],[leads.length,'🎯','Total Leads','rgba(201,169,110,0.06)'],[hotLeads,'🔥','Hot Leads','rgba(224,122,110,0.07)']].map(([v,icon,label,bg])=>
-            <div key={label} style={{background:bg,border:'1px solid rgba(201,169,110,0.18)',borderRadius:20,padding:'16px 12px',textAlign:'center',backdropFilter:'blur(14px)',boxShadow:'0 0 20px rgba(201,169,110,0.07),0 4px 20px rgba(0,0,0,0.4)',transition:'all 0.3s'}}>
-              <div style={{fontSize:18,marginBottom:6}}>{icon}</div>
-              <div style={{fontSize:26,fontWeight:300,color:'#e8dcc8',lineHeight:1,textShadow:'0 1px 0 rgba(201,169,110,0.3),0 2px 8px rgba(0,0,0,0.6)'}}>{v}</div>
-              <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.45)',textTransform:'uppercase',letterSpacing:'0.08em',marginTop:4}}>{label}</div>
+        <div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:10,marginBottom:16}}>
+          {[
+            [convCount,'💬','Conversations','rgba(201,169,110,0.07)','rgba(201,169,110,0.22)','#c9a96e'],
+            [leads.length,'🎯','Total Leads','rgba(201,169,110,0.07)','rgba(201,169,110,0.22)','#c9a96e'],
+            [hotLeads,'🔥','Hot Leads','rgba(224,122,110,0.1)','rgba(224,122,110,0.3)','#e07a6e'],
+          ].map(([v,icon,label,bg,bdr,numColor])=>
+            <div key={label} className="dash-stat" style={{background:bg,border:`1px solid ${bdr}`,borderRadius:20,padding:'20px 10px 16px',textAlign:'center',backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',boxShadow:'0 8px 32px rgba(0,0,0,0.45),inset 0 1px 0 rgba(255,255,255,0.06)'}}>
+              <div style={{fontSize:22,marginBottom:8,lineHeight:1,filter:'drop-shadow(0 0 6px rgba(201,169,110,0.3))'}}>{icon}</div>
+              <div style={{fontSize:38,fontWeight:300,color:numColor,lineHeight:1,textShadow:`0 0 24px ${numColor}66,0 2px 8px rgba(0,0,0,0.7)`,letterSpacing:'-0.01em',marginBottom:6}}>{v}</div>
+              <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.5)',textTransform:'uppercase',letterSpacing:'0.1em'}}>{label}</div>
             </div>
           )}
         </div>
 
         {/* Lead temperature */}
-        <div style={{...card,background:'rgba(201,169,110,0.05)',border:'1px solid rgba(201,169,110,0.15)',marginBottom:16}}>
+        <div className="dash-glass" style={{...card,background:'rgba(201,169,110,0.06)',border:'1px solid rgba(201,169,110,0.18)',marginBottom:16}}>
           <div style={sectionLabel}>Lead Temperature</div>
-          <div style={{display:'flex',gap:20,marginTop:4}}>
-            <div><span style={{color:'#e07a6e',fontSize:20,fontWeight:600}}>{hotLeads}</span><span style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)',marginLeft:5}}>🔥 hot</span></div>
-            <div><span style={{color:'#e0b56e',fontSize:20,fontWeight:600}}>{warmLeads}</span><span style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)',marginLeft:5}}>🌤 warm</span></div>
-            <div><span style={{color:'#8ea6c9',fontSize:20,fontWeight:600}}>{coldLeads}</span><span style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)',marginLeft:5}}>❄️ cold</span></div>
+          <div style={{display:'flex',gap:24,marginTop:4,alignItems:'center'}}>
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+              <span style={{color:'#e07a6e',fontSize:28,fontWeight:300,lineHeight:1,textShadow:'0 0 16px rgba(224,122,110,0.45)'}}>{hotLeads}</span>
+              <span style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)',letterSpacing:'0.06em'}}>🔥 hot</span>
+            </div>
+            <div style={{width:1,height:32,background:'rgba(201,169,110,0.12)'}}/>
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+              <span style={{color:'#e0b56e',fontSize:28,fontWeight:300,lineHeight:1,textShadow:'0 0 16px rgba(224,181,110,0.4)'}}>{warmLeads}</span>
+              <span style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)',letterSpacing:'0.06em'}}>🌤 warm</span>
+            </div>
+            <div style={{width:1,height:32,background:'rgba(201,169,110,0.12)'}}/>
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+              <span style={{color:'#8ea6c9',fontSize:28,fontWeight:300,lineHeight:1,textShadow:'0 0 16px rgba(142,166,201,0.35)'}}>{coldLeads}</span>
+              <span style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)',letterSpacing:'0.06em'}}>❄️ cold</span>
+            </div>
           </div>
         </div>
 
         {/* Revenue projection */}
-        {avgPrice>0&&<div style={{...card,background:'rgba(100,180,80,0.04)',border:'1px solid rgba(100,180,80,0.15)',marginBottom:16}}>
+        {avgPrice>0&&<div className="dash-glass" style={{...card,background:'rgba(100,180,80,0.05)',border:'1px solid rgba(100,180,80,0.2)',marginBottom:16}}>
           <div style={sectionLabel}>Revenue Projection</div>
-          <div style={{display:'flex',gap:24,marginTop:4,alignItems:'flex-end'}}>
-            <div>
-              <div style={{fontSize:28,fontWeight:300,color:'#7aba6a',lineHeight:1}}>£{projRevenue}</div>
-              <div style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.35)',marginTop:3}}>potential from hot leads</div>
-            </div>
-            <div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.3)',lineHeight:1.5,maxWidth:180}}>Based on {hotLeads} hot lead{hotLeads!==1?'s':''} × avg service price £{Math.round(avgPrice)}</div>
+          <div style={{display:'flex',alignItems:'flex-end',gap:16,marginBottom:18}}>
+            <div style={{fontSize:40,fontWeight:300,color:'#7aba6a',lineHeight:1,textShadow:'0 0 28px rgba(122,186,106,0.4)',letterSpacing:'-0.02em'}}>{projRevenue>0?`£${projRevenue}`:'-'}</div>
+            <div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.32)',lineHeight:1.55,paddingBottom:4}}>{hotLeads} hot lead{hotLeads!==1?'s':''}<br/>× avg £{Math.round(avgPrice)}</div>
           </div>
+          {/* Bar chart */}
+          {(()=>{const mx=Math.max(hotLeads,warmLeads,coldLeads,1);const bars=[{v:hotLeads,c:'#e07a6e',g:'rgba(224,122,110,0.35)',lbl:'Hot'},{v:warmLeads,c:'#e0b56e',g:'rgba(224,181,110,0.3)',lbl:'Warm'},{v:coldLeads,c:'#8ea6c9',g:'rgba(142,166,201,0.25)',lbl:'Cold'}];return <div style={{display:'flex',gap:8,alignItems:'flex-end',height:52}}>
+            {bars.map(({v,c,g,lbl})=>{
+              const pct=Math.max((v/mx)*44,v>0?6:0);
+              return <div key={lbl} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:3}}>
+                <div style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.55)',fontWeight:500}}>{v}</div>
+                <div style={{width:'100%',height:`${pct}px`,background:`linear-gradient(180deg,${c},${g})`,borderRadius:'4px 4px 0 0',transition:'height .6s cubic-bezier(.22,1,.36,1)',boxShadow:`0 0 10px ${c}55`}}/>
+                <div style={{fontSize:8,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.35)',letterSpacing:'0.06em',textTransform:'uppercase'}}>{lbl}</div>
+              </div>;
+            })}
+          </div>;})()}
         </div>}
 
         {/* AI Advice */}
-        <div style={{...card,background:'rgba(110,120,201,0.04)',border:'1px solid rgba(110,120,201,0.15)',marginBottom:16}}>
+        <div className="dash-glass" style={{...card,background:'rgba(110,120,201,0.06)',border:'1px solid rgba(110,120,201,0.2)',marginBottom:16}}>
           <div style={sectionLabel}>AI Advice</div>
           <div style={{fontSize:13,color:'rgba(232,220,200,0.65)',lineHeight:1.7,marginTop:4}}>
             {hotLeads>0&&<div style={{marginBottom:8}}>🔥 You have {hotLeads} hot lead{hotLeads!==1?'s':''} — follow up within 24 hours while interest is high.</div>}
@@ -2818,7 +2855,7 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoa
         </div>
 
         {/* Recent leads */}
-        <div style={card}>
+        <div className="dash-glass" style={card}>
           <div style={sectionLabel}>Recent Leads</div>
           {leads.length===0&&<div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.3)'}}>No leads yet — share your link to start receiving enquiries.</div>}
           {leads.slice(0,8).map(l=><div key={l.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'9px 0',borderBottom:'1px solid rgba(255,255,255,0.04)'}}>
@@ -2831,7 +2868,7 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoa
         </div>
 
         {/* Latest Insights */}
-        <div style={card}>
+        <div className="dash-glass" style={card}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:8}}>
             <div style={sectionLabel}>Latest Insights</div>
             {newsDate&&<div style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.3)'}}>Updated {newsDate}</div>}
@@ -2840,12 +2877,20 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoa
             No insights yet.
             <button onClick={()=>{setActiveTab('news');generateNewsNow();}} style={{marginLeft:8,padding:'4px 10px',background:'transparent',border:'1px solid rgba(201,169,110,0.25)',borderRadius:20,cursor:'pointer',fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.6)'}}>Generate now</button>
           </div>}
-          {news.slice(0,3).map((item,i)=><div key={i} style={{padding:'10px 0',borderBottom:i<Math.min(news.length,3)-1?'1px solid rgba(255,255,255,0.04)':'none'}}>
-            <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.4)',marginBottom:4}}>{item.relevance}</div>
-            <div style={{fontSize:13,color:'#e8dcc8',marginBottom:3,lineHeight:1.4}}>{item.title}</div>
-            <div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.45)',lineHeight:1.5}}>{item.summary}</div>
-          </div>)}
-          {news.length>0&&<button onClick={()=>setActiveTab('news')} style={{marginTop:10,width:'100%',padding:'7px 0',background:'transparent',border:'1px solid rgba(201,169,110,0.12)',borderRadius:20,cursor:'pointer',fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.45)',letterSpacing:'0.08em',textTransform:'uppercase'}}>View all in Insights →</button>}
+          {news.slice(0,3).map((item,i)=>{
+            const open=expandedNews.has(`ov-${i}`);
+            return <div key={i} className="news-item" onClick={()=>toggleNews(`ov-${i}`)} style={{padding:'11px 10px',borderRadius:10,marginBottom:i<Math.min(news.length,3)-1?4:0,background:open?'rgba(255,255,255,0.04)':'transparent',border:'1px solid transparent',userSelect:'none'}}>
+              <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",letterSpacing:'0.1em',textTransform:'uppercase',color:'rgba(201,169,110,0.4)',marginBottom:4}}>{item.relevance}</div>
+              <div style={{fontSize:13,color:'#e8dcc8',lineHeight:1.4,display:'flex',alignItems:'center',justifyContent:'space-between',gap:8}}>
+                <span>{item.title}</span>
+                <span className={`news-chevron${open?' open':''}`}>▾</span>
+              </div>
+              <div className="news-body" style={{maxHeight:open?'200px':'0px',opacity:open?1:0}}>
+                <div style={{fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.52)',lineHeight:1.6,paddingTop:8}}>{item.summary}</div>
+              </div>
+            </div>;
+          })}
+          {news.length>0&&<button onClick={(e)=>{e.stopPropagation();setActiveTab('news');}} style={{marginTop:8,width:'100%',padding:'7px 0',background:'transparent',border:'1px solid rgba(201,169,110,0.12)',borderRadius:20,cursor:'pointer',fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.45)',letterSpacing:'0.08em',textTransform:'uppercase'}}>View all in Insights →</button>}
         </div>
       </>}
 
@@ -2965,14 +3010,22 @@ function OwnerDashboard({token, slug, onBack, onLogout, onEditProfile, onDataLoa
           <div style={{fontSize:20,color:'#c9a96e',animation:'pulse 1.5s infinite',marginBottom:8}}>✦</div>
           <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.4)'}}>Scanning the market for you...</div>
         </div>}
-        {news.map((item,i)=><div key={i} style={{...card,background:'rgba(255,255,255,0.02)'}}>
-          <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",letterSpacing:'0.12em',textTransform:'uppercase',color:'rgba(201,169,110,0.4)',marginBottom:6}}>{item.relevance}</div>
-          <div style={{fontSize:15,color:'#e8dcc8',marginBottom:6,lineHeight:1.4}}>{item.title}</div>
-          <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.5)',lineHeight:1.6}}>{item.summary}</div>
-        </div>)}
+        {news.map((item,i)=>{
+          const open=expandedNews.has(`nt-${i}`);
+          return <div key={i} className={`news-item dash-glass`} onClick={()=>toggleNews(`nt-${i}`)} style={{...card,background:open?'rgba(255,255,255,0.07)':'rgba(255,255,255,0.03)',marginBottom:8,cursor:'pointer',userSelect:'none'}}>
+            <div style={{fontSize:9,fontFamily:"'Jost',sans-serif",letterSpacing:'0.12em',textTransform:'uppercase',color:'rgba(201,169,110,0.45)',marginBottom:6}}>{item.relevance}</div>
+            <div style={{fontSize:15,color:'#e8dcc8',lineHeight:1.4,display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
+              <span>{item.title}</span>
+              <span className={`news-chevron${open?' open':''}`} style={{fontSize:12,flexShrink:0}}>▾</span>
+            </div>
+            <div className="news-body" style={{maxHeight:open?'300px':'0px',opacity:open?1:0}}>
+              <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.55)',lineHeight:1.7,paddingTop:10,borderTop:'1px solid rgba(255,215,0,0.08)',marginTop:10}}>{item.summary}</div>
+            </div>
+          </div>;
+        })}
 
         {/* Digest settings */}
-        <div style={{...card,background:'rgba(201,169,110,0.04)',border:'1px solid rgba(201,169,110,0.15)',marginTop:24}}>
+        <div className="dash-glass" style={{...card,background:'rgba(201,169,110,0.05)',border:'1px solid rgba(201,169,110,0.18)',marginTop:24}}>
           <div style={sectionLabel}>Email Digest</div>
           <div style={{fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.45)',marginBottom:12,lineHeight:1.6}}>Receive these insights + your analytics summary directly by email.</div>
           <div style={{display:'flex',flexWrap:'wrap',gap:6,marginBottom:12}}>
