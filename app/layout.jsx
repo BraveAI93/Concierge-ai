@@ -1,8 +1,8 @@
 import './globals.css';
 
 export const metadata = {
-  title: 'The Concierge — AI for Independent Professionals',
-  description: 'Your 24/7 AI concierge, built for independent professionals.',
+  title: 'Brave by Bruno',
+  description: 'Ecosystem home for Brave by Bruno products.',
 };
 
 export default function RootLayout({ children }) {

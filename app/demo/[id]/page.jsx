@@ -9,7 +9,7 @@ export default function DemoPage({ params }) {
   const demo = DEMOS[params.id];
 
   useEffect(() => {
-    if (!demo) router.push('/');
+    if (!demo) router.push('/theconcierge');
     else sessionStorage.setItem('cai_consent', 'demo-' + Date.now());
   }, []);
 
@@ -20,7 +20,7 @@ export default function DemoPage({ params }) {
       profile={demo}
       systemPrompt={demo.systemPrompt}
       profileId={params.id}
-      onBack={() => router.push('/')}
+      onBack={() => router.push('/theconcierge')}
       lang="en"
     />
   );
