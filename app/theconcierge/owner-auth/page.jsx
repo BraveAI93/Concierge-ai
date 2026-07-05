@@ -78,7 +78,7 @@ export default function OwnerAuthPage() {
           }
         </div>
         <div style={{textAlign:'center',marginTop:14}}>
-          <button onClick={()=>router.push('/')} style={{background:'none',border:'none',cursor:'pointer',fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.3)',textDecoration:'underline'}}>← Back to home</button>
+          <button onClick={()=>router.push('/theconcierge')} style={{background:'none',border:'none',cursor:'pointer',fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.3)',textDecoration:'underline'}}>← Back to home</button>
         </div>
       </div>
     </div>

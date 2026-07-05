@@ -54,8 +54,8 @@ export default function OnboardingPage() {
       <BusinessPagePreview
         data={onboardData}
         lang="en"
-        onStartChat={() => router.push('/')}
-        onBack={() => router.push('/')}
+        onStartChat={() => router.push('/theconcierge')}
+        onBack={() => router.push('/theconcierge')}
       />
     );
   }
@@ -63,7 +63,7 @@ export default function OnboardingPage() {
   return (
     <Onboarding
       lang="en"
-      onBack={() => router.push('/')}
+      onBack={() => router.push('/theconcierge')}
       onComplete={handleComplete}
     />
   );

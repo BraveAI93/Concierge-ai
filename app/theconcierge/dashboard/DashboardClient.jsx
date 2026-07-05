@@ -14,7 +14,7 @@ export default function DashboardClient({ token, slug }) {
     localStorage.removeItem('cai_owner_slug');
     localStorage.removeItem('ownerToken');
     localStorage.removeItem('ownerProfile');
-    router.push('/');
+    router.push('/theconcierge');
   };
 
   const switchProfile = async (targetSlug) => {
@@ -40,7 +40,7 @@ export default function DashboardClient({ token, slug }) {
       <OwnerDashboard
         token={token}
         slug={slug}
-        onBack={() => router.push('/')}
+        onBack={() => router.push('/theconcierge')}
         onLogout={handleLogout}
         onEditProfile={() => router.push('/theconcierge/owner-edit')}
         onDataLoaded={(p, l, c) => setPaData({ profile: p, leads: l, convCount: c })}
