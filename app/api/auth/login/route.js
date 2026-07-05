@@ -6,9 +6,13 @@ const BACKEND_URL = 'https://concierge-backend-80rb.onrender.com';
 export async function POST(request) {
   try {
     const body = await request.json();
-    // Support direct token injection (for profile switch)
+    // Support direct token injection (for profile switch) — only for callers
+    // who already hold a valid session; never for anonymous requests.
     if (body._directToken) {
       const cookieStore = cookies();
+      if (!cookieStore.get('cai_token')?.value) {
+        return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+      }
       cookieStore.set('cai_token', body._directToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
