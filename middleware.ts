@@ -3,11 +3,11 @@ import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const token = request.cookies.get('ownerToken')?.value;
+  const token = request.cookies.get('cai_token')?.value;
 
   if (pathname.startsWith('/theconcierge/dashboard') && !token) {
     const url = request.nextUrl.clone();
-    url.pathname = '/theconcierge';
+    url.pathname = '/theconcierge/owner-auth';
     return NextResponse.redirect(url);
   }
 
