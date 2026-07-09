@@ -19,6 +19,9 @@ async function callAPI(messages, systemPrompt, profileId) {
   return { reply: d.reply || 'Something went wrong — please try again.', conversationId: d.conversation_id || '' };
 }
 
+// Returns the real backend delivery outcome. Never assumes success —
+// a network failure or non-2xx response is reported as record failure,
+// regardless of what the email sub-status would have been.
 async function sendAlert(profileId, topic, excerpt, conversationId) {
   try {
     const r = await fetch(`${BACKEND_URL}/alert`, {
@@ -32,9 +35,11 @@ async function sendAlert(profileId, topic, excerpt, conversationId) {
         excerpt
       })
     });
-    return r.ok;
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok || !d.dashboard_record_created) return { recorded: false, emailStatus: null };
+    return { recorded: true, emailStatus: d.email_status || null };
   } catch (e) {
-    return false;
+    return { recorded: false, emailStatus: null };
   }
 }
 
@@ -82,7 +87,8 @@ export default function Chat({ profile, systemPrompt, profileId, onBack, lang })
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [alerts, setAlerts] = useState([]);
-  const [alertStatus, setAlertStatus] = useState(null); // null | 'pending' | 'confirmed' | 'failed'
+  // null | 'pending' | 'confirmed' | 'recorded_email_failed' | 'recorded_email_disabled' | 'failed'
+  const [alertStatus, setAlertStatus] = useState(null);
   const [reviewData, setReviewData] = useState(null);
   const [blocked, setBlocked] = useState(0);
   const [turns, setTurns] = useState(0);
@@ -152,7 +158,12 @@ export default function Chat({ profile, systemPrompt, profileId, onBack, lang })
       setLoading(false);
       if (found.length) {
         setReviewData({ reply, snap: newMsgs });
-        sendAlert(profileId, found.join(', '), t, conversationId).then(ok => setAlertStatus(ok ? 'confirmed' : 'failed'));
+        sendAlert(profileId, found.join(', '), t, conversationId).then(({ recorded, emailStatus }) => {
+          if (!recorded) { setAlertStatus('failed'); return; }
+          if (emailStatus === 'sent') setAlertStatus('confirmed');
+          else if (emailStatus === 'disabled_missing_env') setAlertStatus('recorded_email_disabled');
+          else setAlertStatus('recorded_email_failed'); // covers 'failed' and any unexpected value
+        });
       }
       else setMessages([...newMsgs, { role: 'assistant', content: convertCurrency(reply, L) }]);
       if (newTurn === 3 && !leadCaptured) setTimeout(() => setShowLeadForm(true), 1200);
@@ -301,6 +312,8 @@ export default function Chat({ profile, systemPrompt, profileId, onBack, lang })
                 <span style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:alertStatus==='failed'?'#c06060':'#dc8c3c'}}>
                   {alertStatus==='confirmed' && `🔔 ${P.name} notified`}
                   {alertStatus==='pending' && `Flagging for ${P.name}…`}
+                  {alertStatus==='recorded_email_disabled' && `Flagged — saved to dashboard (email not configured)`}
+                  {alertStatus==='recorded_email_failed' && `Flagged — saved to dashboard (email couldn't be sent)`}
                   {alertStatus==='failed' && `⚠ Flagged — notification could not be sent`}
                 </span>
                 <button onClick={() => { setAlerts([]); setAlertStatus(null); }} style={{background:'none',border:'none',cursor:'pointer',color:'rgba(220,140,60,0.42)',fontSize:16,lineHeight:1,padding:0}}>×</button>

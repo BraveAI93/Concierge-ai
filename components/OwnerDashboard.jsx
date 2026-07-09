@@ -313,13 +313,19 @@ export default function OwnerDashboard({ token, slug, onBack, onLogout, onEditPr
           {notifications.map(n=>{
             let parsed = {};
             try { parsed = JSON.parse(n.content); } catch(e) {}
+            const emailBadge = {
+              sent: { label: '✉ Email sent', color: 'rgba(120,160,100,0.7)' },
+              failed: { label: '✉ Email failed', color: 'rgba(200,80,80,0.7)' },
+              disabled_missing_env: { label: '✉ Email not configured', color: 'rgba(232,220,200,0.35)' },
+            }[parsed.email_status] || { label: 'Recorded only', color: 'rgba(232,220,200,0.3)' };
             return (
               <div key={n.id} style={{...card,border:'1px solid rgba(220,140,60,0.2)'}}>
                 <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}>
                   <span style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(220,140,60,0.7)',textTransform:'uppercase',letterSpacing:'0.08em'}}>🔔 {parsed.topic||'Flagged conversation'}</span>
                   <span style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.25)'}}>{new Date(n.created_at).toLocaleString()}</span>
                 </div>
-                {parsed.excerpt&&<div style={{fontSize:13,color:'rgba(232,220,200,0.7)',lineHeight:1.6,fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic'}}>"{parsed.excerpt}"</div>}
+                {parsed.excerpt&&<div style={{fontSize:13,color:'rgba(232,220,200,0.7)',lineHeight:1.6,fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic',marginBottom:6}}>"{parsed.excerpt}"</div>}
+                <span style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:emailBadge.color}}>{emailBadge.label}</span>
               </div>
             );
           })}

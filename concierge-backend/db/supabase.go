@@ -38,24 +38,24 @@ type Lead struct {
 }
 
 type Profile struct {
-	ID                  string    `json:"id"`
-	Slug                string    `json:"slug"`
-	Name                string    `json:"name"`
-	Business            string    `json:"business"`
-	Profession          string    `json:"profession"`
-	Location            string    `json:"location"`
-	SystemPrompt        string    `json:"system_prompt"`
-	ProfileData         string    `json:"profile_data"`
-	Accent              string    `json:"accent"`
-	Active              bool      `json:"active"`
-	Email               string    `json:"email"`
-	PasswordHash        string    `json:"password_hash"`
-	PasswordSalt        string    `json:"password_salt"`
-	GoogleRefreshToken  string    `json:"google_refresh_token"`
-	DigestFrequency     string    `json:"digest_frequency"` // "none","biweekly","weekly","bimonthly","monthly"
-	DigestLastSent      time.Time `json:"digest_last_sent"`
-	StripeAccountID     string    `json:"stripe_account_id,omitempty"`
-	CreatedAt           time.Time `json:"created_at"`
+	ID                 string    `json:"id"`
+	Slug               string    `json:"slug"`
+	Name               string    `json:"name"`
+	Business           string    `json:"business"`
+	Profession         string    `json:"profession"`
+	Location           string    `json:"location"`
+	SystemPrompt       string    `json:"system_prompt"`
+	ProfileData        string    `json:"profile_data"`
+	Accent             string    `json:"accent"`
+	Active             bool      `json:"active"`
+	Email              string    `json:"email"`
+	PasswordHash       string    `json:"password_hash"`
+	PasswordSalt       string    `json:"password_salt"`
+	GoogleRefreshToken string    `json:"google_refresh_token"`
+	DigestFrequency    string    `json:"digest_frequency"` // "none","biweekly","weekly","bimonthly","monthly"
+	DigestLastSent     time.Time `json:"digest_last_sent"`
+	StripeAccountID    string    `json:"stripe_account_id,omitempty"`
+	CreatedAt          time.Time `json:"created_at"`
 }
 
 // BookingPayment — tracks deposit payments via Stripe
@@ -93,20 +93,20 @@ type Session struct {
 
 // BookingRequest — propose/confirm flow
 type BookingRequest struct {
-	ID            string    `json:"id"`
-	ProfileID     string    `json:"profile_id"`
-	ClientName    string    `json:"client_name"`
-	ClientEmail   string    `json:"client_email"`
-	SessionID     string    `json:"session_id"`
-	ServiceName   string    `json:"service_name"`
-	PrimarySlot   string    `json:"primary_slot"`
-	BackupSlot    string    `json:"backup_slot"`
-	Message       string    `json:"message"`
-	Status        string    `json:"status"` // "pending","accepted","declined","counter"
-	OwnerReply    string    `json:"owner_reply"`
-	CounterSlot   string    `json:"counter_slot"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	ID          string    `json:"id"`
+	ProfileID   string    `json:"profile_id"`
+	ClientName  string    `json:"client_name"`
+	ClientEmail string    `json:"client_email"`
+	SessionID   string    `json:"session_id"`
+	ServiceName string    `json:"service_name"`
+	PrimarySlot string    `json:"primary_slot"`
+	BackupSlot  string    `json:"backup_slot"`
+	Message     string    `json:"message"`
+	Status      string    `json:"status"` // "pending","accepted","declined","counter"
+	OwnerReply  string    `json:"owner_reply"`
+	CounterSlot string    `json:"counter_slot"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
 }
 
 // Note — owner notes on clients or general
@@ -124,7 +124,7 @@ type Note struct {
 type DailyNews struct {
 	ID        string    `json:"id"`
 	ProfileID string    `json:"profile_id"`
-	Date      string    `json:"date"` // YYYY-MM-DD
+	Date      string    `json:"date"`  // YYYY-MM-DD
 	Items     string    `json:"items"` // JSON array of {title, summary, relevance}
 	CreatedAt time.Time `json:"created_at"`
 }
@@ -134,7 +134,7 @@ type BookingPrefs struct {
 	ID             string    `json:"id"`
 	ProfileID      string    `json:"profile_id"`
 	ServiceName    string    `json:"service_name"`
-	SlotDuration   int       `json:"slot_duration"`   // minutes
+	SlotDuration   int       `json:"slot_duration"` // minutes
 	BufferMinutes  int       `json:"buffer_minutes"`
 	PreferredHours string    `json:"preferred_hours"` // e.g. "09:00-17:00"
 	MaxPerDay      int       `json:"max_per_day"`

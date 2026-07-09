@@ -284,7 +284,18 @@ type AlertPayload struct {
 	Excerpt        string `json:"excerpt"`
 	ConversationID string `json:"conversation_id,omitempty"`
 	SessionID      string `json:"session_id,omitempty"`
+	EmailStatus    string `json:"email_status"`          // "sent" | "failed" | "disabled_missing_env"
+	EmailError     string `json:"email_error,omitempty"` // safe, redacted — never includes secrets
 }
+
+// Delivery statuses returned by sendAlertEmail. "disabled_missing_env" is not
+// a failure — it means RESEND_API_KEY/OWNER_EMAIL are not configured, so no
+// send was attempted.
+const (
+	EmailStatusSent          = "sent"
+	EmailStatusFailed        = "failed"
+	EmailStatusDisabledNoEnv = "disabled_missing_env"
+)
 
 func handleCreateAlert(c *gin.Context) {
 	var req struct {
@@ -302,12 +313,20 @@ func handleCreateAlert(c *gin.Context) {
 	if len(excerpt) > 300 {
 		excerpt = excerpt[:300]
 	}
+
+	// Attempt email delivery synchronously (not fire-and-forget) so the
+	// caller and the durable record both get the real outcome, not a guess.
+	emailStatus, emailErr := sendAlertEmail(req.Topic, excerpt, req.ProfileID)
+	emailEnabled := emailStatus != EmailStatusDisabledNoEnv
+
 	payload := AlertPayload{
 		AlertType:      "sensitive_topic",
 		Topic:          req.Topic,
 		Excerpt:        excerpt,
 		ConversationID: req.ConversationID,
 		SessionID:      req.SessionID,
+		EmailStatus:    emailStatus,
+		EmailError:     emailErr,
 	}
 	content, err := json.Marshal(payload)
 	if err != nil {
@@ -324,11 +343,30 @@ func handleCreateAlert(c *gin.Context) {
 		UpdatedAt: time.Now(),
 	}
 	if err := db.SaveNote(n); err != nil {
-		c.JSON(500, gin.H{"error": "Could not create notification record", "detail": err.Error()})
+		resp := gin.H{
+			"error":                    "Could not create notification record",
+			"detail":                   err.Error(),
+			"dashboard_record_created": false,
+			"email_enabled":            emailEnabled,
+			"email_status":             emailStatus,
+		}
+		if emailErr != "" {
+			resp["email_error"] = emailErr
+		}
+		c.JSON(500, resp)
 		return
 	}
-	go sendAlertEmail(req.Topic, excerpt, req.ProfileID)
-	c.JSON(200, gin.H{"status": "ok", "id": n.ID})
+	resp := gin.H{
+		"status":                   "ok",
+		"id":                       n.ID,
+		"dashboard_record_created": true,
+		"email_enabled":            emailEnabled,
+		"email_status":             emailStatus,
+	}
+	if emailErr != "" {
+		resp["email_error"] = emailErr
+	}
+	c.JSON(200, resp)
 }
 
 func handleGetNotifications(c *gin.Context) {
@@ -345,16 +383,21 @@ func handleGetNotifications(c *gin.Context) {
 	c.JSON(200, gin.H{"notifications": alerts})
 }
 
-func sendAlertEmail(topic, excerpt, profileID string) {
+// sendAlertEmail attempts real, synchronous delivery via Resend and returns
+// an explicit status plus a safe (no secrets, no raw response body) error
+// message. It never claims "sent" unless Resend accepted the request.
+func sendAlertEmail(topic, excerpt, profileID string) (status string, safeErr string) {
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Printf("Warning: sendAlertEmail panic: %v\n", r)
+			status = EmailStatusFailed
+			safeErr = "internal error while sending email"
 		}
 	}()
 	apiKey := os.Getenv("RESEND_API_KEY")
 	ownerEmail := os.Getenv("OWNER_EMAIL")
 	if apiKey == "" || ownerEmail == "" {
-		return
+		return EmailStatusDisabledNoEnv, ""
 	}
 	fromEmail := os.Getenv("RESEND_FROM_EMAIL")
 	if fromEmail == "" {
@@ -367,20 +410,26 @@ func sendAlertEmail(topic, excerpt, profileID string) {
 		"html":    fmt.Sprintf("<h2>A conversation was flagged</h2><p><b>Topic:</b> %s</p><p><b>Excerpt:</b> %s</p><p><b>Profile:</b> %s</p>", topic, excerpt, profileID),
 	}
 	b, _ := json.Marshal(body)
-	req, _ := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewBuffer(b))
+	req, err := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewBuffer(b))
+	if err != nil {
+		fmt.Printf("Warning: sendAlertEmail request build failed: %v\n", err)
+		return EmailStatusFailed, "could not build email request"
+	}
 	req.Header.Set("Authorization", "Bearer "+apiKey)
 	req.Header.Set("Content-Type", "application/json")
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Printf("Warning: Resend alert email failed: %v\n", err)
-		return
+		return EmailStatusFailed, "could not reach email provider"
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode >= 300 {
 		rb, _ := io.ReadAll(resp.Body)
 		fmt.Printf("Warning: Resend returned %d for alert email to %s: %s\n", resp.StatusCode, ownerEmail, string(rb))
+		return EmailStatusFailed, fmt.Sprintf("email provider returned status %d", resp.StatusCode)
 	}
+	return EmailStatusSent, ""
 }
 
 func handleSaveProfile(c *gin.Context) {
