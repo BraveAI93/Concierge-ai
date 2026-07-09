@@ -9,6 +9,27 @@ Every day below still requires Bruno's explicit go-ahead before Claude Code touc
 
 ---
 
+## Daily Status Template
+
+Close out every day in this sprint by filling in this template with real evidence, not a summary — per Anti-Chaos Rule #16 ("Concrete evidence beats a confident summary, always"). A blank copy is appended to each day's card below; fill it in at end of day and leave it in place as the permanent record of what actually happened, don't delete it once complete.
+
+```
+**Task:**
+**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Files changed:**
+**Commit:**
+**Build/test:**
+**Production proof:**
+**Remaining risk:**
+**Next safest action:**
+```
+
+- **Status** is never "done" or "looks good" — it is one of the four words above, chosen honestly. `PARTIAL` and `BLOCKED` are valid, useful outcomes, not failures to hide.
+- **Production proof** means a real artifact — a `curl` result, a screenshot, a `Set-Cookie` header, a real DB row, a real push notification received — never a description of what should have happened.
+- **Next safest action** is filled in even on a `PASS` day — it's the bridge to tomorrow's card, and on a `BLOCKED`/`FAIL` day it's the actual next step, not "investigate further."
+
+---
+
 ## 1. Working rhythm
 
 Each working day follows the same five-beat rhythm:
@@ -52,6 +73,17 @@ Each working day follows the same five-beat rhythm:
 - **Live test required:** `curl -L https://www.bravebybruno.com/privacy` → 200; a real consent click in a real browser produces a real DB row Bruno can see.
 - **What not to touch:** legal-form consent (`LegalFormModal.jsx`/`FormPage.jsx`) — already real, do not modify; auth; routing beyond the new privacy route.
 - **Stop condition:** stop once both live tests pass. If the `POST /consent` reuse turns out to need a schema change beyond what's already reviewed, stop and report — do not improvise a new table today.
+- **Daily status:**
+```
+**Task:**
+**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Files changed:**
+**Commit:**
+**Build/test:**
+**Production proof:**
+**Remaining risk:**
+**Next safest action:**
+```
 
 ### Day 2 — Finish P2 + dashboard reliability if needed
 - **Main task:** mount real `<Chat/>` on real public profile pages; fix the hardcoded Vercel-alias share-link domain; add dashboard error surfacing if time allows.
@@ -67,6 +99,17 @@ Each working day follows the same five-beat rhythm:
 - **Live test required:** visit a real profile URL, send a message, confirm a genuine Anthropic-backed reply; copy a share link from a real dashboard session and confirm the domain.
 - **What not to touch:** the demo chat flow (already real); the underlying profile/slug data.
 - **Stop condition:** stop once the real-slug chat test and the share-link domain test both pass. Dashboard error-surfacing (2.4) is a stretch goal for this day only — if it doesn't fit, defer it, do not let it delay Day 1-2's core fix.
+- **Daily status:**
+```
+**Task:**
+**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Files changed:**
+**Commit:**
+**Build/test:**
+**Production proof:**
+**Remaining risk:**
+**Next safest action:**
+```
 
 ### Day 3 — P1: Feature Flags & Audit Events (table + mechanism)
 - **Main task:** build the `feature_flags` table and read/consume mechanism.
@@ -82,6 +125,17 @@ Each working day follows the same five-beat rhythm:
 - **Live test required:** toggle a flag, confirm the observable change.
 - **What not to touch:** any existing table; any feature this system will later gate (the migration happens on later days, not today).
 - **Stop condition:** stop once the table exists and one real toggle is proven live. Do not begin migrating existing features onto the flag system today — that's Day 4 and beyond.
+- **Daily status:**
+```
+**Task:**
+**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Files changed:**
+**Commit:**
+**Build/test:**
+**Production proof:**
+**Remaining risk:**
+**Next safest action:**
+```
 
 ### Day 4 — Seed feature registry + audit events
 - **Main task:** build the `audit_events` table and generalize this week's notification-status pattern into it; seed `feature_flags` from `docs/strategy/FEATURE_REGISTRY_AND_ACTIVATION_STATES_v1.md`.
@@ -97,6 +151,17 @@ Each working day follows the same five-beat rhythm:
 - **Live test required:** spot-check 3-5 registry rows against live table state; confirm both claim types produce real audit-event rows.
 - **What not to touch:** the existing, already-proven notification code's behavior — wrap/extend, don't rewrite.
 - **Stop condition:** stop once the registry seed and the two-claim-type audit-event proof both pass.
+- **Daily status:**
+```
+**Task:**
+**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Files changed:**
+**Commit:**
+**Build/test:**
+**Production proof:**
+**Remaining risk:**
+**Next safest action:**
+```
 
 ### Day 5 — P4: Brave PA Capability Truth
 - **Main task:** remove or gate the calendar/search/booking claims in `buildBravePAPrompt()` that have no backend behind them.
@@ -112,6 +177,17 @@ Each working day follows the same five-beat rhythm:
 - **Live test required:** ask Brave PA to do each previously-claimed action and confirm the response now matches reality.
 - **What not to touch:** Brave PA's real conversational core — do not degrade it while fixing the claims.
 - **Stop condition:** stop once the live test passes for every previously-false claim.
+- **Daily status:**
+```
+**Task:**
+**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Files changed:**
+**Commit:**
+**Build/test:**
+**Production proof:**
+**Remaining risk:**
+**Next safest action:**
+```
 
 ### Day 6 — Google Calendar OAuth setup decision
 - **Main task:** decide whether the Google Cloud Console project/credentials from the previously-interrupted Blocco A3 work still exist, or need recreating.
@@ -127,6 +203,17 @@ Each working day follows the same five-beat rhythm:
 - **Live test required:** N/A — decision day.
 - **What not to touch:** N/A.
 - **Stop condition:** stop once the decision is made and documented (a one-line note is enough: "reusing existing project" or "creating new project, ETA X"). If credentials cannot be resolved today, Days 7-8 should be pushed later in the sprint rather than started without them.
+- **Daily status:**
+```
+**Task:**
+**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Files changed:**
+**Commit:**
+**Build/test:**
+**Production proof:**
+**Remaining risk:**
+**Next safest action:**
+```
 
 ### Day 7-8 — Calendar Connector V1 (if credentials are ready)
 - **Main task:** build the OAuth callback handler + read-only calendar-read endpoint.
@@ -142,6 +229,17 @@ Each working day follows the same five-beat rhythm:
 - **Live test required:** yes — a real "Connect Calendar" flow, a real token refresh, a real "what's on my calendar today" answer.
 - **What not to touch:** the product's own login/auth system — this is a separate OAuth flow; existing profile data.
 - **Stop condition:** if Day 6 did not resolve credentials, **do not proceed** — use these two days for a different, unblocked task instead (recommend pulling forward Day 11's notification-preferences work) and revisit Calendar once credentials are confirmed. If credentials are ready, stop once the live test passes.
+- **Daily status:**
+```
+**Task:**
+**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Files changed:**
+**Commit:**
+**Build/test:**
+**Production proof:**
+**Remaining risk:**
+**Next safest action:**
+```
 
 ### Day 9 — P10: Live Config & Financial Verification
 - **Main task:** confirm Stripe, Resend, and Supabase media-bucket live configuration; run one real Stripe test charge.
@@ -157,6 +255,17 @@ Each working day follows the same five-beat rhythm:
 - **Live test required:** yes — this entire day is the live test.
 - **What not to touch:** Stripe integration code itself, unless verification reveals a real defect — if so, stop and scope that as its own separate task, do not silently patch it today.
 - **Stop condition:** stop once all three verifications pass or fail with a clear, documented reason. A failure here is a valid, useful outcome — do not force a pass.
+- **Daily status:**
+```
+**Task:**
+**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Files changed:**
+**Commit:**
+**Build/test:**
+**Production proof:**
+**Remaining risk:**
+**Next safest action:**
+```
 
 ### Day 10 — Render production decision
 - **Main task:** decide on the Render plan upgrade.
@@ -172,6 +281,17 @@ Each working day follows the same five-beat rhythm:
 - **Live test required:** N/A — decision day, though if upgraded, worth re-running Day 9's Stripe webhook timing check post-upgrade.
 - **What not to touch:** N/A.
 - **Stop condition:** stop once the decision is documented, regardless of which way it goes.
+- **Daily status:**
+```
+**Task:**
+**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Files changed:**
+**Commit:**
+**Build/test:**
+**Production proof:**
+**Remaining risk:**
+**Next safest action:**
+```
 
 ### Day 11 — Notification preferences + sound
 - **Main task:** persist `notifPrefs` server-side and make them actually gate behavior; wire a real sound to real alert arrival.
@@ -187,6 +307,17 @@ Each working day follows the same five-beat rhythm:
 - **Live test required:** yes — toggle off, confirm silence; toggle on, confirm sound plays on a real alert.
 - **What not to touch:** the underlying alert-creation logic — this only gates display/delivery, not detection.
 - **Stop condition:** stop once both toggles are proven live.
+- **Daily status:**
+```
+**Task:**
+**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Files changed:**
+**Commit:**
+**Build/test:**
+**Production proof:**
+**Remaining risk:**
+**Next safest action:**
+```
 
 ### Day 12-13 — Push notification V1
 - **Main task:** register the existing orphaned `service_worker.js`, build a subscribe flow, wire real Web Push delivery.
@@ -202,6 +333,17 @@ Each working day follows the same five-beat rhythm:
 - **Live test required:** yes, on a real browser/device — this cannot be verified by build/vet alone.
 - **What not to touch:** the existing alert-record/email path — push is additive, not a replacement.
 - **Stop condition:** if no `public/` folder exists yet by this point in the sprint, creating it is part of Day 12's work, not a blocker to defer past. Stop once one real push notification is confirmed received.
+- **Daily status:**
+```
+**Task:**
+**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Files changed:**
+**Commit:**
+**Build/test:**
+**Production proof:**
+**Remaining risk:**
+**Next safest action:**
+```
 
 ### Day 14 — Core QA mini-gate
 - **Main task:** a lightweight, sprint-scoped version of the full Pre-Launch QA Day (Roadmap Task 7.4), covering only what this sprint actually built.
@@ -217,6 +359,17 @@ Each working day follows the same five-beat rhythm:
 - **Live test required:** yes — this entire day is a live test session.
 - **What not to touch:** nothing new — this is verification only, no new building.
 - **Stop condition:** stop at the end of the day regardless of outcome; document results honestly, including any regressions found, rather than extending the day to "fix and re-test" — that becomes Sprint 02's first task if needed.
+- **Daily status:**
+```
+**Task:**
+**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Files changed:**
+**Commit:**
+**Build/test:**
+**Production proof:**
+**Remaining risk:**
+**Next safest action:**
+```
 
 ---
 
