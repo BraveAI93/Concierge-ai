@@ -67,6 +67,8 @@ func main() {
 	r.POST("/chat", handleChat)
 	r.GET("/analytics", handleAnalytics)
 	r.POST("/lead", handleLead)
+	r.POST("/alert", handleCreateAlert)
+	r.GET("/owner/notifications", handleGetNotifications)
 	r.POST("/profile", handleSaveProfile)
 	r.GET("/profile/:slug", handleGetProfile)
 	r.GET("/check-slug/:slug", handleCheckSlug)
@@ -268,6 +270,116 @@ func sendHotLeadEmail(name, email, profileID string) {
 	if resp.StatusCode >= 300 {
 		rb, _ := io.ReadAll(resp.Body)
 		fmt.Printf("Warning: Resend returned %d for hot-lead to %s: %s\n", resp.StatusCode, ownerEmail, string(rb))
+	}
+}
+
+// ─── OWNER NOTIFICATION EVENTS ─────────────────────────
+// V1: durable notification/event record, stored via the existing notes
+// table (note_type="alert") since the repo has no migration mechanism for
+// a dedicated table. See docs/architecture/BRAIN_SPINE_READINESS_AUDIT.md.
+
+type AlertPayload struct {
+	AlertType      string `json:"alert_type"`
+	Topic          string `json:"topic"`
+	Excerpt        string `json:"excerpt"`
+	ConversationID string `json:"conversation_id,omitempty"`
+	SessionID      string `json:"session_id,omitempty"`
+}
+
+func handleCreateAlert(c *gin.Context) {
+	var req struct {
+		ProfileID      string `json:"profile_id"`
+		SessionID      string `json:"session_id"`
+		ConversationID string `json:"conversation_id"`
+		Topic          string `json:"topic"`
+		Excerpt        string `json:"excerpt"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil || req.ProfileID == "" || req.Topic == "" {
+		c.JSON(400, gin.H{"error": "profile_id and topic required"})
+		return
+	}
+	excerpt := req.Excerpt
+	if len(excerpt) > 300 {
+		excerpt = excerpt[:300]
+	}
+	payload := AlertPayload{
+		AlertType:      "sensitive_topic",
+		Topic:          req.Topic,
+		Excerpt:        excerpt,
+		ConversationID: req.ConversationID,
+		SessionID:      req.SessionID,
+	}
+	content, err := json.Marshal(payload)
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Could not encode alert"})
+		return
+	}
+	n := db.Note{
+		ID:        uuid.New().String(),
+		ProfileID: req.ProfileID,
+		ClientID:  req.SessionID,
+		Content:   string(content),
+		NoteType:  "alert",
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+	if err := db.SaveNote(n); err != nil {
+		c.JSON(500, gin.H{"error": "Could not create notification record", "detail": err.Error()})
+		return
+	}
+	go sendAlertEmail(req.Topic, excerpt, req.ProfileID)
+	c.JSON(200, gin.H{"status": "ok", "id": n.ID})
+}
+
+func handleGetNotifications(c *gin.Context) {
+	slug, ok := authenticateToken(c)
+	if !ok {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+	alerts, err := db.GetAlertsByProfile(slug)
+	if err != nil {
+		c.JSON(200, gin.H{"notifications": []interface{}{}})
+		return
+	}
+	c.JSON(200, gin.H{"notifications": alerts})
+}
+
+func sendAlertEmail(topic, excerpt, profileID string) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Warning: sendAlertEmail panic: %v\n", r)
+		}
+	}()
+	apiKey := os.Getenv("RESEND_API_KEY")
+	ownerEmail := os.Getenv("OWNER_EMAIL")
+	if apiKey == "" || ownerEmail == "" {
+		return
+	}
+	fromEmail := os.Getenv("RESEND_FROM_EMAIL")
+	if fromEmail == "" {
+		fromEmail = "onboarding@resend.dev"
+	}
+	body := map[string]interface{}{
+		"from":    "Concierge AI <" + fromEmail + ">",
+		"to":      []string{ownerEmail},
+		"subject": "Sensitive topic flagged in your Concierge chat",
+		"html":    fmt.Sprintf("<h2>A conversation was flagged</h2><p><b>Topic:</b> %s</p><p><b>Excerpt:</b> %s</p><p><b>Profile:</b> %s</p>", topic, excerpt, profileID),
+	}
+	b, _ := json.Marshal(body)
+	req, _ := http.NewRequest("POST", "https://api.resend.com/emails", bytes.NewBuffer(b))
+	req.Header.Set("Authorization", "Bearer "+apiKey)
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		fmt.Printf("Warning: Resend alert email failed: %v\n", err)
+		return
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		rb, _ := io.ReadAll(resp.Body)
+		fmt.Printf("Warning: Resend returned %d for alert email to %s: %s\n", resp.StatusCode, ownerEmail, string(rb))
 	}
 }
 

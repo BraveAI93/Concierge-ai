@@ -17,6 +17,7 @@ export default function OwnerDashboard({ token, slug, onBack, onLogout, onEditPr
   const [respondReply, setRespondReply] = useState('');
   const [respondCounter, setRespondCounter] = useState('');
   const [notes, setNotes] = useState([]);
+  const [notifications, setNotifications] = useState([]);
   const [newNote, setNewNote] = useState('');
   const [newNoteType, setNewNoteType] = useState('personal');
   const [newNoteClient, setNewNoteClient] = useState('');
@@ -63,12 +64,14 @@ export default function OwnerDashboard({ token, slug, onBack, onLogout, onEditPr
       fetch(`${BACKEND_URL}/owner/bookings`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : {bookings:[]}),
       fetch(`${BACKEND_URL}/owner/notes`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : {notes:[]}),
       fetch(`${BACKEND_URL}/owner/news`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : {items:null,date:''}),
-    ]).then(([p,l,c,br,nt,nw]) => {
+      fetch(`${BACKEND_URL}/owner/notifications`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : {notifications:[]}),
+    ]).then(([p,l,c,br,nt,nw,nfy]) => {
       setProfile(p);
       setLeads(l.leads||[]);
       setConvCount(c.count||0);
       setBookingRequests(br.bookings||[]);
       setNotes(nt.notes||[]);
+      setNotifications(nfy.notifications||[]);
       if (p) setDigestFreq(p.digest_frequency||'none');
       if (nw.items) {
         try { setNews(JSON.parse(nw.items)); setNewsDate(nw.date); } catch(e) { setNews([]); }
@@ -209,7 +212,7 @@ export default function OwnerDashboard({ token, slug, onBack, onLogout, onEditPr
 
         {/* Tabs */}
         <div style={{display:'flex',gap:6,flexWrap:'wrap',marginBottom:20}}>
-          {[['overview','📊 Overview'],['bookings','📅 Bookings'+(pendingBookings>0?` (${pendingBookings})`:'')],['notes','📝 Notes'],['forms','📋 Forms'],['news','📰 Insights'],['profiles','✦ Profiles'],['settings','⚙️ Settings']].map(([t,label])=>(
+          {[['overview','📊 Overview'],['notifications','🔔 Notifications'+(notifications.length>0?` (${notifications.length})`:'')],['bookings','📅 Bookings'+(pendingBookings>0?` (${pendingBookings})`:'')],['notes','📝 Notes'],['forms','📋 Forms'],['news','📰 Insights'],['profiles','✦ Profiles'],['settings','⚙️ Settings']].map(([t,label])=>(
             <button key={t} onClick={()=>setActiveTab(t)} style={tabBtn(t)}>{label}</button>
           ))}
         </div>
@@ -301,6 +304,25 @@ export default function OwnerDashboard({ token, slug, onBack, onLogout, onEditPr
             })}
             {news.length>0&&<button onClick={(e)=>{e.stopPropagation();setActiveTab('news');}} style={{marginTop:8,width:'100%',padding:'7px 0',background:'transparent',border:'1px solid rgba(201,169,110,0.12)',borderRadius:20,cursor:'pointer',fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.45)',letterSpacing:'0.08em',textTransform:'uppercase'}}>View all in Insights →</button>}
           </div>
+        </>}
+
+        {/* NOTIFICATIONS */}
+        {activeTab==='notifications'&&<>
+          <div style={sectionLabel}>Owner Notifications</div>
+          {notifications.length===0&&<div style={{...card,fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.3)'}}>No notifications yet. Sensitive-topic alerts from your Concierge chat will appear here.</div>}
+          {notifications.map(n=>{
+            let parsed = {};
+            try { parsed = JSON.parse(n.content); } catch(e) {}
+            return (
+              <div key={n.id} style={{...card,border:'1px solid rgba(220,140,60,0.2)'}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:6}}>
+                  <span style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(220,140,60,0.7)',textTransform:'uppercase',letterSpacing:'0.08em'}}>🔔 {parsed.topic||'Flagged conversation'}</span>
+                  <span style={{fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.25)'}}>{new Date(n.created_at).toLocaleString()}</span>
+                </div>
+                {parsed.excerpt&&<div style={{fontSize:13,color:'rgba(232,220,200,0.7)',lineHeight:1.6,fontFamily:"'Cormorant Garamond',serif",fontStyle:'italic'}}>"{parsed.excerpt}"</div>}
+              </div>
+            );
+          })}
         </>}
 
         {/* BOOKINGS */}

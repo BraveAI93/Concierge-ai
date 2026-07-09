@@ -16,7 +16,26 @@ async function callAPI(messages, systemPrompt, profileId) {
   });
   if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || 'Connection error'); }
   const d = await r.json();
-  return d.reply || 'Something went wrong — please try again.';
+  return { reply: d.reply || 'Something went wrong — please try again.', conversationId: d.conversation_id || '' };
+}
+
+async function sendAlert(profileId, topic, excerpt, conversationId) {
+  try {
+    const r = await fetch(`${BACKEND_URL}/alert`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        profile_id: profileId,
+        session_id: sessionStorage.getItem('cai_session') || 'anonymous',
+        conversation_id: conversationId || '',
+        topic,
+        excerpt
+      })
+    });
+    return r.ok;
+  } catch (e) {
+    return false;
+  }
 }
 
 function Dots({ color }) {
@@ -63,6 +82,7 @@ export default function Chat({ profile, systemPrompt, profileId, onBack, lang })
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [alerts, setAlerts] = useState([]);
+  const [alertStatus, setAlertStatus] = useState(null); // null | 'pending' | 'confirmed' | 'failed'
   const [reviewData, setReviewData] = useState(null);
   const [blocked, setBlocked] = useState(0);
   const [turns, setTurns] = useState(0);
@@ -121,16 +141,19 @@ export default function Chat({ profile, systemPrompt, profileId, onBack, lang })
     setInput(''); setErr(null);
     const lower = t.toLowerCase();
     const found = (P.sensitiveTopics||[]).filter(tp => (alertMap[tp]||[]).some(w => lower.includes(w)));
-    if (found.length) setAlerts(found);
+    if (found.length) { setAlerts(found); setAlertStatus('pending'); }
     const newMsgs = [...messages, { role: 'user', content: t }];
     setMessages(newMsgs);
     setLoading(true);
     const newTurn = turns + 1;
     setTurns(newTurn);
     try {
-      const reply = await callAPI(newMsgs, systemPrompt, profileId);
+      const { reply, conversationId } = await callAPI(newMsgs, systemPrompt, profileId);
       setLoading(false);
-      if (found.length) setReviewData({ reply, snap: newMsgs });
+      if (found.length) {
+        setReviewData({ reply, snap: newMsgs });
+        sendAlert(profileId, found.join(', '), t, conversationId).then(ok => setAlertStatus(ok ? 'confirmed' : 'failed'));
+      }
       else setMessages([...newMsgs, { role: 'assistant', content: convertCurrency(reply, L) }]);
       if (newTurn === 3 && !leadCaptured) setTimeout(() => setShowLeadForm(true), 1200);
       const replyLower = reply.toLowerCase();
@@ -275,8 +298,12 @@ export default function Chat({ profile, systemPrompt, profileId, onBack, lang })
           <div style={{paddingTop:messages.length>0?11:0}}>
             <div style={{background:'rgba(220,140,60,0.08)',border:'1px solid rgba(220,140,60,0.25)',borderRadius:20,padding:'9px 12px',marginBottom:10}}>
               <div style={{display:'flex',justifyContent:'space-between',marginBottom:5}}>
-                <span style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'#dc8c3c'}}>🔔 {P.name} notified</span>
-                <button onClick={() => setAlerts([])} style={{background:'none',border:'none',cursor:'pointer',color:'rgba(220,140,60,0.42)',fontSize:16,lineHeight:1,padding:0}}>×</button>
+                <span style={{fontSize:9,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:alertStatus==='failed'?'#c06060':'#dc8c3c'}}>
+                  {alertStatus==='confirmed' && `🔔 ${P.name} notified`}
+                  {alertStatus==='pending' && `Flagging for ${P.name}…`}
+                  {alertStatus==='failed' && `⚠ Flagged — notification could not be sent`}
+                </span>
+                <button onClick={() => { setAlerts([]); setAlertStatus(null); }} style={{background:'none',border:'none',cursor:'pointer',color:'rgba(220,140,60,0.42)',fontSize:16,lineHeight:1,padding:0}}>×</button>
               </div>
               <div style={{display:'flex',flexWrap:'wrap',gap:4}}>{alerts.map((a,i) => <span key={i} style={{padding:'2px 8px',background:'rgba(220,140,60,0.09)',borderRadius:20,fontSize:10,fontFamily:"'Jost',sans-serif",color:'#e8a060'}}>{a}</span>)}</div>
             </div>

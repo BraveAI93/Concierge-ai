@@ -458,6 +458,19 @@ func GetNotesByProfile(slug string) ([]Note, error) {
 	return notes, nil
 }
 
+func GetAlertsByProfile(slug string) ([]Note, error) {
+	u := fmt.Sprintf("%s/rest/v1/notes?profile_id=eq.%s&note_type=eq.alert&select=*&order=created_at.desc", supabaseURL(), url.QueryEscape(slug))
+	b, err := getMany(u)
+	if err != nil {
+		return nil, err
+	}
+	var notes []Note
+	if err := json.Unmarshal(b, &notes); err != nil {
+		return nil, err
+	}
+	return notes, nil
+}
+
 func GetClientNotesByProfile(slug string) ([]Note, error) {
 	u := fmt.Sprintf("%s/rest/v1/notes?profile_id=eq.%s&note_type=eq.client&select=*&order=updated_at.desc", supabaseURL(), url.QueryEscape(slug))
 	b, err := getMany(u)
