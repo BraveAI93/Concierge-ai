@@ -103,6 +103,8 @@ export default function Chat({ profile, systemPrompt, profileId, onBack, lang })
   });
   const [showLegalForm, setShowLegalForm] = useState(false);
   const [legalFormDone, setLegalFormDone] = useState(false);
+  const [consentSubmitting, setConsentSubmitting] = useState(false);
+  const [consentError, setConsentError] = useState(false);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
   const bookingSubmitted = useRef(false);
@@ -124,9 +126,31 @@ export default function Chat({ profile, systemPrompt, profileId, onBack, lang })
     'IP & usage rights':['rights','usage','license','copyright'],
   };
 
-  const giveConsent = () => {
-    sessionStorage.setItem('cai_consent', new Date().toISOString());
-    setConsented(true);
+  const giveConsent = async () => {
+    setConsentSubmitting(true);
+    setConsentError(false);
+    try {
+      const r = await fetch(`${BACKEND_URL}/consent`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          profile_id: profileId,
+          session_id: sessionStorage.getItem('cai_session') || 'anonymous',
+          client_name: '',
+          client_email: '',
+          forms_agreed: ['ai_processing'],
+          answers: '',
+          signature_date: new Date().toISOString()
+        })
+      });
+      if (!r.ok) throw new Error('consent save failed');
+      sessionStorage.setItem('cai_consent', new Date().toISOString());
+      setConsented(true);
+    } catch (e) {
+      setConsentError(true);
+    } finally {
+      setConsentSubmitting(false);
+    }
   };
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, loading]);
@@ -240,8 +264,13 @@ export default function Chat({ profile, systemPrompt, profileId, onBack, lang })
             <a href="/privacy" target="_blank" style={{color:'rgba(201,169,110,0.5)',textDecoration:'underline'}}>{isIT?'Privacy Policy':'Privacy Policy'}</a>.
             {' '}{isIT?'Elaborazione dati conforme al UK GDPR / GDPR EU.':'Data processing compliant with UK GDPR / EU GDPR.'}
           </div>
-          <button onClick={giveConsent} style={{width:'100%',padding:'13px 0',background:`linear-gradient(135deg,${acc},#7a4f0e)`,border:'none',borderRadius:20,cursor:'pointer',color:'#0c0a08',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:10}}>
-            {isIT?'Accetto — Inizia la chat ✦':'I agree — Start chatting ✦'}
+          {consentError && (
+            <div style={{background:'rgba(180,60,60,0.08)',border:'1px solid rgba(180,60,60,0.22)',borderRadius:12,padding:'9px 12px',marginBottom:10,fontSize:11,fontFamily:"'Jost',sans-serif",color:'#c08080',textAlign:'center',lineHeight:1.5}}>
+              {isIT?'Impossibile salvare il consenso. Riprova.':'Could not save your consent. Please try again.'}
+            </div>
+          )}
+          <button onClick={giveConsent} disabled={consentSubmitting} style={{width:'100%',padding:'13px 0',background:consentSubmitting?'rgba(201,169,110,0.25)':`linear-gradient(135deg,${acc},#7a4f0e)`,border:'none',borderRadius:20,cursor:consentSubmitting?'default':'pointer',color:'#0c0a08',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:700,letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:10}}>
+            {consentSubmitting ? (isIT?'Salvataggio…':'Saving…') : consentError ? (isIT?'Riprova ✦':'Retry ✦') : (isIT?'Accetto — Inizia la chat ✦':'I agree — Start chatting ✦')}
           </button>
           <div style={{textAlign:'center'}}>
             <button onClick={onBack} style={{background:'none',border:'none',cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.28)',textDecoration:'underline'}}>
