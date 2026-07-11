@@ -93,10 +93,9 @@ export default function PrivacyPage() {
             <h3>Conversation data</h3>
             <p>When you use the AI Concierge, your messages are sent to <strong>Anthropic, PBC</strong> (the makers of Claude AI) for processing. This is necessary to generate a response.</p>
             <ul>
-              <li>Messages you type are temporarily processed by Anthropic's API</li>
-              <li>Conversations are <strong>not stored</strong> on our servers after your session ends</li>
-              <li>No conversation history is retained between sessions</li>
-              <li>We do not link conversations to your identity</li>
+              <li>Messages you type are sent to Anthropic's API for processing</li>
+              <li>Conversation messages are <strong>also stored on our servers</strong>, so Bruno can review enquiries and follow up</li>
+              <li>We do not link conversations to your identity unless you provide your name or email</li>
               <li className="x">We do not sell your data to third parties</li>
               <li className="x">We do not use your data for advertising</li>
               <li className="x">We do not ask for your name, email or payment details in chat</li>
@@ -125,8 +124,8 @@ export default function PrivacyPage() {
 
           <div className="block">
             <div className="block-title"><span>📅</span> Data retention</div>
-            <p>Conversation data processed via the Anthropic API is <strong>not retained by us</strong> beyond your active session. When you close the chat window, the conversation is gone.</p>
-            <p>Anthropic may retain API logs for safety and abuse monitoring purposes in accordance with their own retention policies (typically up to 30 days). Please refer to Anthropic's Privacy Policy for details.</p>
+            <p>Conversation messages are <strong>stored on our servers</strong> (via our hosting/database provider) so that Bruno can review enquiries. We do not currently apply an automatic deletion schedule; you may request erasure at any time (see "Your Rights").</p>
+            <p>Anthropic may also retain API logs for safety and abuse monitoring purposes in accordance with their own retention policies (typically up to 30 days). Please refer to Anthropic's Privacy Policy for details.</p>
           </div>
 
           <div className="block">
@@ -250,7 +249,7 @@ export default function PrivacyPage() {
 
           <div className="block">
             <div className="block-title"><span>1</span> Right to access</div>
-            <p>You have the right to request a copy of any personal data we hold about you. Given that we do not store conversation data, there is typically no personal data held beyond your consent timestamp (which contains no identifying information).</p>
+            <p>You have the right to request a copy of any personal data we hold about you. This may include your chat messages and your consent record, if you have used the AI Concierge.</p>
           </div>
 
           <div className="block">
