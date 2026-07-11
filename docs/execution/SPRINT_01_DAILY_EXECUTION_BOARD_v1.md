@@ -75,14 +75,28 @@ Each working day follows the same five-beat rhythm:
 - **Stop condition:** stop once both live tests pass. If the `POST /consent` reuse turns out to need a schema change beyond what's already reviewed, stop and report — do not improvise a new table today.
 - **Daily status:**
 ```
-**Task:**
-**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Task:** Fix live /privacy 404; persist AI-processing consent server-side; align privacy-policy text with actual data handling.
+**Status:** PASS
 **Files changed:**
+  - app/privacy/page.jsx (new, 303 lines) — real Next.js route at /privacy
+  - components/Chat.jsx (+39/-5) — giveConsent() now POSTs to BACKEND_URL/consent instead of sessionStorage-only
+  - app/privacy/page.jsx (follow-up, +6/-7) — corrected policy text that had shipped saying "not stored" when handleChat (concierge-backend/main.go:191-216) already persists every message via db.SaveConversation/db.SaveMessage
 **Commit:**
+  - 52451f7 "fix: persist chat consent and serve privacy page" (privacy route + consent POST)
+  - ec6e2c4 "fix: correct privacy policy to reflect actual message storage" (policy-text correction)
+**Push result:** both pushed to origin/main — `git push` output: `52451f7..ec6e2c4  main -> main`. origin/main HEAD confirmed at ec6e2c4.
 **Build/test:**
+  - `npm run build` → " ✓ Compiled successfully", /privacy listed as a static (○) prerendered route in the output route table.
+  - `go build ./...` (concierge-backend) → exits clean, no errors.
 **Production proof:**
+  - `curl -s -o /dev/null -w "HTTP %{http_code}" -L https://www.bravebybruno.com/privacy` → `HTTP 200`.
+**Consent DB-row proof:**
+  - Real POST to live backend: `curl -X POST https://concierge-backend-80rb.onrender.com/consent` with a disposable `session_id=qa-test-1783732146`, `profile_id=qa-test-profile` → `{"id":"927cc69a-2b69-4c02-9a3f-c5108accafaa","status":"ok"}`, HTTP 200.
+  - Confirmed via direct Supabase REST read (`GET /rest/v1/consents?id=eq.927cc69a-...`) → row returned with matching session_id, forms_agreed=["ai_processing"], real created_at timestamp `2026-07-11T01:09:07.63Z`. This is a real row in the real `consents` table, not an inference from code.
 **Remaining risk:**
-**Next safest action:**
+  - The disposable QA test consent row (id `927cc69a-...`) could not be deleted for cleanup — anon/publishable Supabase key has no DELETE grant on `consents` (`42501 permission denied`, same known gap noted for the `profiles` table in prior auth-hardening work). Row contains no real PII (empty name/email, synthetic profile_id) so low sensitivity, but a working service-role key for admin cleanup is still missing locally — worth fixing before more QA rows accumulate.
+  - Full legal content review of the privacy policy text (beyond the technical accuracy fix made today) is still deferred to the parallel legal track per this day's own scope — today closed technical reachability + factual accuracy, not a lawyer-reviewed policy.
+**Next safest action:** Day 2 — mount real `<Chat/>` on real (non-demo) public profile pages and fix the hardcoded Vercel-alias share-link domain.
 ```
 
 ### Day 2 — Finish P2 + dashboard reliability if needed
