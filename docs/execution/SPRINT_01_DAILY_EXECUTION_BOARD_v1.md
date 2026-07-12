@@ -115,14 +115,28 @@ Each working day follows the same five-beat rhythm:
 - **Stop condition:** stop once the real-slug chat test and the share-link domain test both pass. Dashboard error-surfacing (2.4) is a stretch goal for this day only — if it doesn't fit, defer it, do not let it delay Day 1-2's core fix.
 - **Daily status:**
 ```
-**Task:**
-**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Task:** Migrate live public profile rendering from generateBusinessPage()/document.write to real React/JSX with real Chat.jsx mounted; fix hardcoded concierge-ai-gamma.vercel.app share/profile links to bravebybruno.com.
+**Status:** PASS
 **Files changed:**
-**Commit:**
+  - app/[slug]/PublicProfileClient.jsx (+249/-16) — real React public-profile component (avatar, services, links, share block, chat teaser bubble) replacing document.write(generateBusinessPage(...)); mounts real <Chat/> with profile/systemPrompt/profileId wired from app/[slug]/page.jsx (unchanged).
+  - components/Chat.jsx (+1/-1) — back-button label "Demos"→"Back", needed because this shared component now also closes a real-profile chat overlay, not just the demo list.
+  - components/BusinessPagePreview.jsx, components/OwnerDashboard.jsx, components/Onboarding.jsx, lib/generateBusinessPage.js — hardcoded concierge-ai-gamma.vercel.app replaced with bravebybruno.com / window.location.origin. generateBusinessPage.js kept in place, still used by BusinessPagePreview.jsx for export/preview only — not the live /[slug] renderer anymore.
+**Commit:** d301b14 "fix: complete public profile route and chat"
+**Push result:** pushed to origin/main — `git push` output: `508448d..d301b14  main -> main`.
 **Build/test:**
-**Production proof:**
+  - `npm run build` → "✓ Compiled successfully", `/[slug]` listed as a dynamic (ƒ) route.
+**Production proof (against local dev server + live backend, real non-QA profile "brave-therapies"):**
+  - `curl -s -o /dev/null -w "%{http_code}" http://localhost:3000/brave-therapies` → `200`, twice (load + refresh).
+  - Response HTML contains no `document.write`/`QRCode`/`cdnjs` remnants; real profile fields rendered ("Bruno", "London/Sorrento", "Performer Creator Movement and Creaative director", "Deep TIssue" service) — confirms live data, not stub.
+  - Share block renders `https://bravebybruno.com/brave-therapies` (real slug, correct domain).
+  - Real POST to live backend `https://concierge-backend-80rb.onrender.com/chat` with brave-therapies' actual system_prompt (same payload shape Chat.jsx sends) → HTTP 200, genuine Claude reply referencing muscle tension/treatment context (matches Bruno's therapy services), real `conversation_id` returned — not a canned/demo reply.
+  - `/demo/bruno` re-verified after the change: HTTP 200, real Chat.jsx consent screen renders correctly ("Brave Fitness" / "Bruno Aversa") — demo path unaffected.
+  - `grep -rn concierge-ai-gamma` across app/lib/components → no remaining matches.
 **Remaining risk:**
-**Next safest action:**
+  - QR code (previously rendered via `cdnjs.cloudflare.com/.../qrcode.min.js` + `document.write`) was not ported — no QR library exists in `package.json` today, and adding one is a dependency decision, not a "port the JSX" decision, so per the day's own stop condition this was intentionally left out rather than improvised. Public page and chat both work without it (does not block/break the page). Cleanest path if wanted: add the small `qrcode` npm package (no CDN fetch, no CSP concern) and render into a `<canvas>`/data-URI in the new React share block — needs Bruno's go-ahead before adding a new dependency.
+  - `concierge-backend/db/supabase.go` picked up the same stray-corruption pattern noted previously (non-compiling `if err != nil 1{`) while open in the IDE during this session — not caused by this task's edits, left untouched/unstaged/unpushed per "concierge-backend/* should not change." Still unresolved locally; worth checking editor/extension state around that file since it's now recurred a third time.
+  - A stray QA profile row `qa-test-day2-1783735994` exists in the live `profiles` table from earlier work, not created this session — same known cleanup gap as prior QA rows (no working DELETE-capable key available locally).
+**Next safest action:** Day 3 — build the `feature_flags` table and read/consume mechanism (schema review + go-ahead needed from Bruno before running DDL against Supabase).
 ```
 
 ### Day 3 — P1: Feature Flags & Audit Events (table + mechanism)
