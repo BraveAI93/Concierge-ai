@@ -115,7 +115,7 @@ export default function PublicProfileClient({ data, systemPrompt, slug }) {
 
         <div onClick={openTeaser} style={{ ...linkBtnStyle(false, accent), cursor: 'pointer' }}>
           <div style={linkIconStyle(false)}>💬</div>
-          <div><div style={{ fontSize: 13, fontWeight: 500 }}>Chat with me</div><div style={{ fontSize: 10, fontWeight: 300, opacity: 0.65, marginTop: 1 }}>Ask me anything · Available 24/7</div></div>
+          <div><div style={{ fontSize: 13, fontWeight: 500 }}>Ask the Concierge</div><div style={{ fontSize: 10, fontWeight: 300, opacity: 0.65, marginTop: 1 }}>Services, pricing & booking · Available 24/7</div></div>
         </div>
 
         {data.calendar && (
@@ -188,7 +188,7 @@ export default function PublicProfileClient({ data, systemPrompt, slug }) {
         <>
           {hintVisible && (
             <div style={{ position: 'fixed', bottom: 90, right: 18, zIndex: 9998, maxWidth: 190, background: 'rgba(14,11,7,0.97)', border: '1px solid rgba(201,169,110,0.28)', borderRadius: '14px 14px 4px 14px', padding: '10px 13px', fontSize: 12, fontFamily: "'Jost',sans-serif", color: '#e8dcc8', lineHeight: 1.55, boxShadow: '0 8px 32px rgba(0,0,0,0.5)' }}>
-              Knowledge is power — get to know me & what I do ✦
+              Ask the Concierge about services, pricing & booking ✦
             </div>
           )}
           <button onClick={openTeaser} style={{ position: 'fixed', bottom: 22, right: 18, zIndex: 9999, width: 56, height: 56, borderRadius: '50%', border: 'none', cursor: 'pointer', background: `linear-gradient(135deg,${accent},#7a4f0e)`, boxShadow: `0 4px 20px ${accent}66`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22 }}>✦</button>
@@ -203,7 +203,7 @@ export default function PublicProfileClient({ data, systemPrompt, slug }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
                 <div style={{ width: 38, height: 38, borderRadius: '50%', background: `linear-gradient(135deg,${accent},#7a4f0e)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, flexShrink: 0 }}>✦</div>
                 <div>
-                  <div style={{ fontSize: 13, fontFamily: "'Jost',sans-serif", fontWeight: 500, color: '#e8dcc8' }}>{name}'s Assistant</div>
+                  <div style={{ fontSize: 13, fontFamily: "'Jost',sans-serif", fontWeight: 500, color: '#e8dcc8' }}>{name}'s Concierge</div>
                   <div style={{ fontSize: 9, fontFamily: "'Jost',sans-serif", color: 'rgba(120,180,100,0.8)', display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
                     <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#7aba6a' }} />Available now · 24/7
                   </div>
@@ -213,7 +213,7 @@ export default function PublicProfileClient({ data, systemPrompt, slug }) {
               <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(201,169,110,0.1)', borderRadius: '12px 12px 12px 4px', padding: '11px 14px', marginBottom: 12, fontSize: 14, fontFamily: "'Cormorant Garamond',serif", lineHeight: 1.65, color: 'rgba(232,220,200,0.9)' }}>
                 {!teaserRevealed
                   ? <div style={{ display: 'flex', gap: 5, alignItems: 'center', padding: '4px 2px' }}>{[0, 1, 2].map(i => <span key={i} style={{ width: 6, height: 6, borderRadius: '50%', background: accent, opacity: 0.5 }} />)}</div>
-                  : <div>Hi 👋 I'm {name}'s AI assistant — I know everything about their services, prices and availability. What would you like to know?</div>}
+                  : <div>Hi 👋 I'm {name}'s digital concierge — I can help with services, pricing, booking and availability. What would you like to know?</div>}
               </div>
               {teaserRevealed && (
                 <>
@@ -224,7 +224,7 @@ export default function PublicProfileClient({ data, systemPrompt, slug }) {
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 7 }}>
                     <div onClick={openChat} style={{ padding: '10px 8px', borderRadius: 11, cursor: 'pointer', textAlign: 'center', fontSize: 11, fontFamily: "'Jost',sans-serif", fontWeight: 600, background: `linear-gradient(135deg,${accent},#7a4f0e)`, color: '#0c0a08', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                      <div style={{ fontSize: 16 }}>💬</div><div style={{ fontSize: 10 }}>Ask me anything</div>
+                      <div style={{ fontSize: 16 }}>💬</div><div style={{ fontSize: 10 }}>Ask the Concierge</div>
                     </div>
                     {data.booking
                       ? <a href={data.booking} target="_blank" rel="noopener noreferrer" style={{ padding: '10px 8px', borderRadius: 11, textAlign: 'center', fontSize: 11, fontFamily: "'Jost',sans-serif", fontWeight: 500, border: '1px solid rgba(201,169,110,0.18)', background: 'rgba(201,169,110,0.06)', color: 'rgba(232,220,200,0.7)', textDecoration: 'none', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
