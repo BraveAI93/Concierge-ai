@@ -152,6 +152,14 @@ type FormSubmission struct {
 	SubmittedAt time.Time `json:"submitted_at"`
 }
 
+// FeatureFlag — capability/activation-state spine (Sprint 01 Day 3)
+type FeatureFlag struct {
+	ID        string    `json:"id"`
+	Name      string    `json:"name"`
+	State     string    `json:"state"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 func supabaseURL() string { return os.Getenv("SUPABASE_URL") }
 func supabaseKey() string { return os.Getenv("SUPABASE_KEY") }
 
@@ -567,4 +575,19 @@ func GetFormSubmissionsByProfile(slug string) ([]FormSubmission, error) {
 		return nil, err
 	}
 	return subs, nil
+}
+
+// ── FEATURE FLAGS ─────────────────────────────────────────
+
+func GetFeatureFlags() ([]FeatureFlag, error) {
+	u := fmt.Sprintf("%s/rest/v1/feature_flags?select=*&order=name.asc", supabaseURL())
+	b, err := getMany(u)
+	if err != nil {
+		return nil, err
+	}
+	var flags []FeatureFlag
+	if err := json.Unmarshal(b, &flags); err != nil {
+		return nil, err
+	}
+	return flags, nil
 }

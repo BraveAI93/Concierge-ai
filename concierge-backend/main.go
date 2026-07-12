@@ -124,6 +124,7 @@ func main() {
 	r.GET("/forms/:slug/:formType", handleGetFormInfo)
 	r.POST("/forms/:slug/:formType", handleSubmitForm)
 	r.GET("/owner/form-submissions", handleGetFormSubmissions)
+	r.GET("/flags", handleGetFeatureFlags)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -1522,6 +1523,15 @@ func handleGetFormSubmissions(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"submissions": subs})
+}
+
+func handleGetFeatureFlags(c *gin.Context) {
+	flags, err := db.GetFeatureFlags()
+	if err != nil {
+		c.JSON(500, gin.H{"error": "Could not load feature flags", "detail": err.Error()})
+		return
+	}
+	c.JSON(200, gin.H{"flags": flags})
 }
 
 func min(a, b int) int {
