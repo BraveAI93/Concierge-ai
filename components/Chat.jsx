@@ -297,7 +297,7 @@ export default function Chat({ profile, systemPrompt, profileId, onBack, lang })
           </div>
           <div style={{display:'flex',alignItems:'center',gap:7}}>
             {blocked > 0 && <div style={{padding:'2px 7px',borderRadius:20,background:'rgba(180,60,60,0.11)',border:'1px solid rgba(180,60,60,0.2)',fontSize:10,fontFamily:"'Jost',sans-serif",color:'#c06060'}}>{blocked} blocked</div>}
-            <button onClick={onBack} style={{padding:'4px 10px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:20,cursor:'pointer',fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.35)'}}>← {L==='it'?'Demo':'Demos'}</button>
+            <button onClick={onBack} style={{padding:'4px 10px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:20,cursor:'pointer',fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.35)'}}>← {L==='it'?'Indietro':'Back'}</button>
             <div style={{display:'flex',alignItems:'center',gap:4,fontSize:10,fontFamily:"'Jost',sans-serif",color:'#7a9e6e'}}>
               <div style={{width:5,height:5,borderRadius:'50%',background:'#7a9e6e',boxShadow:'0 0 5px #7a9e6e',animation:'pulse 2s infinite'}}/>Live
             </div>

@@ -13,7 +13,7 @@ export default function BusinessPagePreview({ data, lang, onStartChat, onBack })
   const html = generateBusinessPage(data, lang);
 
   const publicURL = data._slug
-    ? `${typeof window !== 'undefined' ? window.location.origin : 'https://concierge-ai-gamma.vercel.app'}/${data._slug}`
+    ? `${typeof window !== 'undefined' ? window.location.origin : 'https://bravebybruno.com'}/${data._slug}`
     : (typeof window !== 'undefined' ? window.location.href : '');
 
   const download = () => {

@@ -350,7 +350,7 @@ export default function Onboarding({ onComplete, onBack, lang }) {
 
           {cur.type==='handle'&&<div>
             <div style={{display:'flex',alignItems:'center',background:'rgba(255,255,255,0.04)',border:`1px solid ${handleStatus==='available'?'rgba(100,180,80,0.4)':handleStatus==='taken'||handleStatus==='reserved'?'rgba(200,80,80,0.4)':'rgba(201,169,110,0.16)'}`,borderRadius:20,overflow:'hidden'}}>
-              <span style={{padding:'9px 4px 9px 12px',fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.3)',whiteSpace:'nowrap'}}>concierge-ai-gamma.vercel.app/</span>
+              <span style={{padding:'9px 4px 9px 12px',fontSize:12,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.3)',whiteSpace:'nowrap'}}>bravebybruno.com/</span>
               <input value={handle} onChange={e=>onHandleChange(e.target.value)} placeholder="your-name" style={{flex:1,padding:'9px 12px 9px 0',background:'none',border:'none',color:'#e8dcc8',fontSize:13,fontFamily:"'Jost',sans-serif",fontWeight:500,outline:'none'}}/>
             </div>
             <div style={{marginTop:8,fontSize:11,fontFamily:"'Jost',sans-serif",minHeight:16}}>

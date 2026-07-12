@@ -173,7 +173,7 @@ export default function OwnerDashboard({ token, slug, onBack, onLogout, onEditPr
     setNewsLoading(false);
   };
 
-  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://concierge-ai-gamma.vercel.app';
+  const origin = typeof window !== 'undefined' ? window.location.origin : 'https://bravebybruno.com';
 
   const sectionLabel = {fontSize:10,fontFamily:"'Jost',sans-serif",fontWeight:500,letterSpacing:'0.12em',textTransform:'uppercase',color:'rgba(201,169,110,0.5)',marginBottom:12,marginTop:24};
   const card = {background:'rgba(255,255,255,0.05)',border:'1px solid rgba(255,215,0,0.15)',borderRadius:20,padding:'24px',marginBottom:12,backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',boxShadow:'0 8px 32px rgba(0,0,0,0.4),inset 0 1px 0 rgba(255,255,255,0.05)'};
@@ -479,9 +479,9 @@ export default function OwnerDashboard({ token, slug, onBack, onLogout, onEditPr
           <div style={sectionLabel}>Your Public Link</div>
           <div style={{...card,marginBottom:16}}>
             <div style={{fontSize:13,fontFamily:"'Jost',sans-serif",color:'#c9a96e',wordBreak:'break-all',marginBottom:10}}>
-              https://concierge-ai-gamma.vercel.app/{slug}
+              {origin}/{slug}
             </div>
-            <button onClick={()=>navigator.clipboard?.writeText(`https://concierge-ai-gamma.vercel.app/${slug}`)} style={{padding:'7px 14px',background:'rgba(201,169,110,0.08)',border:'1px solid rgba(201,169,110,0.2)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'#c9a96e'}}>
+            <button onClick={()=>navigator.clipboard?.writeText(`${origin}/${slug}`)} style={{padding:'7px 14px',background:'rgba(201,169,110,0.08)',border:'1px solid rgba(201,169,110,0.2)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'#c9a96e'}}>
               📋 Copy link
             </button>
           </div>
@@ -589,7 +589,7 @@ export default function OwnerDashboard({ token, slug, onBack, onLogout, onEditPr
                   ?<span style={{padding:'5px 12px',background:'rgba(201,169,110,0.07)',border:'1px solid rgba(201,169,110,0.18)',borderRadius:20,fontSize:10,fontFamily:"'Jost',sans-serif",color:'rgba(201,169,110,0.5)',textAlign:'center',letterSpacing:'0.06em',textTransform:'uppercase'}}>Active</span>
                   :<button onClick={()=>onSwitchProfile&&onSwitchProfile(p.slug)} style={{padding:'5px 12px',background:'rgba(201,169,110,0.1)',border:'1px solid rgba(201,169,110,0.3)',borderRadius:20,cursor:'pointer',fontSize:11,fontFamily:"'Jost',sans-serif",color:'#c9a96e'}}>Switch →</button>
                 }
-                <a href={`https://concierge-ai-gamma.vercel.app/${p.slug}`} target="_blank" rel="noopener noreferrer" style={{padding:'5px 12px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:20,fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)',textDecoration:'none',textAlign:'center'}}>View ↗</a>
+                <a href={`${origin}/${p.slug}`} target="_blank" rel="noopener noreferrer" style={{padding:'5px 12px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:20,fontSize:11,fontFamily:"'Jost',sans-serif",color:'rgba(232,220,200,0.4)',textDecoration:'none',textAlign:'center'}}>View ↗</a>
               </div>
             </div>
           ))}
