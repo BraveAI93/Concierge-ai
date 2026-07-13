@@ -281,33 +281,40 @@ Each working day follows the same five-beat rhythm:
 - **Daily status:**
 ```
 **Task:** Owner PA web search capability gate (behind the pa_web_search feature flag) — re-scoped from the Calendar OAuth decision above
-**Status:** PARTIAL / BUILT-BUT-LOCKED
+**Status:** PASS / CLOSED (built PARTIAL/BUILT-BUT-LOCKED, then activated and verified end-to-end)
 **Files changed:**
 - concierge-backend/main.go
 - lib/buildPrompt.js
 - components/BravePAv2.jsx
-**Commit:** 21feeca
+**Commit:** 21feeca (build). Activation itself required no new commit — Bruno added `BRAVE_SEARCH_API_KEY` to Render and flipped `pa_web_search` to `ACTIVE_PRIVATE` in Supabase directly; code was already in place.
 **Build/test:**
 - npm run build passed
 - gofmt main.go passed
 - go build ./... passed
 - go vet ./... passed
-**Production proof:**
+**Production proof (build phase, pre-activation):**
 - POST /pa/websearch (run locally against real Supabase): correctly short-circuits before auth/provider when pa_web_search != ACTIVE_PRIVATE, returning `{"connected":false,"reason":"pa_web_search is not ACTIVE_PRIVATE yet","results":[],"setup_needed":"BRAVE_SEARCH_API_KEY"}`
 - Direct adapter check: braveWebSearch() returns "BRAVE_SEARCH_API_KEY not configured" -> classified as safe error code "missing_api_key"; braveSearchConfigured() returns false
 - Prompt-logic simulation: with a simulated ACTIVE_PRIVATE flag + mock results, pa_web_search correctly drops out of the "NOT CONNECTED" list and a cited LIVE SEARCH RESULTS block renders
 - Public https://www.bravebybruno.com/brave-therapies -> HTTP 200
 - Public https://www.bravebybruno.com/demo/bruno -> HTTP 200
 - Production GET /flags -> HTTP 200; pa_web_search confirmed GHOST_FORBIDDEN both before and after this commit
-- No real end-to-end live Brave Search provider call has been completed — BRAVE_SEARCH_API_KEY is absent from concierge-backend/.env and process env
+**Production proof (final activation, post-key/flag-flip):**
+- GET /flags live: pa_web_search confirmed ACTIVE_PRIVATE
+- Real owner session token obtained via /auth/signup against a disposable QA profile (qa-day6-verify-1783961695); POST /pa/websearch with that token returned `"connected":true"` and 5 real Brave Search results with title/url/source/snippet/timestamp (where Brave provided one)
+- The exact returned results were fed into buildBravePAPrompt() and sent through the real production /chat model: the live reply opened with "Here's what I found from a live search just now" and cited every claim with the real returned URLs — no fabricated/uncited claims
+- Permission boundary re-checked post-activation: POST /pa/websearch with no auth token now correctly returns 401 (no result leakage now that the flag is live)
+- audit_events confirmed via Bruno's own Supabase readback (anon key has no SELECT grant on this table, so this required Bruno's direct query): both `pa_web_search_requested` (`{"provider":"brave_search"}`) and `pa_web_search_completed` (`{"provider":"brave_search","latency_ms":1275,"result_count":5}`) rows exist, both `status: ok`, metadata contains only the allowed low-risk fields — no query text, URLs, snippets, or personal data
+- Public https://www.bravebybruno.com/brave-therapies -> HTTP 200; https://www.bravebybruno.com/demo/bruno -> HTTP 200 (re-confirmed post-activation)
+- Public /chat (Brave Therapies system prompt) re-tested post-activation: real, on-brand reply, unaffected by the web-search change
+- Disposable QA profile neutralized after testing (email replaced with a clearly-marked disposable address, password cleared, name set to DELETED_QA_TEST) — could not hard-delete; no working service-role key in this environment (same standing limitation noted in the auth-hardening session)
 **Remaining risk:**
-- Capability is fully built but inert — zero real-world exercise of an actual live search request/response/citation cycle
-- pa_web_search's DB row still reads GHOST_FORBIDDEN, not DORMANT_BUILT (cosmetic only — no admin/update endpoint exists for feature_flags, and no confirmed working write-credential is available in this environment)
-- audit_events (pa_web_search_requested/completed/failed) have never fired — the code path is only reachable once the flag+auth gate passes
-- Search-trigger keyword heuristic in components/BravePAv2.jsx is coarse and untuned against real usage
+- pa_web_search's DB row still reads GHOST_FORBIDDEN in the Feature Registry doc's own row text (docs/strategy/FEATURE_REGISTRY_AND_ACTIVATION_STATES_v1.md REG-19a) — worth a separate docs-only reconciliation pass, same pattern as prior days
+- Search-trigger keyword heuristic in components/BravePAv2.jsx is coarse and untuned against real owner usage
+- No admin/update endpoint exists for feature_flags — any future flag change still requires direct Supabase access, not the app
 **Next safest action:**
-- get BRAVE_SEARCH_API_KEY
-- add it to local/backend env and Render env
+- Reconcile docs/strategy/FEATURE_REGISTRY_AND_ACTIVATION_STATES_v1.md (REG-19a and related rows) to reflect pa_web_search's real ACTIVE_PRIVATE state, in its own small docs-only pass
+- Do not start Day 7 (weather/calendar/maps/tickets/booking actions) without a separate explicit go-ahead, per the "one active integration at a time" rule
 - run one real owner-only search test with citations
 - only then flip pa_web_search to ACTIVE_PRIVATE
 ```
