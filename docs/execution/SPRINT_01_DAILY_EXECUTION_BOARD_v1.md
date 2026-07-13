@@ -181,14 +181,34 @@ Each working day follows the same five-beat rhythm:
 - **Stop condition:** stop once the registry seed and the two-claim-type audit-event proof both pass.
 - **Daily status:**
 ```
-**Task:**
-**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Task:** Seed feature registry + build audit_events provenance logging
+**Status:** PASS / CLOSED
 **Files changed:**
-**Commit:**
+- concierge-backend/db/supabase.go
+- concierge-backend/main.go
+- docs/strategy/FEATURE_REGISTRY_AND_ACTIVATION_STATES_v1.md
+**Commit:** 62c827d
 **Build/test:**
+- npm run build passed
+- gofmt passed
+- go build ./... passed
+- go vet ./... passed
 **Production proof:**
+- feature_flags table exists and GET /flags works
+- 21 flags now exist after Day 4 additions
+- audit_events table exists
+- alert_created audit event written
+- booking_request_created audit event written
+- audit metadata contains no raw messages, no contact details, no sensitive data
+- audit_events is not publicly readable
+- /brave-therapies still works
+- /demo/bruno still works
+- working tree clean after commit
 **Remaining risk:**
-**Next safest action:**
+- owner notification email delivery/env remains separate from audit_events
+- visual design is still not final
+- PA tools/capabilities are not yet wired; this is Day 5+
+**Next safest action:** proceed to Day 5 (Brave PA capability truth)
 ```
 
 ### Day 5 — P4: Brave PA Capability Truth
