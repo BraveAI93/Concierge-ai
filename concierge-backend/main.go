@@ -357,6 +357,9 @@ func handleCreateAlert(c *gin.Context) {
 		c.JSON(500, resp)
 		return
 	}
+	logAuditEvent(req.ProfileID, "alert_created", "chat_alert_endpoint", "note", n.ID, emailStatus, map[string]interface{}{
+		"topic": req.Topic,
+	})
 	resp := gin.H{
 		"status":                   "ok",
 		"id":                       n.ID,
@@ -937,6 +940,9 @@ func handleCreateBookingRequest(c *gin.Context) {
 		c.JSON(500, gin.H{"error": "Could not save booking request", "detail": err.Error()})
 		return
 	}
+	logAuditEvent(req.ProfileID, "booking_request_created", "booking_endpoint", "booking_request", br.ID, "ok", map[string]interface{}{
+		"service_name": req.ServiceName,
+	})
 	c.JSON(200, gin.H{"status": "ok", "id": br.ID})
 }
 
@@ -1532,6 +1538,36 @@ func handleGetFeatureFlags(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"flags": flags})
+}
+
+// logAuditEvent is best-effort and must never block or fail the caller's
+// primary action — a failed audit write is logged server-side, not surfaced.
+// metadata must only contain low-risk structural fields (topic, service_name,
+// etc.) — never raw messages, contact details, form contents, or payment data.
+func logAuditEvent(profileID, eventType, source, entityType, entityID, status string, metadata map[string]interface{}) {
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Printf("Warning: logAuditEvent panic: %v\n", r)
+		}
+	}()
+	metaBytes, err := json.Marshal(metadata)
+	if err != nil {
+		metaBytes = []byte("{}")
+	}
+	ev := db.AuditEvent{
+		ID:           uuid.New().String(),
+		ProfileID:    profileID,
+		EventType:    eventType,
+		Source:       source,
+		EntityType:   entityType,
+		EntityID:     entityID,
+		Status:       status,
+		MetadataJSON: metaBytes,
+		CreatedAt:    time.Now(),
+	}
+	if err := db.SaveAuditEvent(ev); err != nil {
+		fmt.Printf("Warning: audit event %s (%s) failed to record: %v\n", eventType, entityID, err)
+	}
 }
 
 func min(a, b int) int {

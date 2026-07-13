@@ -160,6 +160,22 @@ type FeatureFlag struct {
 	UpdatedAt time.Time `json:"updated_at"`
 }
 
+// AuditEvent — backend-private provenance record (Sprint 01 Day 4).
+// metadata_json must only ever carry low-risk structural fields
+// (topic, service_name, etc.) — never raw messages, contact details,
+// form contents, or payment data.
+type AuditEvent struct {
+	ID           string          `json:"id,omitempty"`
+	ProfileID    string          `json:"profile_id,omitempty"`
+	EventType    string          `json:"event_type"`
+	Source       string          `json:"source"`
+	EntityType   string          `json:"entity_type,omitempty"`
+	EntityID     string          `json:"entity_id,omitempty"`
+	Status       string          `json:"status"`
+	MetadataJSON json.RawMessage `json:"metadata_json,omitempty"`
+	CreatedAt    time.Time       `json:"created_at,omitempty"`
+}
+
 func supabaseURL() string { return os.Getenv("SUPABASE_URL") }
 func supabaseKey() string { return os.Getenv("SUPABASE_KEY") }
 
@@ -591,3 +607,9 @@ func GetFeatureFlags() ([]FeatureFlag, error) {
 	}
 	return flags, nil
 }
+
+// ── AUDIT EVENTS ──────────────────────────────────────────
+
+// SaveAuditEvent is write-only by design: audit_events grants INSERT
+// only, no SELECT, so this must never be extended into a Get* reader.
+func SaveAuditEvent(e AuditEvent) error { return insert("audit_events", e) }

@@ -19,15 +19,15 @@ Note on vocabulary: prior audits in this repo used a plain `GHOST` label. This d
 |---|---|---|---|---|
 | REG-01 | Auth / session (login, dashboard gating) | `ACTIVE_PUBLIC` | Live-verified, real `Set-Cookie`, real token match, real bypass block | AUTH GREEN evidence; `PRODUCT_REALITY_MATRIX.md` #16 |
 | REG-02 | Demo AI chat (`/demo/*`) | `ACTIVE_PUBLIC` | Real `<Chat/>`, real backend call, live-verified this session (`/demo/bruno` → 200) | `PRODUCT_REALITY_MATRIX.md` #4; `MASTER_VISION_VS_REPO_REALITY_REVISION.md` live evidence |
-| REG-03 | Real AI chat on real (non-demo) public profile pages | **`GHOST_FORBIDDEN`** | Scripted bubble, no live AI call, dead-end links to a stale domain | `PRODUCT_REALITY_MATRIX.md` #3; confirmed with live production evidence in the Revision Audit |
+| REG-03 | Real AI chat on real (non-demo) public profile pages | `ACTIVE_PUBLIC` | Closed Sprint 01 Day 2 — real React `<Chat/>` mounted on `/[slug]`, live-verified end-to-end reply from real backend against real profile context | Sprint 01 Day 2 status card, `SPRINT_01_DAILY_EXECUTION_BOARD_v1.md` |
 | REG-04 | Public profile page data rendering (services, contact links) | `ACTIVE_PUBLIC` | Real `GET /profile/:slug` data, correctly rendered | `PRODUCT_REALITY_MATRIX.md` #3 |
 | REG-05 | Leads / CRM-lite + hot-lead email | `ACTIVE_PUBLIC` | Real deterministic scoring, real Resend email | `PRODUCT_REALITY_MATRIX.md` #13 |
 | REG-06 | Booking-request pipeline | `ACTIVE_PUBLIC` | Real end-to-end, known regex-detection fragility (see REG-06a) | `PRODUCT_REALITY_MATRIX.md` #12 |
 | REG-06a | Booking-intent detection (regex-based) | `ACTIVE_PUBLIC` with known fragility | Detects via string match on AI reply text, not a structured tool call | `TECHNICAL_CONSTRAINTS_MATRIX.md` O |
 | REG-07 | Legal/consent forms (health, injury, image-rights, etc.) | `ACTIVE_PUBLIC` | Real submission, real persistence, real owner visibility | `PRODUCT_REALITY_MATRIX.md` #11 |
 | REG-07a | Health-category form DPIA coverage | `UNKNOWN` (gap) | Special-category data collected without a documented DPIA-trigger review | `TECHNICAL_CONSTRAINTS_MATRIX.md` W |
-| REG-08 | General AI-processing consent (chat consent screen) | **`GHOST_FORBIDDEN`** | `sessionStorage`-only, never persisted server-side, cites GDPR compliance falsely | `PRODUCT_REALITY_MATRIX.md` #11 |
-| REG-09 | Privacy policy / Terms of Service page (`/privacy`) | **`GHOST_FORBIDDEN`** | Live-confirmed 404 in production; both legal disclosures unreachable | `MASTER_VISION_VS_REPO_REALITY_REVISION.md` I, live evidence |
+| REG-08 | General AI-processing consent (chat consent screen) | `ACTIVE_PUBLIC` | Closed Sprint 01 Day 1 — `giveConsent()` persists a real row to the `consents` table, live-verified via direct Supabase read | Sprint 01 Day 1 status card, `SPRINT_01_DAILY_EXECUTION_BOARD_v1.md` |
+| REG-09 | Privacy policy / Terms of Service page (`/privacy`) | `ACTIVE_PUBLIC` | Closed Sprint 01 Day 1 — real Next.js route, live-verified `HTTP 200` in production | Sprint 01 Day 1 status card, `SPRINT_01_DAILY_EXECUTION_BOARD_v1.md` |
 | REG-10 | Owner dashboard (leads, bookings, notes, forms) | `ACTIVE_PUBLIC` | Extensive real CRUD | `PRODUCT_REALITY_MATRIX.md` #6 |
 | REG-10a | Owner dashboard share-link / QR domain | `PARTIAL-REAL` (violates repo's own Anti-Chaos Rule #17) | Hardcoded to a Vercel alias, not the production domain; live-confirmed as a functioning duplicate, not dead, but still a rule violation | `MASTER_VISION_VS_REPO_REALITY_REVISION.md` live evidence |
 | REG-10b | Owner dashboard silent data-load failures | `PARTIAL-REAL` | Fetch failures silently fall back to empty state instead of visible error | `PRODUCT_REALITY_MATRIX.md` #6 |
@@ -58,7 +58,7 @@ Note on vocabulary: prior audits in this repo used a plain `GHOST` label. This d
 | REG-31 | Advanced/semantic memory (vector-based) | `SPEC_ONLY` | Explicitly V2/V3, no infrastructure exists | `BRAIN_SPINE_READINESS_AUDIT.md` §11 |
 | REG-32 | Stripe payments (Connect, checkout, webhook) | `UNKNOWN` | Code-level REAL (real signature verification, real fee calc); live env-var status unverifiable from this environment | `TECHNICAL_CONSTRAINTS_MATRIX.md` U |
 | REG-33 | Minimal Brain Spine (architecture layer) | `SPEC_ONLY` | Fully scoped in its own audit, explicitly deferred until after Cinematic Shell + Core Flow QA, pending Bruno approval | `BRAIN_SPINE_READINESS_AUDIT.md` §15/§17 |
-| REG-34 | Feature registry / feature flags / activation states (this system) | **`GHOST_FORBIDDEN`** (as a system — doesn't exist) | No flag/toggle mechanism exists anywhere in the codebase | `TECHNICAL_CONSTRAINTS_MATRIX.md` X |
+| REG-34 | Feature registry / feature flags / activation states (this system) | `DORMANT_BUILT` | Closed (build) Sprint 01 Day 3 — real `feature_flags` table + `GET /flags` live against Supabase, live-toggle proven; not yet `ACTIVE` because no prompt/UI actually consumes the flags yet | Sprint 01 Day 3 status card, `SPRINT_01_DAILY_EXECUTION_BOARD_v1.md` |
 | REG-35 | Audit events / provenance / trust logs | `SPEC_ONLY` | The notification work is a real, working instance of the pattern, not yet generalized | `TECHNICAL_CONSTRAINTS_MATRIX.md` Y |
 | REG-36 | Root landing page (`/`) | `ACTIVE_PUBLIC` | Honest placeholder, doesn't overclaim | `MASTER_VISION_VS_REPO_REALITY_REVISION.md` A |
 | REG-37 | `/theconcierge` home | `ACTIVE_PUBLIC` | Fully functional router; one dead legacy `localStorage` check, harmless | `MASTER_VISION_VS_REPO_REALITY_REVISION.md` context |
@@ -69,15 +69,15 @@ Note on vocabulary: prior audits in this repo used a plain `GHOST` label. This d
 
 | State | Count |
 |---|---|
-| `ACTIVE_PUBLIC` | 14 |
+| `ACTIVE_PUBLIC` | 17 |
 | `ACTIVE_PRIVATE` | 2 |
-| `DORMANT_BUILT` | 1 |
+| `DORMANT_BUILT` | 2 |
 | `SPEC_ONLY` | 12 |
 | `LEGAL_LOCKED` | 2 |
-| `GHOST_FORBIDDEN` | 9 |
+| `GHOST_FORBIDDEN` | 5 |
 | `UNKNOWN` | 2 |
 
-Nine `GHOST_FORBIDDEN` entries is the single most important number in this document — each one represents a live or recently-live claim the product makes that isn't structurally backed. Closing REG-03, REG-08, and REG-09 (Roadmap Phase 2) resolves three of the nine and the three with the highest live-production stakes.
+Nine `GHOST_FORBIDDEN` entries at this document's creation was the single most important number — each one represented a live or recently-live claim the product made that wasn't structurally backed. Sprint 01 Days 1-3 closed REG-03, REG-08, REG-09 (→ `ACTIVE_PUBLIC`) and REG-34 (→ `DORMANT_BUILT`), leaving 5 `GHOST_FORBIDDEN` entries as of Day 4's reconciliation review (see `SPRINT_01_DAILY_EXECUTION_BOARD_v1.md`). This document was not updated in the same commit as those closures, contrary to its own stated practice below — Day 4 restored it retroactively; future closures should update this file in the closing commit, not defer it.
 
 ## How this feeds Roadmap Phase 1
 
