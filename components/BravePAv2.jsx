@@ -2,8 +2,10 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { BACKEND_URL } from '@/lib/constants';
 import { buildBravePAPrompt, generateProactiveMessage, getQuickActions } from '@/lib/buildPrompt';
+import { useFeatureFlags } from '@/lib/useFeatureFlags';
 
 export default function BravePAv2({ token, slug, profile, leads, convCount }) {
+  const { flags } = useFeatureFlags();
   const [mode, setMode] = useState('bubble');
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -62,7 +64,7 @@ export default function BravePAv2({ token, slug, profile, leads, convCount }) {
     setMessages(newMessages);
     setLoading(true);
     try {
-      const systemPrompt = buildBravePAPrompt(profile, paConfig, businessData);
+      const systemPrompt = buildBravePAPrompt(profile, paConfig, businessData, flags);
       const apiMessages = newMessages
         .filter(m => !m.type || m.type === 'text')
         .map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }));
