@@ -277,16 +277,39 @@ Each working day follows the same five-beat rhythm:
 - **Live test required:** N/A — decision day.
 - **What not to touch:** N/A.
 - **Stop condition:** stop once the decision is made and documented (a one-line note is enough: "reusing existing project" or "creating new project, ETA X"). If credentials cannot be resolved today, Days 7-8 should be pushed later in the sprint rather than started without them.
+- **Note:** actual Day 6 execution diverged from the plan above. Bruno re-sequenced Day 6 to Owner PA Web Search Activation instead, per Perplexity's recommended safest activation order (web search → weather → read-only calendar → maps → tickets → booking actions). The Calendar OAuth decision above was deferred, not completed. The status block below reflects the work actually done.
 - **Daily status:**
 ```
-**Task:**
-**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Task:** Owner PA web search capability gate (behind the pa_web_search feature flag) — re-scoped from the Calendar OAuth decision above
+**Status:** PARTIAL / BUILT-BUT-LOCKED
 **Files changed:**
-**Commit:**
+- concierge-backend/main.go
+- lib/buildPrompt.js
+- components/BravePAv2.jsx
+**Commit:** 21feeca
 **Build/test:**
+- npm run build passed
+- gofmt main.go passed
+- go build ./... passed
+- go vet ./... passed
 **Production proof:**
+- POST /pa/websearch (run locally against real Supabase): correctly short-circuits before auth/provider when pa_web_search != ACTIVE_PRIVATE, returning `{"connected":false,"reason":"pa_web_search is not ACTIVE_PRIVATE yet","results":[],"setup_needed":"BRAVE_SEARCH_API_KEY"}`
+- Direct adapter check: braveWebSearch() returns "BRAVE_SEARCH_API_KEY not configured" -> classified as safe error code "missing_api_key"; braveSearchConfigured() returns false
+- Prompt-logic simulation: with a simulated ACTIVE_PRIVATE flag + mock results, pa_web_search correctly drops out of the "NOT CONNECTED" list and a cited LIVE SEARCH RESULTS block renders
+- Public https://www.bravebybruno.com/brave-therapies -> HTTP 200
+- Public https://www.bravebybruno.com/demo/bruno -> HTTP 200
+- Production GET /flags -> HTTP 200; pa_web_search confirmed GHOST_FORBIDDEN both before and after this commit
+- No real end-to-end live Brave Search provider call has been completed — BRAVE_SEARCH_API_KEY is absent from concierge-backend/.env and process env
 **Remaining risk:**
+- Capability is fully built but inert — zero real-world exercise of an actual live search request/response/citation cycle
+- pa_web_search's DB row still reads GHOST_FORBIDDEN, not DORMANT_BUILT (cosmetic only — no admin/update endpoint exists for feature_flags, and no confirmed working write-credential is available in this environment)
+- audit_events (pa_web_search_requested/completed/failed) have never fired — the code path is only reachable once the flag+auth gate passes
+- Search-trigger keyword heuristic in components/BravePAv2.jsx is coarse and untuned against real usage
 **Next safest action:**
+- get BRAVE_SEARCH_API_KEY
+- add it to local/backend env and Render env
+- run one real owner-only search test with citations
+- only then flip pa_web_search to ACTIVE_PRIVATE
 ```
 
 ### Day 7-8 — Calendar Connector V1 (if credentials are ready)
