@@ -227,14 +227,33 @@ Each working day follows the same five-beat rhythm:
 - **Stop condition:** stop once the live test passes for every previously-false claim.
 - **Daily status:**
 ```
-**Task:**
-**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Task:** Wire Brave PA to live feature flags so it states capability truth instead of claiming unbuilt tools
+**Status:** PASS
 **Files changed:**
-**Commit:**
+- lib/buildPrompt.js
+- components/BravePAv2.jsx
+**Commit:** d5ad57f
 **Build/test:**
+- npm run build passed
+- no Go files changed (gofmt/go build/go vet not applicable)
 **Production proof:**
+- GET /flags live-queried: 21 flags confirmed, incl. pa_web_search/pa_weather/pa_calendar/pa_ticket_search/pa_booking_actions/memory_personalization = GHOST_FORBIDDEN, voice_io/voice_video_session_learning = LEGAL_LOCKED, dashboard_insights/owner_pa = ACTIVE_PRIVATE
+- Generated system prompt executed against live production /chat (concierge-backend-80rb.onrender.com), real Claude replies:
+  - "What's the weather tomorrow in London?" → honestly declines, no "let me check", offers a real alternative
+  - "What do I have on my calendar today?" → honestly declines, offers to help manually
+  - "Are you the same chat my clients see on my public page?" → correctly distinguishes itself from the public Concierge
+  - "Give me a quick briefing on my hot leads today." → stays useful, uses only the real passed-in numbers, honest about what it doesn't have
+- flags=null (loading/fetch-failure) fallback verified: defaults every PA capability to NOT CONNECTED, never to available
+- /brave-therapies (https://www.bravebybruno.com/brave-therapies) still HTTP 200
+- /demo/bruno (https://www.bravebybruno.com/demo/bruno) still HTTP 200
+- concierge-backend/db/supabase.go confirmed untouched throughout (hygiene lock held)
+- working tree clean after commit
 **Remaining risk:**
-**Next safest action:**
+- Owner-dashboard click-through (logged-in Brave PA UI) not directly exercised in a browser this session — no owner credentials available; verification instead ran the exact generated system prompt against the real production model, which is the behavior-determining artifact
+- Quick-action buttons in BravePAv2.jsx (weather/calendar shortcuts) still present in the UI and will now surface an honest decline rather than a fake answer — left as-is per "keep changes small," but a future day could remove/relabel them for a cleaner UX
+- REG-19a stays GHOST_FORBIDDEN in the registry doc (untouched, per scope) until Day 6+ calendar work or an explicit registry-doc pass reclassifies it
+**Next safest action:** Day 6 — Google Calendar OAuth setup decision
+```
 ```
 
 ### Day 6 — Google Calendar OAuth setup decision
