@@ -55,6 +55,10 @@ export default function BravePAv2({ token, slug, profile, leads, convCount }) {
 
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
+  const webSearchState = flags?.find(f => f.name === 'pa_web_search')?.state;
+  const webSearchConnected = webSearchState === 'ACTIVE_PRIVATE';
+  const searchTriggerKeywords = ['search', 'look up', 'lookup', 'latest', 'current', 'right now', 'today', 'this week', 'news', 'what is happening', "what's happening", "who won", 'score', 'price of'];
+
   const sendMessage = async (text) => {
     const t = (text || input).trim();
     if (!t || loading) return;
@@ -64,7 +68,20 @@ export default function BravePAv2({ token, slug, profile, leads, convCount }) {
     setMessages(newMessages);
     setLoading(true);
     try {
-      const systemPrompt = buildBravePAPrompt(profile, paConfig, businessData, flags);
+      let searchResults = null;
+      const looksLikeSearch = searchTriggerKeywords.some(kw => t.toLowerCase().includes(kw));
+      if (webSearchConnected && looksLikeSearch && token) {
+        try {
+          const searchResp = await fetch(`${BACKEND_URL}/pa/websearch`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+            body: JSON.stringify({ query: t, profile_id: slug || 'brave-pa' })
+          });
+          const searchData = await searchResp.json();
+          if (searchData.connected && searchData.results?.length) searchResults = searchData.results;
+        } catch (e) { /* search adapter unreachable — PA falls back to an honest "not connected" answer via the prompt's capability truth block */ }
+      }
+      const systemPrompt = buildBravePAPrompt(profile, paConfig, businessData, flags, searchResults);
       const apiMessages = newMessages
         .filter(m => !m.type || m.type === 'text')
         .map(m => ({ role: m.role === 'assistant' ? 'assistant' : 'user', content: m.content }));
@@ -137,7 +154,7 @@ export default function BravePAv2({ token, slug, profile, leads, convCount }) {
           <div style={{ width:36, height:36, borderRadius:'50%', background:`linear-gradient(135deg,${gold},#7a4f0e)`, display:'flex', alignItems:'center', justifyContent:'center', fontSize:16, color:dark, flexShrink:0 }}>✦</div>
           <div>
             <div style={{ fontSize:14, fontWeight:500, color:cream, letterSpacing:'0.04em' }}>{paConfig.paName}</div>
-            <div style={{ fontSize:10, color:loading?gold:'rgba(100,200,100,0.7)', letterSpacing:'0.1em' }}>{loading?'✦ thinking...':'● online'}</div>
+            <div style={{ fontSize:10, color:loading?gold:'rgba(100,200,100,0.7)', letterSpacing:'0.1em' }}>{loading?'✦ thinking...':'● online'}{webSearchConnected?' · Live web: connected':''}</div>
           </div>
         </div>
         <div style={{ display:'flex', gap:6 }}>

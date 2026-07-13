@@ -10,6 +10,7 @@ import (
 	"io"
 	"mime"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -125,6 +126,7 @@ func main() {
 	r.POST("/forms/:slug/:formType", handleSubmitForm)
 	r.GET("/owner/form-submissions", handleGetFormSubmissions)
 	r.GET("/flags", handleGetFeatureFlags)
+	r.POST("/pa/websearch", handlePAWebSearch)
 
 	port := os.Getenv("PORT")
 	if port == "" {
@@ -1538,6 +1540,173 @@ func handleGetFeatureFlags(c *gin.Context) {
 		return
 	}
 	c.JSON(200, gin.H{"flags": flags})
+}
+
+// ─── OWNER PA WEB SEARCH (Sprint 01 Day 6) ──────────────────
+// Owner-only. Never used by the public /[slug] concierge chat, which
+// has its own separate prompt-building path (buildPrompt in the
+// frontend) and never calls this endpoint.
+//
+// Gate order is deliberate: (1) feature flag must be ACTIVE_PRIVATE,
+// (2) valid owner session token, (3) provider call. If either of the
+// first two fails, the provider is never touched and no key is spent.
+
+type WebSearchResult struct {
+	Title     string `json:"title"`
+	URL       string `json:"url"`
+	Source    string `json:"source,omitempty"`
+	Snippet   string `json:"snippet,omitempty"`
+	Timestamp string `json:"timestamp,omitempty"`
+}
+
+func featureFlagState(name string) string {
+	flags, err := db.GetFeatureFlags()
+	if err != nil {
+		return "UNKNOWN"
+	}
+	for _, f := range flags {
+		if f.Name == name {
+			return f.State
+		}
+	}
+	return "UNKNOWN"
+}
+
+func handlePAWebSearch(c *gin.Context) {
+	if featureFlagState("pa_web_search") != "ACTIVE_PRIVATE" {
+		resp := gin.H{
+			"connected": false,
+			"reason":    "pa_web_search is not ACTIVE_PRIVATE yet",
+			"results":   []WebSearchResult{},
+		}
+		if !braveSearchConfigured() {
+			resp["setup_needed"] = "BRAVE_SEARCH_API_KEY"
+		}
+		c.JSON(200, resp)
+		return
+	}
+
+	slug, ok := authenticateToken(c)
+	if !ok {
+		c.JSON(401, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	var req struct {
+		Query     string `json:"query"`
+		ProfileID string `json:"profile_id"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil || req.Query == "" {
+		c.JSON(400, gin.H{"error": "query required"})
+		return
+	}
+	profileID := req.ProfileID
+	if profileID == "" {
+		profileID = slug
+	}
+
+	start := time.Now()
+	logAuditEvent(profileID, "pa_web_search_requested", "pa_web_search_endpoint", "web_search", slug, "ok", map[string]interface{}{
+		"provider": "brave_search",
+	})
+
+	results, err := braveWebSearch(req.Query)
+	latencyMs := time.Since(start).Milliseconds()
+
+	if err != nil {
+		logAuditEvent(profileID, "pa_web_search_failed", "pa_web_search_endpoint", "web_search", slug, "failed", map[string]interface{}{
+			"provider":   "brave_search",
+			"latency_ms": latencyMs,
+			"error_code": webSearchErrorCode(err),
+		})
+		c.JSON(200, gin.H{
+			"connected": false,
+			"reason":    "search provider error",
+			"results":   []WebSearchResult{},
+		})
+		return
+	}
+
+	logAuditEvent(profileID, "pa_web_search_completed", "pa_web_search_endpoint", "web_search", slug, "ok", map[string]interface{}{
+		"provider":     "brave_search",
+		"result_count": len(results),
+		"latency_ms":   latencyMs,
+	})
+
+	c.JSON(200, gin.H{"connected": true, "results": results})
+}
+
+// braveSearchConfigured reports whether a provider key is present, without
+// making a network call. DORMANT_BUILT posture: the adapter below never
+// fabricates a result from model knowledge when the key is absent.
+func braveSearchConfigured() bool {
+	return os.Getenv("BRAVE_SEARCH_API_KEY") != ""
+}
+
+func braveWebSearch(query string) ([]WebSearchResult, error) {
+	apiKey := os.Getenv("BRAVE_SEARCH_API_KEY")
+	if apiKey == "" {
+		return nil, fmt.Errorf("BRAVE_SEARCH_API_KEY not configured")
+	}
+	baseURL := os.Getenv("BRAVE_SEARCH_BASE_URL")
+	if baseURL == "" {
+		baseURL = "https://api.search.brave.com/res/v1/web/search"
+	}
+	req, err := http.NewRequest("GET", baseURL+"?q="+url.QueryEscape(query), nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("X-Subscription-Token", apiKey)
+	client := &http.Client{Timeout: 8 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("brave search request failed")
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("brave search returned status %d", resp.StatusCode)
+	}
+	var parsed struct {
+		Web struct {
+			Results []struct {
+				Title       string `json:"title"`
+				URL         string `json:"url"`
+				Description string `json:"description"`
+				Age         string `json:"age"`
+			} `json:"results"`
+		} `json:"web"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&parsed); err != nil {
+		return nil, fmt.Errorf("brave search returned an unparseable response")
+	}
+	results := make([]WebSearchResult, 0, min(len(parsed.Web.Results), 5))
+	for _, r := range parsed.Web.Results {
+		if len(results) >= 5 {
+			break
+		}
+		results = append(results, WebSearchResult{
+			Title: r.Title, URL: r.URL, Source: "Brave Search", Snippet: r.Description, Timestamp: r.Age,
+		})
+	}
+	return results, nil
+}
+
+// webSearchErrorCode classifies an error into a safe, low-risk code for
+// audit_events — never the raw error string, which can embed the query
+// (Go's http client errors often include the full request URL).
+func webSearchErrorCode(err error) string {
+	msg := err.Error()
+	switch {
+	case strings.Contains(msg, "not configured"):
+		return "missing_api_key"
+	case strings.Contains(msg, "unparseable"):
+		return "invalid_response"
+	case strings.Contains(msg, "returned status"):
+		return "provider_http_error"
+	default:
+		return "request_error"
+	}
 }
 
 // logAuditEvent is best-effort and must never block or fail the caller's
