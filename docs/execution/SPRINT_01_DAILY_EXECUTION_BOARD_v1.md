@@ -155,14 +155,21 @@ Each working day follows the same five-beat rhythm:
 - **Stop condition:** stop once the table exists and one real toggle is proven live. Do not begin migrating existing features onto the flag system today — that's Day 4 and beyond.
 - **Daily status:**
 ```
-**Task:**
-**Status:** PASS / FAIL / PARTIAL / BLOCKED
+**Task:** Build feature_flags table + GET /flags read mechanism
+**Status:** PASS (retroactively reconstructed — this status block was never filled in at the time; rebuilt from commit history and REG-34 evidence, not from a contemporaneous record)
 **Files changed:**
-**Commit:**
-**Build/test:**
+- concierge-backend/db/supabase.go
+- concierge-backend/main.go
+- lib/useFeatureFlags.js
+**Commit:** 66e01e6
+**Build/test:** UNKNOWN — no gofmt/go build/go vet/npm run build record exists for this commit
 **Production proof:**
+- GET /flags live against Supabase — independently reconfirmed working in Day 4/5/6 sessions
+- "Live-toggle proven" per docs/strategy/FEATURE_REGISTRY_AND_ACTIVATION_STATES_v1.md REG-34 row — asserted there at the time; not independently re-verified in this reconstruction
 **Remaining risk:**
-**Next safest action:**
+- No migration mechanism exists in this repo (the reason Bruno's DDL review was required at the time)
+- No admin/update endpoint for feature_flags exists even now (confirmed as of Day 6) — toggling a flag still requires direct Supabase access, not the app
+**Next safest action:** proceed to Day 4 (seed registry + audit events) — historically what happened next
 ```
 
 ### Day 4 — Seed feature registry + audit events
@@ -511,6 +518,7 @@ Tracked against `docs/strategy/DATA_PARTICIPATION_AND_COHORT_LEARNING_v1.md`:
 - Day 9's Stripe/Resend/media verification has passed, or Stripe-dependent features are explicitly not mentioned in what's shared with that client.
 - Day 10's Render decision has been made — per the repo's own binding pricing rule, the free-tier backend should not be what a real client's traffic hits.
 - Day 5's Brave PA truth-pass is live, if Brave PA is part of what's shown to that client.
+- **Owner notification email delivery/env truth is verified end-to-end** — a real hot-lead/alert email actually sends with `RESEND_API_KEY`/`OWNER_EMAIL` configured in production, or the owner is honestly shown `disabled_missing_env` rather than a silent gap. Flagged as a remaining risk in both the Day 4 and Day 5 status cards above; must be closed with real send evidence, not assumed, before real client links go out.
 
 **What can remain dormant** (i.e., does not need to be finished before sharing real links, as long as it isn't claimed):
 - Calendar connector (Days 7-8) — fine to ship after real links go out, as long as no false claim exists in the meantime (Day 5 already ensures this).
