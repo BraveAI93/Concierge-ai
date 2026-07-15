@@ -31,3 +31,15 @@ body.light-mode .glass{background:rgba(245,240,235,0.85)!important;border-color:
 
 .concierge-brand{position:relative;display:inline-block}
 .concierge-idot{position:absolute;top:-2px;left:50%;transform:translateX(-50%);width:3px;height:3px;background:#c9a96e;border-radius:50%;animation:bravePulse 2s ease-in-out infinite}
+
+.landing-mark{opacity:0;animation:fadeUp 0.7s ease forwards}
+.landing-title{opacity:0;animation:fadeUp 0.7s ease forwards;animation-delay:0.1s}
+.landing-subtitle{opacity:0;animation:fadeUp 0.7s ease forwards;animation-delay:0.35s}
+.landing-lede{opacity:0;animation:fadeUp 0.7s ease forwards;animation-delay:0.5s}
+.landing-cta{opacity:0;animation:fadeUp 0.7s ease forwards;animation-delay:0.65s}
+.landing-demos{opacity:0;animation:fadeUp 0.7s ease forwards;animation-delay:0.5s}
+.landing-footer{opacity:0;animation:fadeIn 0.7s ease forwards;animation-delay:0.85s}
+
+@media (prefers-reduced-motion:reduce){
+  .landing-mark,.landing-title,.landing-subtitle,.landing-lede,.landing-cta,.landing-demos,.landing-footer{animation:none;opacity:1}
+}

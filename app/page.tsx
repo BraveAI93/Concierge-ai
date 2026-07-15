@@ -21,15 +21,15 @@ export default function EcosystemHome() {
         opacity: 0.5, pointerEvents: 'none',
       }} />
       <div style={{ position: 'relative', maxWidth: 640, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-        <div style={{ fontSize: 28, color: '#c9a96e', marginBottom: 18 }}>✦</div>
-        <h1 style={{ fontSize: 'clamp(32px, 6vw, 56px)', fontWeight: 300, marginBottom: 14, lineHeight: 1.1 }}>Brave by Bruno</h1>
-        <p style={{ fontSize: 17, fontFamily: "'Jost', sans-serif", fontWeight: 400, color: '#c9a96e', marginBottom: 22, letterSpacing: '0.02em' }}>
+        <div className="landing-mark" style={{ fontSize: 28, color: '#c9a96e', marginBottom: 18 }}>✦</div>
+        <h1 className="landing-title" style={{ fontSize: 'clamp(32px, 6vw, 56px)', fontWeight: 300, marginBottom: 14, lineHeight: 1.1 }}>Brave by Bruno</h1>
+        <p className="landing-subtitle" style={{ fontSize: 17, fontFamily: "'Jost', sans-serif", fontWeight: 400, color: '#c9a96e', marginBottom: 22, letterSpacing: '0.02em' }}>
           AI-powered tools for independent professionals, creators, and service businesses.
         </p>
-        <p style={{ fontSize: 15, fontFamily: "'Jost', sans-serif", fontWeight: 300, color: 'rgba(232,220,200,0.65)', marginBottom: 44, maxWidth: 560, lineHeight: 1.8 }}>
+        <p className="landing-lede" style={{ fontSize: 15, fontFamily: "'Jost', sans-serif", fontWeight: 300, color: 'rgba(232,220,200,0.65)', marginBottom: 44, maxWidth: 560, lineHeight: 1.8 }}>
           We are building The Concierge: a personal AI front desk and owner-side assistant that helps professionals present their work, answer client questions, capture leads, organise bookings, and grow with less friction.
         </p>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
+        <div className="landing-cta" style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
           <a href="/theconcierge" style={{ padding: '14px 32px', background: 'linear-gradient(135deg, #c9a96e, #7a4f0e)', borderRadius: 20, color: '#0c0a08', fontFamily: "'Jost', sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', textDecoration: 'none' }}>
             Explore The Concierge →
           </a>
@@ -41,7 +41,7 @@ export default function EcosystemHome() {
           </a>
         </div>
       </div>
-      <p style={{ position: 'relative', marginTop: 60, fontSize: 10, fontFamily: "'Jost', sans-serif", color: 'rgba(201,169,110,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+      <p className="landing-footer" style={{ position: 'relative', marginTop: 60, fontSize: 10, fontFamily: "'Jost', sans-serif", color: 'rgba(201,169,110,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
         The Concierge · Brave by Bruno · London
       </p>
     </div>
