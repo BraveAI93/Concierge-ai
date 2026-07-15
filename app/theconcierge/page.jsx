@@ -20,8 +20,8 @@ export default function TheConciergeHome() {
     <div style={{ minHeight: '100vh', background: '#0c0a08', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', Georgia, serif", color: '#e8dcc8', textAlign: 'center', padding: '0 20px' }}>
       <div style={{ fontSize: 32, color: '#c9a96e', marginBottom: 20 }}>✦</div>
       <h1 style={{ fontSize: 'clamp(32px, 6vw, 64px)', fontWeight: 300, marginBottom: 16, lineHeight: 1.1 }}>The Concierge</h1>
-      <p style={{ fontSize: 16, fontFamily: "'Jost', sans-serif", fontWeight: 300, color: 'rgba(232,220,200,0.5)', marginBottom: 48, maxWidth: 500, lineHeight: 1.7 }}>
-        Your 24/7 AI-powered personal concierge, built for independent professionals.
+      <p style={{ fontSize: 16, fontFamily: "'Jost', sans-serif", fontWeight: 300, color: 'rgba(232,220,200,0.5)', marginBottom: 48, maxWidth: 560, lineHeight: 1.7 }}>
+        An AI-powered client concierge and owner assistant for independent professionals — built to answer questions, capture leads, support bookings, and help your business grow.
       </p>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 60 }}>
         {[
