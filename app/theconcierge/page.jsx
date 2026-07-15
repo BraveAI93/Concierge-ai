@@ -1,16 +1,17 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function TheConciergeHome() {
   const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
     const hasCookieToken = document.cookie.includes('cai_token=');
     const hasLocalToken = localStorage.getItem('ownerToken') || localStorage.getItem('cai_owner_token');
     if (hasCookieToken || hasLocalToken) {
       fetch('/api/auth/session').then(r => r.json()).then(d => {
-        if (d.token) router.replace('/theconcierge/dashboard');
+        if (d.token) setIsLoggedIn(true);
       });
     }
   }, []);
@@ -45,10 +46,17 @@ export default function TheConciergeHome() {
           style={{ padding: '14px 32px', background: 'linear-gradient(135deg, #c9a96e, #7a4f0e)', border: 'none', borderRadius: 20, cursor: 'pointer', color: '#0c0a08', fontFamily: "'Jost', sans-serif", fontSize: 13, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
           Build My Concierge ✦
         </button>
-        <button onClick={() => router.push('/theconcierge/owner-auth')}
-          style={{ padding: '14px 32px', background: 'none', border: '1px solid rgba(201,169,110,0.3)', borderRadius: 20, cursor: 'pointer', color: '#c9a96e', fontFamily: "'Jost', sans-serif", fontSize: 13, fontWeight: 500, letterSpacing: '0.06em' }}>
-          Owner Login
-        </button>
+        {isLoggedIn ? (
+          <button onClick={() => router.push('/theconcierge/dashboard')}
+            style={{ padding: '14px 32px', background: 'none', border: '1px solid rgba(201,169,110,0.3)', borderRadius: 20, cursor: 'pointer', color: '#c9a96e', fontFamily: "'Jost', sans-serif", fontSize: 13, fontWeight: 500, letterSpacing: '0.06em' }}>
+            Go to Dashboard
+          </button>
+        ) : (
+          <button onClick={() => router.push('/theconcierge/owner-auth')}
+            style={{ padding: '14px 32px', background: 'none', border: '1px solid rgba(201,169,110,0.3)', borderRadius: 20, cursor: 'pointer', color: '#c9a96e', fontFamily: "'Jost', sans-serif", fontSize: 13, fontWeight: 500, letterSpacing: '0.06em' }}>
+            Owner Login
+          </button>
+        )}
       </div>
       <p style={{ marginTop: 60, fontSize: 10, fontFamily: "'Jost', sans-serif", color: 'rgba(201,169,110,0.2)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
         Brave by Bruno · London

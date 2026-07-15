@@ -11,12 +11,6 @@ export function middleware(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (pathname === '/theconcierge' && token) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/theconcierge/dashboard';
-    return NextResponse.redirect(url);
-  }
-
   return NextResponse.next();
 }
 
