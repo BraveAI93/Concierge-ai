@@ -1,6 +1,20 @@
+export const metadata = {
+  title: 'Brave by Bruno — The Concierge, AI for Independent Professionals',
+  description:
+    'Brave by Bruno is a London-based software company founded by Bruno Aversa. The Concierge is a 24/7 AI client concierge and owner assistant: it answers client questions, captures leads, and supports bookings for independent professionals.',
+};
+
 export default function EcosystemHome() {
+  const features = [
+    'A 24/7 AI concierge that answers client questions on each professional\u2019s public business page',
+    'Lead capture with interest temperature \u2014 hot, warm or cold',
+    'Owner dashboard for conversations, leads and profile editing',
+    'Guided onboarding with GDPR-compliant consent and legal forms',
+    'Contact buttons, media gallery, QR code and calendar links on every page',
+  ];
+
   return (
-    <div style={{ position: 'relative', minHeight: '100vh', background: '#0c0a08', overflow: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond', Georgia, serif", color: '#e8dcc8', textAlign: 'center', padding: '80px 20px' }}>
+    <div style={{ position: 'relative', minHeight: '100vh', background: '#0c0a08', overflowX: 'hidden', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', fontFamily: "'Cormorant Garamond', Georgia, serif", color: '#e8dcc8', textAlign: 'center', padding: '80px 20px' }}>
       <div aria-hidden="true" style={{
         position: 'absolute', inset: 0,
         backgroundImage: `
@@ -40,10 +54,46 @@ export default function EcosystemHome() {
             Build My Concierge
           </a>
         </div>
+
+        <section style={{ marginTop: 72, width: '100%', maxWidth: 560 }}>
+          <h2 style={{ fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 300, marginBottom: 10, lineHeight: 1.2 }}>What The Concierge does</h2>
+          <p style={{ fontSize: 13, fontFamily: "'Jost', sans-serif", fontWeight: 300, color: 'rgba(232,220,200,0.5)', marginBottom: 28, letterSpacing: '0.04em' }}>
+            Available today on bravebybruno.com
+          </p>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {features.map((item) => (
+              <li key={item} style={{ display: 'flex', gap: 12, alignItems: 'flex-start', textAlign: 'left', fontSize: 15, fontFamily: "'Jost', sans-serif", fontWeight: 300, color: 'rgba(232,220,200,0.75)', lineHeight: 1.7 }}>
+                <span aria-hidden="true" style={{ color: '#c9a96e', fontSize: 13, lineHeight: '1.9' }}>✦</span>
+                <span>{item}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section style={{ marginTop: 64, width: '100%', maxWidth: 560 }}>
+          <h2 style={{ fontSize: 'clamp(22px, 4vw, 32px)', fontWeight: 300, marginBottom: 18, lineHeight: 1.2 }}>About</h2>
+          <p style={{ fontSize: 15, fontFamily: "'Jost', sans-serif", fontWeight: 300, color: 'rgba(232,220,200,0.65)', lineHeight: 1.8 }}>
+            Brave by Bruno is a London-based software company founded by Bruno Aversa, building AI-first tools for independent professionals. The Concierge is our first product: subscription software that gives every independent professional an AI front desk of their own.
+          </p>
+          <p style={{ marginTop: 20, fontSize: 15, fontFamily: "'Jost', sans-serif", fontWeight: 300, color: 'rgba(232,220,200,0.65)', lineHeight: 1.8 }}>
+            Contact:{' '}
+            <a href="mailto:bruno@bravebybruno.com" style={{ color: '#c9a96e', textDecoration: 'none', borderBottom: '1px solid rgba(201,169,110,0.35)' }}>
+              bruno@bravebybruno.com
+            </a>
+          </p>
+        </section>
       </div>
-      <p className="landing-footer" style={{ position: 'relative', marginTop: 60, fontSize: 10, fontFamily: "'Jost', sans-serif", color: 'rgba(201,169,110,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-        The Concierge · Brave by Bruno · London
-      </p>
+
+      <footer style={{ position: 'relative', marginTop: 72, paddingTop: 28, borderTop: '1px solid rgba(201,169,110,0.15)', width: '100%', maxWidth: 640, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
+        <div style={{ display: 'flex', gap: 22, flexWrap: 'wrap', justifyContent: 'center', fontFamily: "'Jost', sans-serif", fontSize: 12, letterSpacing: '0.04em' }}>
+          <a href="mailto:bruno@bravebybruno.com" style={{ color: 'rgba(201,169,110,0.75)', textDecoration: 'none' }}>bruno@bravebybruno.com</a>
+          <a href="/privacy" style={{ color: 'rgba(201,169,110,0.75)', textDecoration: 'none' }}>Privacy &amp; Terms</a>
+          <a href="/theconcierge" style={{ color: 'rgba(201,169,110,0.75)', textDecoration: 'none' }}>The Concierge</a>
+        </div>
+        <p className="landing-footer" style={{ fontSize: 10, fontFamily: "'Jost', sans-serif", color: 'rgba(201,169,110,0.3)', letterSpacing: '0.1em', textTransform: 'uppercase', margin: 0 }}>
+          © 2026 Brave by Bruno · London, United Kingdom
+        </p>
+      </footer>
     </div>
   );
 }
