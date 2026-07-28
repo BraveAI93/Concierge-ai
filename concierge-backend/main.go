@@ -457,14 +457,48 @@ func handleSaveProfile(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "ok", "slug": p.Slug})
 }
 
+// publicProfile is the allowlisted public view of a db.Profile. /profile/:slug is
+// unauthenticated, and db.Profile carries credentials (password hash/salt),
+// connected-account secrets (Google refresh token, Stripe account) and internal
+// metadata — none of which may ever reach a public response. Fields are added
+// here only when a public page genuinely needs them.
+type publicProfile struct {
+	Slug         string `json:"slug"`
+	Name         string `json:"name"`
+	Business     string `json:"business"`
+	Profession   string `json:"profession"`
+	Location     string `json:"location"`
+	SystemPrompt string `json:"system_prompt"`
+	ProfileData  string `json:"profile_data"`
+	Accent       string `json:"accent"`
+	Active       bool   `json:"active"`
+}
+
+func newPublicProfile(p db.Profile) publicProfile {
+	return publicProfile{
+		Slug:         p.Slug,
+		Name:         p.Name,
+		Business:     p.Business,
+		Profession:   p.Profession,
+		Location:     p.Location,
+		SystemPrompt: p.SystemPrompt,
+		ProfileData:  p.ProfileData,
+		Accent:       p.Accent,
+		Active:       p.Active,
+	}
+}
+
+// Indirection so the public profile route can be tested without a live Supabase backend.
+var publicGetProfile = db.GetProfile
+
 func handleGetProfile(c *gin.Context) {
 	slug := c.Param("slug")
-	p, err := db.GetProfile(slug)
+	p, err := publicGetProfile(slug)
 	if err != nil {
 		c.JSON(404, gin.H{"error": "Profile not found"})
 		return
 	}
-	c.JSON(200, p)
+	c.JSON(200, newPublicProfile(*p))
 }
 
 func handleCheckSlug(c *gin.Context) {
