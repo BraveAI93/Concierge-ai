@@ -858,20 +858,84 @@ func authenticateToken(c *gin.Context) (string, bool) {
 	return slug, true
 }
 
+// The owner endpoints below return allowlisted views of db.Profile rather than
+// blanking individual fields. Blanking is a denylist: it fails open, so every
+// field added to db.Profile in future would be published automatically. These
+// responses are authenticated and scoped to the caller's own account, but they
+// still land in browser-reachable JSON, so credentials, OAuth tokens, payment
+// identifiers and internal metadata are excluded entirely.
+
+// ownerProfileDetail is the allowlisted view returned by GET /owner/profile.
+// email and digest_frequency are included because the dashboard genuinely
+// renders them (Account section, and the digest-frequency selector).
+type ownerProfileDetail struct {
+	Slug            string `json:"slug"`
+	Name            string `json:"name"`
+	Business        string `json:"business"`
+	Profession      string `json:"profession"`
+	Location        string `json:"location"`
+	SystemPrompt    string `json:"system_prompt"`
+	ProfileData     string `json:"profile_data"`
+	Accent          string `json:"accent"`
+	Active          bool   `json:"active"`
+	Email           string `json:"email"`
+	DigestFrequency string `json:"digest_frequency"`
+}
+
+func newOwnerProfileDetail(p db.Profile) ownerProfileDetail {
+	return ownerProfileDetail{
+		Slug:            p.Slug,
+		Name:            p.Name,
+		Business:        p.Business,
+		Profession:      p.Profession,
+		Location:        p.Location,
+		SystemPrompt:    p.SystemPrompt,
+		ProfileData:     p.ProfileData,
+		Accent:          p.Accent,
+		Active:          p.Active,
+		Email:           p.Email,
+		DigestFrequency: p.DigestFrequency,
+	}
+}
+
+// ownerProfileSummary is the allowlisted per-profile view returned by
+// GET /owner/profiles, which only backs the dashboard's profile switcher.
+type ownerProfileSummary struct {
+	Slug       string `json:"slug"`
+	Name       string `json:"name"`
+	Business   string `json:"business"`
+	Profession string `json:"profession"`
+}
+
+func newOwnerProfileSummary(p db.Profile) ownerProfileSummary {
+	return ownerProfileSummary{
+		Slug:       p.Slug,
+		Name:       p.Name,
+		Business:   p.Business,
+		Profession: p.Profession,
+	}
+}
+
+// Indirection so the two owner profile read endpoints can be tested without a
+// live Supabase backend. authenticateToken itself is unchanged.
+var (
+	ownerAuth               = authenticateToken
+	ownerGetProfile         = db.GetProfile
+	ownerGetProfilesByEmail = db.GetProfilesByEmail
+)
+
 func handleGetOwnerProfile(c *gin.Context) {
-	slug, ok := authenticateToken(c)
+	slug, ok := ownerAuth(c)
 	if !ok {
 		c.JSON(401, gin.H{"error": "Unauthorized"})
 		return
 	}
-	p, err := db.GetProfile(slug)
+	p, err := ownerGetProfile(slug)
 	if err != nil {
 		c.JSON(404, gin.H{"error": "Profile not found"})
 		return
 	}
-	p.PasswordHash = ""
-	p.PasswordSalt = ""
-	c.JSON(200, p)
+	c.JSON(200, newOwnerProfileDetail(*p))
 }
 
 func handleUpdateOwnerProfile(c *gin.Context) {
@@ -1253,26 +1317,26 @@ func handleSaveBookingPrefs(c *gin.Context) {
 // ─── MULTI-PROFILE ─────────────────────────────────
 
 func handleGetOwnerProfiles(c *gin.Context) {
-	slug, ok := authenticateToken(c)
+	slug, ok := ownerAuth(c)
 	if !ok {
 		c.JSON(401, gin.H{"error": "Unauthorized"})
 		return
 	}
-	owner, err := db.GetProfile(slug)
+	owner, err := ownerGetProfile(slug)
 	if err != nil || owner.Email == "" {
 		c.JSON(200, gin.H{"profiles": []interface{}{}})
 		return
 	}
-	profiles, err := db.GetProfilesByEmail(owner.Email)
+	profiles, err := ownerGetProfilesByEmail(owner.Email)
 	if err != nil {
 		c.JSON(200, gin.H{"profiles": []interface{}{}})
 		return
 	}
-	for i := range profiles {
-		profiles[i].PasswordHash = ""
-		profiles[i].PasswordSalt = ""
+	summaries := make([]ownerProfileSummary, 0, len(profiles))
+	for _, p := range profiles {
+		summaries = append(summaries, newOwnerProfileSummary(p))
 	}
-	c.JSON(200, gin.H{"profiles": profiles})
+	c.JSON(200, gin.H{"profiles": summaries})
 }
 
 func handleAddOwnerProfile(c *gin.Context) {
