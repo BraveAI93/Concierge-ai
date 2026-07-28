@@ -594,6 +594,13 @@ func generateToken() string {
 	return uuid.New().String() + uuid.New().String()
 }
 
+// Indirection so signup can be tested without a live Supabase backend.
+var (
+	signupGetProfile    = db.GetProfile
+	signupUpdateProfile = db.UpdateProfile
+	signupSaveSession   = db.SaveSession
+)
+
 func handleSignup(c *gin.Context) {
 	var req struct {
 		Slug     string `json:"slug"`
@@ -608,9 +615,15 @@ func handleSignup(c *gin.Context) {
 		c.JSON(400, gin.H{"error": "Slug, email and password (6+ chars) required"})
 		return
 	}
-	p, err := db.GetProfile(req.Slug)
+	p, err := signupGetProfile(req.Slug)
 	if err != nil {
 		c.JSON(404, gin.H{"error": "Profile not found — complete onboarding first"})
+		return
+	}
+	// Credentials already registered: never overwrite them from an unauthenticated
+	// signup request. Reject before touching email, hash or salt.
+	if strings.TrimSpace(p.PasswordHash) != "" {
+		c.JSON(409, gin.H{"error": "Account already exists — please log in"})
 		return
 	}
 	salt := uuid.New().String()
@@ -618,12 +631,12 @@ func handleSignup(c *gin.Context) {
 	p.Email = req.Email
 	p.PasswordHash = hashed
 	p.PasswordSalt = salt
-	if err := db.UpdateProfile(*p); err != nil {
+	if err := signupUpdateProfile(*p); err != nil {
 		c.JSON(500, gin.H{"error": "Could not save account", "detail": err.Error()})
 		return
 	}
 	token := generateToken()
-	if err := db.SaveSession(db.Session{Token: token, Slug: p.Slug, CreatedAt: time.Now()}); err != nil {
+	if err := signupSaveSession(db.Session{Token: token, Slug: p.Slug, CreatedAt: time.Now()}); err != nil {
 		c.JSON(500, gin.H{"error": "Could not create session"})
 		return
 	}
