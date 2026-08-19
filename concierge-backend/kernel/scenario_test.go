@@ -300,14 +300,14 @@ func TestPendingIntentOnlyAllowsDeclaredStateTransitions(t *testing.T) {
 
 func TestFourDimensionalTimeAndTemporalUtility(t *testing.T) {
 	now := time.Date(2026, time.August, 19, 9, 0, 0, 0, time.UTC)
-	invalid := TemporalState{
-		EventAt:     now,
-		RecordedAt:  now.Add(-time.Minute),
+	futureEventRecordedNow := TemporalState{
+		EventAt:     now.Add(24 * time.Hour),
+		RecordedAt:  now,
 		EffectiveAt: now,
 		AttentionAt: now,
 	}
-	if err := invalid.Validate(); !errors.Is(err, ErrInvalidTemporalState) {
-		t.Fatalf("expected recorded-before-event rejection, got %v", err)
+	if err := futureEventRecordedNow.Validate(); err != nil {
+		t.Fatalf("future event recorded before its semantic event time must be valid, got %v", err)
 	}
 
 	expiredAt := now.Add(-time.Minute)

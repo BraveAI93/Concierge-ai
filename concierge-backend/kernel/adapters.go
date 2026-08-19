@@ -52,14 +52,23 @@ type LearningRepository interface {
 	SaveSelfAudit(ctx stdcontext.Context, audit SelfAudit) error
 }
 
+// AttentionRepository is a future persistence port for finite attention
+// budgets, their transparent selection/deferral records, and claim lineage.
+type AttentionRepository interface {
+	SaveAttentionBudget(ctx stdcontext.Context, budget AttentionBudget) error
+	SaveAttentionAllocation(ctx stdcontext.Context, allocation AttentionAllocation) error
+	SaveClaimLineage(ctx stdcontext.Context, lineage ClaimLineage) error
+}
+
 // KernelRepository groups storage ports for a composition root. This package
-// supplies no concrete implementation in v0.1.
+// supplies no concrete implementation in v0.2.
 type KernelRepository interface {
 	PersonalWorldRepository
 	KnowledgeRepository
 	IntentionRepository
 	DeliberationRepository
 	LearningRepository
+	AttentionRepository
 }
 
 // LegacyEventInput is intentionally minimal. Existing application records must

@@ -137,6 +137,8 @@ type Claim struct {
 	EvidenceIDs  []string
 	Confidence   ConfidenceAssessment
 	Temporal     TemporalState
+	Freshness    FreshnessState
+	Lineage      ClaimLineage
 	SupersedesID string
 	CreatedAt    time.Time
 }
@@ -159,6 +161,7 @@ type Evidence struct {
 	Summary    string
 	Quality    float64
 	Relevance  float64
+	Authority  float64
 	Provenance Provenance
 	Temporal   TemporalState
 	CreatedAt  time.Time
@@ -185,14 +188,15 @@ const (
 )
 
 type Goal struct {
-	ID          string
-	PersonID    string
-	Title       string
-	Description string
-	Importance  float64
-	Status      GoalStatus
-	Temporal    TemporalState
-	CreatedAt   time.Time
+	ID                   string
+	PersonID             string
+	Title                string
+	Description          string
+	Importance           float64 // v0.1 compatibility field; policy must not infer objective stakes from it.
+	SubjectiveImportance float64
+	Status               GoalStatus
+	Temporal             TemporalState
+	CreatedAt            time.Time
 }
 
 // Constraint may prevent action altogether (hard) or reduce its utility (soft).
@@ -257,6 +261,10 @@ type OpenLoop struct {
 	PendingIntentID string
 	Label           string
 	Attention       TemporalState
+	InteractionGap  InteractionGapState
+	AttentionNeed   EffortAttention
+	ContextIDs      []string
+	EntityIDs       []string
 	ResolvedAt      *time.Time
 	CreatedAt       time.Time
 }
@@ -282,12 +290,15 @@ type Opportunity struct {
 	ConstraintIDs      []string
 	EvidenceIDs        []string
 	Temporal           TemporalState
-	GoalAlignment      float64
-	ExpectedValue      float64
-	Effort             float64
-	Risk               float64
-	EvidenceConfidence float64
-	TemporalPriority   float64
+	Priority           PriorityFactors
+	ActionWindow       ActionWindow
+	AttentionNeed      EffortAttention
+	GoalAlignment      float64 // v0.1 compatibility field; v0.2 policy uses Priority factors.
+	ExpectedValue      float64 // v0.1 compatibility field; not an objective-stakes substitute.
+	Effort             float64 // v0.1 compatibility field; not an attention-duration substitute.
+	Risk               float64 // v0.1 compatibility field; not a reversibility substitute.
+	EvidenceConfidence float64 // v0.1 compatibility field; v0.2 uses explicit uncertainty.
+	TemporalPriority   float64 // v0.1 compatibility field; policy may use deadline feasibility instead.
 	Evaluation         OpportunityEvaluation
 	CreatedAt          time.Time
 }
@@ -295,7 +306,9 @@ type Opportunity struct {
 type OpportunityEvaluation struct {
 	Utility       float64
 	HardBlocked   bool
-	SoftPenalty   float64
+	SoftPenalty   float64 // v0.1 compatibility output; v0.2 policy owns any penalty.
+	Deadline      DeadlineFeasibility
+	Mismatch      PriorityMismatch
 	DecisionBasis string
 	EvaluatedAt   time.Time
 }
@@ -307,6 +320,7 @@ const (
 	DecisionRecommend DecisionKind = "recommend"
 	DecisionDefer     DecisionKind = "defer"
 	DecisionDecline   DecisionKind = "decline"
+	DecisionSurface   DecisionKind = "must_surface"
 )
 
 type Decision struct {
@@ -451,6 +465,7 @@ type TemporalEvaluation struct {
 	Importance      float64
 	DeadlineUrgency float64
 	Recency         float64
+	InteractionGap  time.Duration
 	AttentionDue    float64
 	Utility         float64
 	EvaluatedAt     time.Time
@@ -460,9 +475,8 @@ func (t TemporalState) Validate() error {
 	if t.EventAt.IsZero() || t.RecordedAt.IsZero() || t.EffectiveAt.IsZero() || t.AttentionAt.IsZero() {
 		return ErrInvalidTemporalState
 	}
-	if t.RecordedAt.Before(t.EventAt) {
-		return ErrInvalidTemporalState
-	}
+	// RecordedAt is knowledge/ingestion time, not semantic event time. A future
+	// appointment may therefore be validly recorded before EventAt occurs.
 	if t.ExpiresAt != nil && t.ExpiresAt.Before(t.EffectiveAt) {
 		return ErrInvalidTemporalState
 	}

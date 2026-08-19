@@ -61,7 +61,7 @@
 --   attention_at timestamptz NOT NULL,
 --   expires_at timestamptz,
 --   created_at timestamptz NOT NULL,
---   CHECK (recorded_at >= event_at),
+--   -- Recorded time is knowledge-ingestion time and may precede a future semantic event time.
 --   CHECK (expires_at IS NULL OR expires_at >= effective_at)
 -- );
 
@@ -78,7 +78,7 @@
 --   attention_at timestamptz NOT NULL,
 --   expires_at timestamptz,
 --   created_at timestamptz NOT NULL,
---   CHECK (recorded_at >= event_at),
+--   -- Recorded time is knowledge-ingestion time and may precede a future semantic event time.
 --   CHECK (expires_at IS NULL OR expires_at >= effective_at)
 -- );
 
@@ -95,7 +95,7 @@
 --   expires_at timestamptz,
 --   created_at timestamptz NOT NULL,
 --   updated_at timestamptz NOT NULL,
---   CHECK (recorded_at >= event_at),
+--   -- Recorded time is knowledge-ingestion time and may precede a future semantic event time.
 --   CHECK (expires_at IS NULL OR expires_at >= effective_at)
 -- );
 
@@ -127,7 +127,7 @@
 --   attention_at timestamptz NOT NULL,
 --   expires_at timestamptz,
 --   created_at timestamptz NOT NULL,
---   CHECK (recorded_at >= event_at),
+--   -- Recorded time is knowledge-ingestion time and may precede a future semantic event time.
 --   CHECK (expires_at IS NULL OR expires_at >= effective_at)
 -- );
 
@@ -150,7 +150,7 @@
 --   attention_at timestamptz NOT NULL,
 --   expires_at timestamptz,
 --   created_at timestamptz NOT NULL,
---   CHECK (recorded_at >= event_at),
+--   -- Recorded time is knowledge-ingestion time and may precede a future semantic event time.
 --   CHECK (expires_at IS NULL OR expires_at >= effective_at)
 -- );
 
@@ -167,7 +167,7 @@
 --   attention_at timestamptz NOT NULL,
 --   expires_at timestamptz,
 --   created_at timestamptz NOT NULL,
---   CHECK (recorded_at >= event_at),
+--   -- Recorded time is knowledge-ingestion time and may precede a future semantic event time.
 --   CHECK (expires_at IS NULL OR expires_at >= effective_at)
 -- );
 
@@ -184,7 +184,7 @@
 --   attention_at timestamptz NOT NULL,
 --   expires_at timestamptz,
 --   created_at timestamptz NOT NULL,
---   CHECK (recorded_at >= event_at),
+--   -- Recorded time is knowledge-ingestion time and may precede a future semantic event time.
 --   CHECK (expires_at IS NULL OR expires_at >= effective_at)
 -- );
 
@@ -203,7 +203,7 @@
 --   expires_at timestamptz,
 --   created_at timestamptz NOT NULL,
 --   updated_at timestamptz NOT NULL,
---   CHECK (recorded_at >= event_at),
+--   -- Recorded time is knowledge-ingestion time and may precede a future semantic event time.
 --   CHECK (expires_at IS NULL OR expires_at >= effective_at)
 -- );
 
@@ -230,7 +230,7 @@
 --   expires_at timestamptz,
 --   resolved_at timestamptz,
 --   created_at timestamptz NOT NULL,
---   CHECK (recorded_at >= event_at),
+--   -- Recorded time is knowledge-ingestion time and may precede a future semantic event time.
 --   CHECK (expires_at IS NULL OR expires_at >= effective_at)
 -- );
 
@@ -259,7 +259,7 @@
 --   attention_at timestamptz NOT NULL,
 --   expires_at timestamptz,
 --   created_at timestamptz NOT NULL,
---   CHECK (recorded_at >= event_at),
+--   -- Recorded time is knowledge-ingestion time and may precede a future semantic event time.
 --   CHECK (expires_at IS NULL OR expires_at >= effective_at)
 -- );
 
@@ -285,7 +285,7 @@
 --   attention_at timestamptz NOT NULL,
 --   expires_at timestamptz,
 --   created_at timestamptz NOT NULL,
---   CHECK (recorded_at >= event_at),
+--   -- Recorded time is knowledge-ingestion time and may precede a future semantic event time.
 --   CHECK (expires_at IS NULL OR expires_at >= effective_at)
 -- );
 
@@ -369,3 +369,111 @@
 -- procedures for same-person foreign-reference invariants.
 --
 -- COMMIT;
+
+-- ---------------------------------------------------------------------------
+-- v0.2 SEMANTIC CORRECTION — PROPOSAL ONLY; DO NOT EXECUTE
+--
+-- These statements refine the design above. They remain commented, are not
+-- registered with any migration runner, and have not been applied to Supabase.
+-- The final migration must be separately reviewed for tenancy/RLS, retention,
+-- deletion, privacy, production rollout, and transaction semantics.
+-- ---------------------------------------------------------------------------
+
+-- v0.2 time correction:
+-- `event_at` is semantic event time and `recorded_at` is knowledge-ingestion
+-- time. Never add a `recorded_at >= event_at` check: future appointments may
+-- be known before they occur. Current wall-clock evaluation time is supplied by
+-- application evaluation, not persisted as an event-time replacement.
+
+-- ALTER TABLE ci_kernel.open_loops
+--   ADD COLUMN context_ids jsonb NOT NULL DEFAULT '[]'::jsonb,
+--   ADD COLUMN entity_ids jsonb NOT NULL DEFAULT '[]'::jsonb,
+--   ADD COLUMN last_interaction_at timestamptz,
+--   ADD COLUMN interaction_observed_at timestamptz,
+--   ADD COLUMN estimated_effort_seconds bigint NOT NULL DEFAULT 0 CHECK (estimated_effort_seconds >= 0),
+--   ADD COLUMN estimated_attention_seconds bigint NOT NULL DEFAULT 0 CHECK (estimated_attention_seconds >= 0),
+--   ADD COLUMN interruption_cost numeric(4,3) NOT NULL DEFAULT 0 CHECK (interruption_cost BETWEEN 0 AND 1),
+--   ADD COLUMN context_switch_cost numeric(4,3) NOT NULL DEFAULT 0 CHECK (context_switch_cost BETWEEN 0 AND 1);
+
+-- `last_interaction_at` captures interaction-gap state. It is intentionally
+-- separate from `event_at`; neither should be derived from the other.
+
+-- CREATE TABLE ci_kernel.attention_budgets (
+--   id uuid PRIMARY KEY,
+--   person_id uuid NOT NULL REFERENCES ci_kernel.persons(id),
+--   window_start timestamptz NOT NULL,
+--   window_end timestamptz NOT NULL CHECK (window_end > window_start),
+--   attention_capacity_seconds bigint NOT NULL CHECK (attention_capacity_seconds >= 0),
+--   max_competing_items integer NOT NULL CHECK (max_competing_items > 0),
+--   interruption_cost numeric(4,3) NOT NULL DEFAULT 0 CHECK (interruption_cost BETWEEN 0 AND 1),
+--   current_context_ids jsonb NOT NULL DEFAULT '[]'::jsonb,
+--   current_entity_ids jsonb NOT NULL DEFAULT '[]'::jsonb,
+--   created_at timestamptz NOT NULL,
+--   updated_at timestamptz NOT NULL
+-- );
+
+-- CREATE TABLE ci_kernel.attention_allocations (
+--   id uuid PRIMARY KEY,
+--   attention_budget_id uuid NOT NULL REFERENCES ci_kernel.attention_budgets(id),
+--   open_loop_id uuid NOT NULL REFERENCES ci_kernel.open_loops(id),
+--   selection_state text NOT NULL CHECK (selection_state IN ('surfaced', 'deferred')),
+--   policy_score numeric(4,3),
+--   context_matched boolean NOT NULL DEFAULT false,
+--   attention_reserved_seconds bigint NOT NULL DEFAULT 0 CHECK (attention_reserved_seconds >= 0),
+--   reason text NOT NULL,
+--   evaluated_at timestamptz NOT NULL,
+--   UNIQUE (attention_budget_id, open_loop_id)
+-- );
+
+-- ALTER TABLE ci_kernel.opportunities
+--   ADD COLUMN subjective_importance numeric(4,3) CHECK (subjective_importance BETWEEN 0 AND 1),
+--   ADD COLUMN objective_stakes numeric(4,3) CHECK (objective_stakes BETWEEN 0 AND 1),
+--   ADD COLUMN expected_impact numeric(4,3) CHECK (expected_impact BETWEEN 0 AND 1),
+--   ADD COLUMN reversibility numeric(4,3) CHECK (reversibility BETWEEN 0 AND 1),
+--   ADD COLUMN uncertainty numeric(4,3) CHECK (uncertainty BETWEEN 0 AND 1),
+--   ADD COLUMN opportunity_cost numeric(4,3) CHECK (opportunity_cost BETWEEN 0 AND 1),
+--   ADD COLUMN effort_attention_cost numeric(4,3) CHECK (effort_attention_cost BETWEEN 0 AND 1),
+--   ADD COLUMN latest_safe_action_at timestamptz,
+--   ADD COLUMN estimated_effort_seconds bigint NOT NULL DEFAULT 0 CHECK (estimated_effort_seconds >= 0),
+--   ADD COLUMN estimated_attention_seconds bigint NOT NULL DEFAULT 0 CHECK (estimated_attention_seconds >= 0),
+--   ADD COLUMN priority_mismatch_must_surface boolean NOT NULL DEFAULT false,
+--   ADD COLUMN priority_mismatch_reason text,
+--   ADD COLUMN deadline_feasibility text CHECK (deadline_feasibility IN ('no_deadline', 'feasible', 'infeasible'));
+
+-- The legacy generic expected_value, effort, and risk columns must not be
+-- interpreted as replacements for the independent v0.2 priority factors.
+-- Policy weights, thresholds, penalties, and selection rules are application
+-- configuration, not database constraints or canonical domain columns.
+
+-- ALTER TABLE ci_kernel.claims
+--   ADD COLUMN stale_after_seconds bigint NOT NULL DEFAULT 0 CHECK (stale_after_seconds >= 0),
+--   ADD COLUMN last_validated_at timestamptz,
+--   ADD COLUMN last_revalidated_at timestamptz,
+--   ADD COLUMN freshness_status text NOT NULL DEFAULT 'fresh' CHECK (freshness_status IN ('fresh', 'stale', 'historical', 'superseded')),
+--   ADD COLUMN supersedes_claim_id uuid REFERENCES ci_kernel.claims(id),
+--   ADD COLUMN preserves_history boolean NOT NULL DEFAULT true;
+
+-- ALTER TABLE ci_kernel.evidence
+--   ADD COLUMN authority numeric(4,3) NOT NULL DEFAULT 0 CHECK (authority BETWEEN 0 AND 1);
+
+-- CREATE TABLE ci_kernel.claim_lineage (
+--   claim_id uuid PRIMARY KEY REFERENCES ci_kernel.claims(id),
+--   supersedes_claim_id uuid REFERENCES ci_kernel.claims(id),
+--   evidence_ids jsonb NOT NULL DEFAULT '[]'::jsonb,
+--   preserves_history boolean NOT NULL DEFAULT true,
+--   recorded_at timestamptz NOT NULL
+-- );
+
+-- Claim supersession must be an explicit, transactionally validated operation.
+-- Newness alone is insufficient: policy must evaluate contradictory stance,
+-- authority, relevance, provenance, and temporal validity. Historical claims
+-- and evidence remain retained and retrievable after supersession.
+
+-- Suggested indexes after tenancy/RLS review:
+-- CREATE INDEX attention_budgets_person_window_idx ON ci_kernel.attention_budgets(person_id, window_start, window_end);
+-- CREATE INDEX attention_allocations_budget_state_idx ON ci_kernel.attention_allocations(attention_budget_id, selection_state);
+-- CREATE INDEX open_loops_person_unresolved_idx ON ci_kernel.open_loops(person_id, resolved_at, attention_at);
+-- CREATE INDEX claims_person_freshness_idx ON ci_kernel.claims(person_id, freshness_status, last_validated_at);
+-- CREATE INDEX evidence_claim_authority_idx ON ci_kernel.evidence(claim_id, authority DESC);
+
+-- END v0.2 proposal-only section.

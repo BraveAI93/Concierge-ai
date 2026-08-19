@@ -132,12 +132,13 @@ func EvaluateTemporalUtility(temporal TemporalState, importance float64, at time
 		evaluation.AttentionDue = 1 / (1 + hoursToAttention/24)
 	}
 
-	evaluation.Utility = clampUnit(
-		0.35*evaluation.Importance +
-			0.30*evaluation.DeadlineUrgency +
-			0.20*evaluation.Recency +
-			0.15*evaluation.AttentionDue,
-	)
+	// Retained v0.1 callers use an explicit compatibility policy. Coefficients
+	// are no longer embedded in this canonical primitive.
+	utility, err := LegacyV01Policy().LegacyTemporalEvaluation(evaluation.Importance, evaluation.DeadlineUrgency, evaluation.Recency, evaluation.AttentionDue)
+	if err != nil {
+		return TemporalEvaluation{}, err
+	}
+	evaluation.Utility = utility
 	return evaluation, nil
 }
 
@@ -191,12 +192,12 @@ func hasProvenance(provenance Provenance) bool {
 // EvaluateOpportunity evaluates candidate utility against active goals,
 // person-scoped constraints, confidence, and temporal priority. A matching
 // active hard constraint always blocks the opportunity.
+// EvaluateOpportunity is a v0.1 compatibility wrapper. It explicitly maps
+// legacy generic values into a policy adapter; v0.2 callers must populate the
+// independent PriorityFactors and call EvaluateOpportunityWithPolicy.
 func EvaluateOpportunity(opportunity *Opportunity, goals []Goal, constraints []Constraint, at time.Time) (OpportunityEvaluation, error) {
 	if opportunity == nil || normalizeText(opportunity.ID) == "" || normalizeText(opportunity.PersonID) == "" || at.IsZero() {
 		return OpportunityEvaluation{}, ErrMissingIdentifier
-	}
-	if opportunity.Temporal.Validate() != nil {
-		return OpportunityEvaluation{}, ErrInvalidTemporalState
 	}
 	for _, value := range []float64{
 		opportunity.GoalAlignment,
@@ -210,50 +211,22 @@ func EvaluateOpportunity(opportunity *Opportunity, goals []Goal, constraints []C
 			return OpportunityEvaluation{}, ErrInvalidTemporalState
 		}
 	}
-
-	evaluation := OpportunityEvaluation{EvaluatedAt: at}
-	if !opportunity.Temporal.IsActive(at) {
-		evaluation.DecisionBasis = "opportunity is not currently effective"
-		opportunity.Evaluation = evaluation
-		return evaluation, nil
+	activeImportance, _ := activeGoalImportance(opportunity, goals, at)
+	legacy := *opportunity
+	legacy.Priority = PriorityFactors{
+		SubjectiveImportance: opportunity.GoalAlignment * activeImportance,
+		ObjectiveStakes:      opportunity.ExpectedValue,
+		ExpectedImpact:       opportunity.TemporalPriority,
+		Reversibility:        1 - opportunity.Risk,
+		Uncertainty:          1 - opportunity.EvidenceConfidence,
+		OpportunityCost:      0,
+		EffortAttentionCost:  opportunity.Effort,
 	}
-
-	activeImportance, activeGoalCount := activeGoalImportance(opportunity, goals, at)
-	if activeGoalCount == 0 {
-		evaluation.DecisionBasis = "no referenced active goal"
-		opportunity.Evaluation = evaluation
-		return evaluation, nil
+	legacy.AttentionNeed = EffortAttention{}
+	evaluation, err := EvaluateOpportunityWithPolicy(&legacy, goals, constraints, LegacyV01Policy(), EvaluationMoment{WallClockAt: at})
+	if err != nil {
+		return OpportunityEvaluation{}, err
 	}
-
-	for _, constraint := range constraints {
-		if constraint.PersonID != opportunity.PersonID {
-			return OpportunityEvaluation{}, ErrPersonBoundary
-		}
-		if !contains(opportunity.ConstraintIDs, constraint.ID) || !constraint.Active || !constraint.Temporal.IsActive(at) {
-			continue
-		}
-		if constraint.Kind == ConstraintHard {
-			evaluation.HardBlocked = true
-			evaluation.DecisionBasis = "blocked by hard constraint: " + constraint.Title
-			opportunity.Evaluation = evaluation
-			return evaluation, nil
-		}
-		if constraint.Kind == ConstraintSoft {
-			evaluation.SoftPenalty += 0.10
-		}
-	}
-
-	goalFactor := opportunity.GoalAlignment * activeImportance
-	evaluation.Utility = clampUnit(
-		0.30*goalFactor +
-			0.25*opportunity.ExpectedValue +
-			0.15*opportunity.EvidenceConfidence +
-			0.15*opportunity.TemporalPriority -
-			0.08*opportunity.Effort -
-			0.12*opportunity.Risk -
-			evaluation.SoftPenalty,
-	)
-	evaluation.DecisionBasis = "scored against active goal, evidence, timing, effort, risk, and constraints"
 	opportunity.Evaluation = evaluation
 	return evaluation, nil
 }
@@ -287,29 +260,10 @@ func contains(values []string, target string) bool {
 
 // DecideOpportunity applies fixed v0.1 thresholds to an evaluation. Thresholds
 // are intentionally local and visible until policy configuration is introduced.
+// DecideOpportunity is a v0.1 compatibility wrapper. New callers must inject
+// a policy through DecideOpportunityWithPolicy rather than use fixed cut-offs.
 func DecideOpportunity(opportunity Opportunity, decisionID string, at time.Time) (Decision, error) {
-	if normalizeText(decisionID) == "" || at.IsZero() || normalizeText(opportunity.ID) == "" || normalizeText(opportunity.PersonID) == "" {
-		return Decision{}, ErrMissingIdentifier
-	}
-	decision := Decision{
-		ID:            decisionID,
-		PersonID:      opportunity.PersonID,
-		OpportunityID: opportunity.ID,
-		Utility:       opportunity.Evaluation.Utility,
-		CreatedAt:     at,
-	}
-	switch {
-	case opportunity.Evaluation.HardBlocked || opportunity.Evaluation.Utility < 0.35:
-		decision.Kind = DecisionDecline
-		decision.Reason = opportunity.Evaluation.DecisionBasis
-	case opportunity.Evaluation.Utility < 0.65:
-		decision.Kind = DecisionDefer
-		decision.Reason = opportunity.Evaluation.DecisionBasis
-	default:
-		decision.Kind = DecisionRecommend
-		decision.Reason = opportunity.Evaluation.DecisionBasis
-	}
-	return decision, nil
+	return DecideOpportunityWithPolicy(opportunity, decisionID, LegacyV01Policy(), EvaluationMoment{WallClockAt: at})
 }
 
 // ValidateProposalPermission ensures the permission is person-scoped, active,
