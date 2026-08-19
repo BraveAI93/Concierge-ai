@@ -443,6 +443,7 @@ type SelfAudit struct {
 
 // MemoryEventLink is a reciprocal association with explicit linking semantics.
 type MemoryEventLink struct {
+	PersonID string
 	MemoryID string
 	EventID  string
 	Reason   string

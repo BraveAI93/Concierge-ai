@@ -21,6 +21,7 @@ func LinkMemoryToEvent(memory *Memory, event *Event, reason string, linkedAt tim
 	event.MemoryIDs = appendUnique(event.MemoryIDs, memory.ID)
 	event.ContextIDs = uniqueValues(event.ContextIDs)
 	return MemoryEventLink{
+		PersonID: memory.PersonID,
 		MemoryID: memory.ID,
 		EventID:  event.ID,
 		Reason:   normalizeText(reason),

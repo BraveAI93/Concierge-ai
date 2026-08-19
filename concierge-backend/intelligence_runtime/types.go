@@ -13,16 +13,17 @@ import (
 )
 
 var (
-	ErrRuntimeDisabled        = errors.New("intelligence runtime: feature is disabled")
-	ErrUnknownIdentity        = errors.New("intelligence runtime: authenticated identity is unknown")
-	ErrSourceUnauthorized     = errors.New("intelligence runtime: source profile is not bound to authenticated person")
-	ErrCrossPersonAccess      = errors.New("intelligence runtime: cross-person access denied")
-	ErrUnsupportedSource      = errors.New("intelligence runtime: source does not support canonical ingestion")
-	ErrNoActiveGoal           = errors.New("intelligence runtime: no active goal available for opportunity")
-	ErrNoAttentionBudget      = errors.New("intelligence runtime: no active attention budget")
-	ErrNoPermission           = errors.New("intelligence runtime: no matching action permission")
-	ErrInvalidRuntimeConfig   = errors.New("intelligence runtime: invalid runtime configuration")
-	ErrDuplicateRuntimeRecord = errors.New("intelligence runtime: duplicate runtime record")
+	ErrRuntimeDisabled         = errors.New("intelligence runtime: feature is disabled")
+	ErrUnknownIdentity         = errors.New("intelligence runtime: authenticated identity is unknown")
+	ErrSourceUnauthorized      = errors.New("intelligence runtime: source profile is not bound to authenticated person")
+	ErrCrossPersonAccess       = errors.New("intelligence runtime: cross-person access denied")
+	ErrUnsupportedSource       = errors.New("intelligence runtime: source does not support canonical ingestion")
+	ErrNoActiveGoal            = errors.New("intelligence runtime: no active goal available for opportunity")
+	ErrNoAttentionBudget       = errors.New("intelligence runtime: no active attention budget")
+	ErrNoPermission            = errors.New("intelligence runtime: no matching action permission")
+	ErrInvalidRuntimeConfig    = errors.New("intelligence runtime: invalid runtime configuration")
+	ErrDuplicateRuntimeRecord  = errors.New("intelligence runtime: duplicate runtime record")
+	ErrUnsafePersistenceTarget = errors.New("intelligence runtime: persistence target is not an approved local staging database")
 )
 
 // Feature is the server-side activation boundary. The default constructor is
@@ -45,10 +46,28 @@ type AuthenticatedPrincipal struct {
 // Concierge account subject, an internal source profile ID, and a canonical
 // Person. SourceProfileID is not a public routing slug.
 type PersonBinding struct {
-	StableSubjectID string
-	SourceProfileID string
-	Person          kernel.Person
-	World           kernel.PersonalWorld
+	StableSubjectID         string
+	SourceProfileID         string
+	AllowedSourceProfileIDs []string
+	Person                  kernel.Person
+	World                   kernel.PersonalWorld
+}
+
+// AllowsSourceProfile permits the primary internal profile and explicit linked
+// internal profile IDs. It never treats a public browser slug as an identity.
+func (b PersonBinding) AllowsSourceProfile(sourceProfileID string) bool {
+	if sourceProfileID == "" {
+		return false
+	}
+	if sourceProfileID == b.SourceProfileID {
+		return true
+	}
+	for _, linked := range b.AllowedSourceProfileIDs {
+		if linked == sourceProfileID {
+			return true
+		}
+	}
+	return false
 }
 
 // IdentityResolver is a runtime boundary. A production implementation must
@@ -221,11 +240,13 @@ type TemporalEvaluationPolicy interface {
 
 // RuntimeService is the explicit composition root. It is not an HTTP handler.
 type RuntimeService struct {
-	Feature  Feature
-	Identity IdentityResolver
-	Adapter  ConversationMessageAdapter
-	Repo     RuntimeRepository
-	Clock    kernel.Clock
-	Policy   TemporalEvaluationPolicy
-	Config   RuntimeConfig
+	Feature    Feature
+	Activation RuntimeActivation
+	Consent    DerivedMemoryConsentVerifier
+	Identity   IdentityResolver
+	Adapter    ConversationMessageAdapter
+	Repo       RuntimeRepository
+	Clock      kernel.Clock
+	Policy     TemporalEvaluationPolicy
+	Config     RuntimeConfig
 }

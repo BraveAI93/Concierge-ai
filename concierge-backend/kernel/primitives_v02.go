@@ -283,10 +283,12 @@ func SupersedeClaim(previous *Claim, replacement *Claim, evidence Evidence, poli
 		return ErrSupersessionDenied
 	}
 	previous.Freshness.Status = FreshnessSuperseded
+	previous.Lineage.PersonID = previous.PersonID
 	previous.Lineage.ClaimID = previous.ID
 	previous.Lineage.PreservesHistory = true
 	replacement.SupersedesID = previous.ID
 	replacement.Lineage = ClaimLineage{
+		PersonID:          replacement.PersonID,
 		ClaimID:           replacement.ID,
 		SupersedesClaimID: previous.ID,
 		EvidenceIDs:       appendUnique(replacement.Lineage.EvidenceIDs, evidence.ID),

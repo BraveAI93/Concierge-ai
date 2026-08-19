@@ -38,6 +38,7 @@ func (r *StaticIdentityResolver) Resolve(_ context.Context, principal Authentica
 }
 
 func cloneBinding(binding PersonBinding) PersonBinding {
+	binding.AllowedSourceProfileIDs = append([]string(nil), binding.AllowedSourceProfileIDs...)
 	binding.World.EntityIDs = append([]string(nil), binding.World.EntityIDs...)
 	binding.World.ContextIDs = append([]string(nil), binding.World.ContextIDs...)
 	return binding

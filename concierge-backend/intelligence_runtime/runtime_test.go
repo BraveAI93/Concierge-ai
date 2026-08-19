@@ -185,13 +185,15 @@ func runtimeFixture(t *testing.T, now time.Time) (RuntimeService, *InMemoryRunti
 		t.Fatalf("seed attention budget: %v", err)
 	}
 	service := RuntimeService{
-		Feature:  EnabledFeature(),
-		Identity: resolver,
-		Adapter:  ConservativeConversationAdapter{},
-		Repo:     repo,
-		Clock:    fixedClock{now: now},
-		Policy:   kernel.DefaultV02Policy(),
-		Config:   DefaultRuntimeConfig(),
+		Feature:    EnabledFeature(),
+		Activation: StaticRuntimeActivation{Allowed: true},
+		Consent:    NewStaticConsentVerifier([]PersonBinding{bindingA}),
+		Identity:   resolver,
+		Adapter:    ConservativeConversationAdapter{},
+		Repo:       repo,
+		Clock:      fixedClock{now: now},
+		Policy:     kernel.DefaultV02Policy(),
+		Config:     DefaultRuntimeConfig(),
 	}
 	return service, repo, AuthenticatedPrincipal{StableSubjectID: "owner-subject-a"}
 }

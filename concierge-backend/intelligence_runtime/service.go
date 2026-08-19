@@ -16,6 +16,15 @@ func (s RuntimeService) IngestConversationMessage(ctx context.Context, principal
 	if !s.Feature.Enabled {
 		return RuntimeResult{}, ErrRuntimeDisabled
 	}
+	if s.Activation != nil {
+		enabled, err := s.Activation.Enabled(ctx)
+		if err != nil {
+			return RuntimeResult{}, ErrActivationCheck
+		}
+		if !enabled {
+			return RuntimeResult{}, ErrRuntimeDisabled
+		}
+	}
 	if s.Identity == nil || s.Adapter == nil || s.Repo == nil || s.Clock == nil || s.Policy == nil || s.Config.Validate() != nil {
 		return RuntimeResult{}, ErrInvalidRuntimeConfig
 	}
@@ -25,8 +34,14 @@ func (s RuntimeService) IngestConversationMessage(ctx context.Context, principal
 	}
 	// The conversation's internal profile ID is checked only against the
 	// server-resolved binding. No public caller may nominate a target person.
-	if source.Conversation.ProfileID != binding.SourceProfileID {
+	if !binding.AllowsSourceProfile(source.Conversation.ProfileID) {
 		return RuntimeResult{}, ErrSourceUnauthorized
+	}
+	if s.Consent == nil {
+		return RuntimeResult{}, ErrConsentNotVerified
+	}
+	if err := s.Consent.VerifyConversationDerivedMemory(ctx, binding, source); err != nil {
+		return RuntimeResult{}, err
 	}
 	now := s.Clock.Now().UTC()
 	bundle, err := s.Adapter.Map(binding, source, now)
@@ -228,6 +243,15 @@ func matchingPermission(permissions []kernel.Permission, personID string, reques
 func (s RuntimeService) State(ctx context.Context, principal AuthenticatedPrincipal) (RuntimeState, error) {
 	if !s.Feature.Enabled {
 		return RuntimeState{}, ErrRuntimeDisabled
+	}
+	if s.Activation != nil {
+		enabled, err := s.Activation.Enabled(ctx)
+		if err != nil {
+			return RuntimeState{}, ErrActivationCheck
+		}
+		if !enabled {
+			return RuntimeState{}, ErrRuntimeDisabled
+		}
 	}
 	if s.Identity == nil || s.Repo == nil {
 		return RuntimeState{}, ErrInvalidRuntimeConfig

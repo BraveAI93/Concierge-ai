@@ -191,7 +191,7 @@ func (tx *memoryTransaction) SaveClaim(claim kernel.Claim) error {
 func (tx *memoryTransaction) SaveMemoryEventLink(link kernel.MemoryEventLink) error {
 	memory, memoryOK := tx.state.memories[link.MemoryID]
 	event, eventOK := tx.state.events[link.EventID]
-	if !memoryOK || !eventOK || memory.PersonID != tx.personID || event.PersonID != tx.personID {
+	if link.PersonID != tx.personID || !memoryOK || !eventOK || memory.PersonID != tx.personID || event.PersonID != tx.personID {
 		return ErrCrossPersonAccess
 	}
 	return saveRecord(tx.state.links, link.MemoryID+":"+link.EventID, link)
@@ -508,13 +508,10 @@ func (r *InMemoryRuntimeRepository) SaveEvidence(_ context.Context, evidence ker
 	return r.withAutoTransaction(evidence.PersonID, func(tx *memoryTransaction) error { return tx.SaveEvidence(evidence) })
 }
 func (r *InMemoryRuntimeRepository) SaveMemoryEventLink(_ context.Context, link kernel.MemoryEventLink) error {
-	r.mu.RLock()
-	memory, ok := r.state.memories[link.MemoryID]
-	r.mu.RUnlock()
-	if !ok {
+	if link.PersonID == "" {
 		return ErrCrossPersonAccess
 	}
-	return r.withAutoTransaction(memory.PersonID, func(tx *memoryTransaction) error { return tx.SaveMemoryEventLink(link) })
+	return r.withAutoTransaction(link.PersonID, func(tx *memoryTransaction) error { return tx.SaveMemoryEventLink(link) })
 }
 func (r *InMemoryRuntimeRepository) SaveGoal(_ context.Context, goal kernel.Goal) error {
 	return r.SeedGoal(goal)
@@ -566,13 +563,16 @@ func (r *InMemoryRuntimeRepository) SaveAttentionAllocation(_ context.Context, a
 	return r.withAutoTransaction(allocation.PersonID, func(tx *memoryTransaction) error { return tx.SaveAttentionAllocation(allocation) })
 }
 func (r *InMemoryRuntimeRepository) SaveClaimLineage(_ context.Context, lineage kernel.ClaimLineage) error {
-	r.mu.RLock()
-	claim, ok := r.state.claims[lineage.ClaimID]
-	r.mu.RUnlock()
-	if !ok {
+	if lineage.PersonID == "" {
 		return ErrCrossPersonAccess
 	}
-	return r.withAutoTransaction(claim.PersonID, func(tx *memoryTransaction) error { return saveRecord(tx.state.lineages, lineage.ClaimID, lineage) })
+	return r.withAutoTransaction(lineage.PersonID, func(tx *memoryTransaction) error {
+		claim, ok := tx.state.claims[lineage.ClaimID]
+		if !ok || claim.PersonID != lineage.PersonID {
+			return ErrCrossPersonAccess
+		}
+		return saveRecord(tx.state.lineages, lineage.ClaimID, lineage)
+	})
 }
 
 var _ RuntimeRepository = (*InMemoryRuntimeRepository)(nil)

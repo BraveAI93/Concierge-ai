@@ -258,6 +258,7 @@ func (f FreshnessState) Validate() error {
 }
 
 type ClaimLineage struct {
+	PersonID          string
 	ClaimID           string
 	SupersedesClaimID string
 	EvidenceIDs       []string

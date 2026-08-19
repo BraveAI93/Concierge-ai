@@ -17,7 +17,7 @@ type ConservativeConversationAdapter struct{}
 func (ConservativeConversationAdapter) Map(binding PersonBinding, source ConversationMessage, now time.Time) (IngestionBundle, error) {
 	conversation := source.Conversation
 	message := source.Message
-	if binding.Person.ID == "" || binding.SourceProfileID == "" || conversation.ID == "" || message.ID == "" || message.ConversationID != conversation.ID || conversation.ProfileID != binding.SourceProfileID || message.CreatedAt.IsZero() || now.IsZero() {
+	if binding.Person.ID == "" || binding.SourceProfileID == "" || conversation.ID == "" || message.ID == "" || message.ConversationID != conversation.ID || !binding.AllowsSourceProfile(conversation.ProfileID) || message.CreatedAt.IsZero() || now.IsZero() {
 		return IngestionBundle{}, ErrUnsupportedSource
 	}
 	if !isClientRole(message.Role) || !isSchedulingRequest(message.Content) {
