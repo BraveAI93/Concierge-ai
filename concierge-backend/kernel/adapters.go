@@ -60,6 +60,30 @@ type AttentionRepository interface {
 	SaveClaimLineage(ctx stdcontext.Context, lineage ClaimLineage) error
 }
 
+// ContinuityRepository persists the append-preserving conversational support
+// graph. It must enforce person ownership on every block, thread, state, link,
+// and delta rather than trusting source chat/session identifiers.
+type ContinuityRepository interface {
+	SaveInteractionBlock(ctx stdcontext.Context, block InteractionBlock) error
+	SaveThread(ctx stdcontext.Context, thread Thread) error
+	SaveContinuityLink(ctx stdcontext.Context, link ContinuityLink) error
+	SaveThreadDelta(ctx stdcontext.Context, delta ThreadDelta) error
+	SaveCurrentThreadState(ctx stdcontext.Context, state CurrentThreadState) error
+}
+
+// AttunementRepository persists only abstract/derived local attunement records.
+// It has no raw-audio or external-account capture contract.
+type AttunementRepository interface {
+	SaveObservedInteractionSignal(ctx stdcontext.Context, signal ObservedInteractionSignal) error
+	SavePersonalInteractionBaseline(ctx stdcontext.Context, baseline PersonalInteractionBaseline) error
+	SaveInferredInteractionState(ctx stdcontext.Context, state InferredInteractionState) error
+	SaveInteractionAdaptationDecision(ctx stdcontext.Context, decision InteractionAdaptationDecision) error
+	SaveAttunementEpisode(ctx stdcontext.Context, episode AttunementEpisode) error
+	SaveInteractionIntervention(ctx stdcontext.Context, intervention InteractionIntervention) error
+	SaveInteractionOutcome(ctx stdcontext.Context, outcome InteractionOutcome) error
+	SavePersonalAttunementPattern(ctx stdcontext.Context, pattern PersonalAttunementPattern) error
+}
+
 // KernelRepository groups storage ports for a composition root. This package
 // supplies no concrete implementation in v0.2.
 type KernelRepository interface {
@@ -69,6 +93,8 @@ type KernelRepository interface {
 	DeliberationRepository
 	LearningRepository
 	AttentionRepository
+	ContinuityRepository
+	AttunementRepository
 }
 
 // LegacyEventInput is intentionally minimal. Existing application records must

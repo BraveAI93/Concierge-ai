@@ -282,7 +282,7 @@ func postgresRuntimeFixture(t *testing.T, now time.Time) (RuntimeService, *Postg
 	if err := repo.SeedAttentionBudget(context.Background(), budget); err != nil {
 		t.Fatalf("seed attention budget: %v", err)
 	}
-	service := RuntimeService{Feature: EnabledFeature(), Activation: StaticRuntimeActivation{Allowed: true}, Consent: NewStaticConsentVerifier([]PersonBinding{binding}), Identity: PostgresIdentityResolver{Repository: repo}, Adapter: ConservativeConversationAdapter{}, Repo: repo, Clock: fixedClock{now: now}, Policy: kernel.DefaultV02Policy(), Config: DefaultRuntimeConfig()}
+	service := RuntimeService{Feature: EnabledFeature(), Activation: StaticRuntimeActivation{Allowed: true}, Consent: NewStaticConsentVerifier([]PersonBinding{binding}), Identity: PostgresIdentityResolver{Repository: repo}, Adapter: ConservativeConversationAdapter{}, Repo: repo, Clock: fixedClock{now: now}, Policy: kernel.DefaultV02Policy(), Config: DefaultRuntimeConfig(), BoundaryPolicy: kernel.DeterministicBoundaryPolicy{Config: kernel.BoundaryPolicyConfig{MinimumGap: 30 * time.Minute, MinimumConfidence: 0.7}}, ThreadResolver: kernel.DeterministicThreadResolver{Policy: kernel.ThreadResolverPolicy{SelectionThreshold: 0.5, AmbiguityMargin: 0.15}}, RetrievalDepthPolicy: kernel.DeterministicRetrievalDepthPolicy{KeyContinuityThreshold: 0.6, ReconstructionThreshold: 0.8, DeepAuditThreshold: 0.9}, AttunementPolicy: kernel.DeterministicAttunementSafetyPolicy{DefaultMaxChoices: 3}}
 	t.Cleanup(func() { repo.Close() })
 	return service, repo, AuthenticatedPrincipal{StableSubjectID: "owner-subject-a"}
 }

@@ -573,6 +573,18 @@ func readPostgresState(ctx context.Context, tx *sql.Tx, personID string) (Runtim
 	if err := rows.Err(); err != nil {
 		return RuntimeState{}, err
 	}
+	rows.Close()
+	rows, err = tx.QueryContext(ctx, "SELECT payload FROM ci_kernel_v04.continuity_links WHERE person_id=$1 ORDER BY id", personID)
+	if err != nil { return RuntimeState{}, err }
+	for rows.Next() {
+		var payload []byte
+		if err := rows.Scan(&payload); err != nil { return RuntimeState{}, err }
+		var link kernel.ContinuityLink
+		if err := decodePayload(payload, &link); err != nil { return RuntimeState{}, err }
+		state.ContinuityLinks = append(state.ContinuityLinks, link)
+	}
+	if err := rows.Err(); err != nil { return RuntimeState{}, err }
+	rows.Close()
 	rows, err = tx.QueryContext(ctx, "SELECT payload FROM ci_kernel_v04.runtime_sources WHERE person_id=$1 ORDER BY id", personID)
 	if err != nil {
 		return RuntimeState{}, err
@@ -721,10 +733,56 @@ func appendRecord(state *RuntimeState, kind string, payload []byte) error {
 		state.Outcomes = append(state.Outcomes, value)
 	case "self_audit":
 		var value kernel.SelfAudit
-		if err := decodePayload(payload, &value); err != nil {
-			return err
-		}
+		if err := decodePayload(payload, &value); err != nil { return err }
 		state.Audits = append(state.Audits, value)
+	case "interaction_block":
+		var value kernel.InteractionBlock
+		if err := decodePayload(payload, &value); err != nil { return err }
+		state.InteractionBlocks = append(state.InteractionBlocks, value)
+	case "thread":
+		var value kernel.Thread
+		if err := decodePayload(payload, &value); err != nil { return err }
+		state.Threads = append(state.Threads, value)
+	case "thread_delta":
+		var value kernel.ThreadDelta
+		if err := decodePayload(payload, &value); err != nil { return err }
+		state.ThreadDeltas = append(state.ThreadDeltas, value)
+	case "current_thread_state":
+		var value kernel.CurrentThreadState
+		if err := decodePayload(payload, &value); err != nil { return err }
+		state.CurrentThreadStates = append(state.CurrentThreadStates, value)
+	case "observed_interaction_signal":
+		var value kernel.ObservedInteractionSignal
+		if err := decodePayload(payload, &value); err != nil { return err }
+		state.ObservedSignals = append(state.ObservedSignals, value)
+	case "personal_interaction_baseline":
+		var value kernel.PersonalInteractionBaseline
+		if err := decodePayload(payload, &value); err != nil { return err }
+		state.InteractionBaselines = append(state.InteractionBaselines, value)
+	case "inferred_interaction_state":
+		var value kernel.InferredInteractionState
+		if err := decodePayload(payload, &value); err != nil { return err }
+		state.InferredInteractionStates = append(state.InferredInteractionStates, value)
+	case "interaction_adaptation_decision":
+		var value kernel.InteractionAdaptationDecision
+		if err := decodePayload(payload, &value); err != nil { return err }
+		state.AdaptationDecisions = append(state.AdaptationDecisions, value)
+	case "attunement_episode":
+		var value kernel.AttunementEpisode
+		if err := decodePayload(payload, &value); err != nil { return err }
+		state.AttunementEpisodes = append(state.AttunementEpisodes, value)
+	case "interaction_intervention":
+		var value kernel.InteractionIntervention
+		if err := decodePayload(payload, &value); err != nil { return err }
+		state.InteractionInterventions = append(state.InteractionInterventions, value)
+	case "interaction_outcome":
+		var value kernel.InteractionOutcome
+		if err := decodePayload(payload, &value); err != nil { return err }
+		state.InteractionOutcomes = append(state.InteractionOutcomes, value)
+	case "personal_attunement_pattern":
+		var value kernel.PersonalAttunementPattern
+		if err := decodePayload(payload, &value); err != nil { return err }
+		state.AttunementPatterns = append(state.AttunementPatterns, value)
 	}
 	return nil
 }

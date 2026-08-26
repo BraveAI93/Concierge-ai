@@ -148,6 +148,50 @@ CREATE TABLE ci_kernel_v04.runtime_replays (
 );
 CREATE INDEX runtime_replays_person_idx ON ci_kernel_v04.runtime_replays(person_id, idempotency_key);
 
+-- v0.5 persists material continuity graph edges relationally rather than hiding
+-- critical person-scoped targets solely inside JSONB payloads. Canonical blocks,
+-- threads, states, and attunement records remain append-only record payloads.
+CREATE TABLE ci_kernel_v04.continuity_links (
+  person_id text NOT NULL REFERENCES ci_kernel_v04.people(id) ON DELETE RESTRICT,
+  id text NOT NULL,
+  source_kind text NOT NULL,
+  source_id text NOT NULL,
+  target_kind text NOT NULL,
+  target_id text NOT NULL,
+  relation text NOT NULL,
+  payload jsonb NOT NULL,
+  created_at timestamptz NOT NULL,
+  PRIMARY KEY (person_id, id),
+  FOREIGN KEY (source_kind, person_id, source_id)
+    REFERENCES ci_kernel_v04.records(record_kind, person_id, id) DEFERRABLE INITIALLY IMMEDIATE,
+  FOREIGN KEY (target_kind, person_id, target_id)
+    REFERENCES ci_kernel_v04.records(record_kind, person_id, id) DEFERRABLE INITIALLY IMMEDIATE
+);
+CREATE INDEX continuity_links_person_target_idx
+  ON ci_kernel_v04.continuity_links(person_id, target_kind, target_id, created_at);
+
+CREATE TABLE ci_kernel_v04.thread_deltas (
+  person_id text NOT NULL REFERENCES ci_kernel_v04.people(id) ON DELETE RESTRICT,
+  id text NOT NULL,
+  delta_kind text NOT NULL DEFAULT 'thread_delta' CHECK (delta_kind = 'thread_delta'),
+  target_thread_kind text NOT NULL DEFAULT 'thread' CHECK (target_thread_kind = 'thread'),
+  target_thread_id text NOT NULL,
+  origin_kind text NOT NULL,
+  origin_id text NOT NULL,
+  payload jsonb NOT NULL,
+  event_at timestamptz NOT NULL,
+  evaluated_at timestamptz NOT NULL,
+  PRIMARY KEY (person_id, id),
+  FOREIGN KEY (target_thread_kind, person_id, target_thread_id)
+    REFERENCES ci_kernel_v04.records(record_kind, person_id, id) DEFERRABLE INITIALLY IMMEDIATE,
+  FOREIGN KEY (origin_kind, person_id, origin_id)
+    REFERENCES ci_kernel_v04.records(record_kind, person_id, id) DEFERRABLE INITIALLY IMMEDIATE,
+  FOREIGN KEY (delta_kind, person_id, id)
+    REFERENCES ci_kernel_v04.records(record_kind, person_id, id) DEFERRABLE INITIALLY IMMEDIATE
+);
+CREATE INDEX thread_deltas_person_thread_event_idx
+  ON ci_kernel_v04.thread_deltas(person_id, target_thread_id, event_at, id);
+
 -- RLS is enabled and forced on every actual kernel table. There are no anon,
 -- PUBLIC, or broad authenticated policies. The runtime role only has policies
 -- needed for normal person-scoped reads/inserts (and World compatibility
@@ -161,6 +205,8 @@ ALTER TABLE ci_kernel_v04.records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ci_kernel_v04.memory_event_links ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ci_kernel_v04.attention_allocations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ci_kernel_v04.runtime_replays ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ci_kernel_v04.continuity_links ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ci_kernel_v04.thread_deltas ENABLE ROW LEVEL SECURITY;
 ALTER TABLE ci_kernel_v04.people FORCE ROW LEVEL SECURITY;
 ALTER TABLE ci_kernel_v04.worlds FORCE ROW LEVEL SECURITY;
 ALTER TABLE ci_kernel_v04.person_binding_subjects FORCE ROW LEVEL SECURITY;
@@ -170,11 +216,15 @@ ALTER TABLE ci_kernel_v04.records FORCE ROW LEVEL SECURITY;
 ALTER TABLE ci_kernel_v04.memory_event_links FORCE ROW LEVEL SECURITY;
 ALTER TABLE ci_kernel_v04.attention_allocations FORCE ROW LEVEL SECURITY;
 ALTER TABLE ci_kernel_v04.runtime_replays FORCE ROW LEVEL SECURITY;
+ALTER TABLE ci_kernel_v04.continuity_links FORCE ROW LEVEL SECURITY;
+ALTER TABLE ci_kernel_v04.thread_deltas FORCE ROW LEVEL SECURITY;
 
 -- Defense in depth: never leave schema/function execution available to PUBLIC.
 REVOKE ALL ON SCHEMA ci_kernel_v04 FROM PUBLIC;
 REVOKE ALL ON ALL TABLES IN SCHEMA ci_kernel_v04 FROM PUBLIC;
 REVOKE ALL ON ALL FUNCTIONS IN SCHEMA ci_kernel_v04 FROM PUBLIC;
+-- Future local schema functions must not silently inherit PUBLIC EXECUTE.
+ALTER DEFAULT PRIVILEGES IN SCHEMA ci_kernel_v04 REVOKE EXECUTE ON FUNCTIONS FROM PUBLIC;
 
 -- Runtime least-privilege grants. It cannot create, update, or delete identity
 -- bindings; it cannot delete any canonical/runtime record.
@@ -185,10 +235,12 @@ GRANT SELECT ON ci_kernel_v04.people, ci_kernel_v04.worlds,
   ci_kernel_v04.person_binding_subjects, ci_kernel_v04.person_profile_links,
   ci_kernel_v04.runtime_sources, ci_kernel_v04.records,
   ci_kernel_v04.memory_event_links, ci_kernel_v04.attention_allocations,
-  ci_kernel_v04.runtime_replays TO ci_kernel_runtime;
+  ci_kernel_v04.runtime_replays, ci_kernel_v04.continuity_links,
+  ci_kernel_v04.thread_deltas TO ci_kernel_runtime;
 GRANT INSERT ON ci_kernel_v04.runtime_sources, ci_kernel_v04.records,
   ci_kernel_v04.memory_event_links, ci_kernel_v04.attention_allocations,
-  ci_kernel_v04.runtime_replays TO ci_kernel_runtime;
+  ci_kernel_v04.runtime_replays, ci_kernel_v04.continuity_links,
+  ci_kernel_v04.thread_deltas TO ci_kernel_runtime;
 GRANT UPDATE ON ci_kernel_v04.worlds TO ci_kernel_runtime;
 
 -- Identity provisioner is the only role that can initially create Person,
@@ -243,6 +295,18 @@ CREATE POLICY replays_runtime_read ON ci_kernel_v04.runtime_replays
   FOR SELECT TO ci_kernel_runtime
   USING (person_id = ci_kernel_v04.current_person_id());
 CREATE POLICY replays_runtime_insert ON ci_kernel_v04.runtime_replays
+  FOR INSERT TO ci_kernel_runtime
+  WITH CHECK (person_id = ci_kernel_v04.current_person_id());
+CREATE POLICY continuity_links_runtime_read ON ci_kernel_v04.continuity_links
+  FOR SELECT TO ci_kernel_runtime
+  USING (person_id = ci_kernel_v04.current_person_id());
+CREATE POLICY continuity_links_runtime_insert ON ci_kernel_v04.continuity_links
+  FOR INSERT TO ci_kernel_runtime
+  WITH CHECK (person_id = ci_kernel_v04.current_person_id());
+CREATE POLICY thread_deltas_runtime_read ON ci_kernel_v04.thread_deltas
+  FOR SELECT TO ci_kernel_runtime
+  USING (person_id = ci_kernel_v04.current_person_id());
+CREATE POLICY thread_deltas_runtime_insert ON ci_kernel_v04.thread_deltas
   FOR INSERT TO ci_kernel_runtime
   WITH CHECK (person_id = ci_kernel_v04.current_person_id());
 

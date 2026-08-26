@@ -13,17 +13,17 @@ import (
 )
 
 var (
-	ErrRuntimeDisabled         = errors.New("intelligence runtime: feature is disabled")
-	ErrUnknownIdentity         = errors.New("intelligence runtime: authenticated identity is unknown")
-	ErrSourceUnauthorized      = errors.New("intelligence runtime: source profile is not bound to authenticated person")
-	ErrCrossPersonAccess       = errors.New("intelligence runtime: cross-person access denied")
-	ErrUnsupportedSource       = errors.New("intelligence runtime: source does not support canonical ingestion")
-	ErrNoActiveGoal            = errors.New("intelligence runtime: no active goal available for opportunity")
-	ErrNoAttentionBudget       = errors.New("intelligence runtime: no active attention budget")
-	ErrNoPermission            = errors.New("intelligence runtime: no matching action permission")
-	ErrInvalidRuntimeConfig    = errors.New("intelligence runtime: invalid runtime configuration")
-	ErrDuplicateRuntimeRecord  = errors.New("intelligence runtime: duplicate runtime record")
-	ErrUnsafePersistenceTarget       = errors.New("intelligence runtime: persistence target is not an approved local staging database")
+	ErrRuntimeDisabled              = errors.New("intelligence runtime: feature is disabled")
+	ErrUnknownIdentity              = errors.New("intelligence runtime: authenticated identity is unknown")
+	ErrSourceUnauthorized           = errors.New("intelligence runtime: source profile is not bound to authenticated person")
+	ErrCrossPersonAccess            = errors.New("intelligence runtime: cross-person access denied")
+	ErrUnsupportedSource            = errors.New("intelligence runtime: source does not support canonical ingestion")
+	ErrNoActiveGoal                 = errors.New("intelligence runtime: no active goal available for opportunity")
+	ErrNoAttentionBudget            = errors.New("intelligence runtime: no active attention budget")
+	ErrNoPermission                 = errors.New("intelligence runtime: no matching action permission")
+	ErrInvalidRuntimeConfig         = errors.New("intelligence runtime: invalid runtime configuration")
+	ErrDuplicateRuntimeRecord       = errors.New("intelligence runtime: duplicate runtime record")
+	ErrUnsafePersistenceTarget      = errors.New("intelligence runtime: persistence target is not an approved local staging database")
 	ErrIdentityProvisioningRequired = errors.New("intelligence runtime: identity provisioning requires the separate provisioner boundary")
 )
 
@@ -160,45 +160,65 @@ func (c RuntimeConfig) Validate() error {
 // RuntimeResult contains durable identifiers from a completed vertical slice
 // and is returned unchanged by a deterministic idempotent replay.
 type RuntimeResult struct {
-	PersonID       string
-	IdempotencyKey string
-	EventID        string
-	EvidenceID     string
-	MemoryID       string
-	ClaimID        string
-	IntentID       string
-	OpenLoopID     string
-	OpportunityID  string
-	DecisionID     string
-	ProposalID     string
-	ActionGateID   string
-	Replayed       bool
+	PersonID            string
+	IdempotencyKey      string
+	EventID             string
+	EvidenceID          string
+	MemoryID            string
+	ClaimID             string
+	IntentID            string
+	OpenLoopID          string
+	OpportunityID       string
+	DecisionID          string
+	ProposalID          string
+	ActionGateID        string
+	InteractionBlockID  string
+	ThreadID            string
+	ThreadStateID       string
+	ContinuityLinkID    string
+	AttunementEpisodeID string
+	InterventionID      string
+	AdaptationID        string
+	Replayed            bool
 }
 
 // RuntimeState is a person-scoped retrieval view. It preserves the complete
 // source-to-action lineage used by the local vertical-slice proof.
 type RuntimeState struct {
-	Person           kernel.Person
-	World            kernel.PersonalWorld
-	Sources          []SourceRecord
-	Events           []kernel.Event
-	Evidence         []kernel.Evidence
-	Memories         []kernel.Memory
-	Claims           []kernel.Claim
-	Goals            []kernel.Goal
-	Constraints      []kernel.Constraint
-	PendingIntents   []kernel.PendingIntent
-	OpenLoops        []kernel.OpenLoop
-	AttentionBudgets []kernel.AttentionBudget
-	Allocations      []kernel.AttentionAllocation
-	Opportunities    []kernel.Opportunity
-	Decisions        []kernel.Decision
-	Permissions      []kernel.Permission
-	ActionProposals  []kernel.ActionProposal
-	ActionGates      []kernel.ActionGate
-	Outcomes         []kernel.Outcome
-	Audits           []kernel.SelfAudit
-	Replays          []RuntimeResult
+	Person                    kernel.Person
+	World                     kernel.PersonalWorld
+	Sources                   []SourceRecord
+	Events                    []kernel.Event
+	Evidence                  []kernel.Evidence
+	Memories                  []kernel.Memory
+	Claims                    []kernel.Claim
+	Goals                     []kernel.Goal
+	Constraints               []kernel.Constraint
+	PendingIntents            []kernel.PendingIntent
+	OpenLoops                 []kernel.OpenLoop
+	AttentionBudgets          []kernel.AttentionBudget
+	Allocations               []kernel.AttentionAllocation
+	Opportunities             []kernel.Opportunity
+	Decisions                 []kernel.Decision
+	Permissions               []kernel.Permission
+	ActionProposals           []kernel.ActionProposal
+	ActionGates               []kernel.ActionGate
+	Outcomes                  []kernel.Outcome
+	Audits                    []kernel.SelfAudit
+	InteractionBlocks         []kernel.InteractionBlock
+	Threads                   []kernel.Thread
+	ContinuityLinks           []kernel.ContinuityLink
+	ThreadDeltas              []kernel.ThreadDelta
+	CurrentThreadStates       []kernel.CurrentThreadState
+	ObservedSignals           []kernel.ObservedInteractionSignal
+	InteractionBaselines      []kernel.PersonalInteractionBaseline
+	InferredInteractionStates []kernel.InferredInteractionState
+	AdaptationDecisions       []kernel.InteractionAdaptationDecision
+	AttunementEpisodes        []kernel.AttunementEpisode
+	InteractionInterventions  []kernel.InteractionIntervention
+	InteractionOutcomes       []kernel.InteractionOutcome
+	AttunementPatterns        []kernel.PersonalAttunementPattern
+	Replays                   []RuntimeResult
 }
 
 // RuntimeRepository defines transactional, person-scoped persistence required
@@ -226,6 +246,24 @@ type RuntimeTransaction interface {
 	SaveActionProposal(proposal kernel.ActionProposal) error
 	SaveActionGate(gate kernel.ActionGate) error
 	SaveAttentionAllocation(allocation kernel.AttentionAllocation) error
+	SaveInteractionBlock(block kernel.InteractionBlock) error
+	SaveThread(thread kernel.Thread) error
+	SaveContinuityLink(link kernel.ContinuityLink) error
+	SaveThreadDelta(delta kernel.ThreadDelta) error
+	SaveCurrentThreadState(state kernel.CurrentThreadState) error
+	SaveObservedInteractionSignal(signal kernel.ObservedInteractionSignal) error
+	SavePersonalInteractionBaseline(baseline kernel.PersonalInteractionBaseline) error
+	SaveInferredInteractionState(state kernel.InferredInteractionState) error
+	SaveInteractionAdaptationDecision(decision kernel.InteractionAdaptationDecision) error
+	SaveAttunementEpisode(episode kernel.AttunementEpisode) error
+	SaveInteractionIntervention(intervention kernel.InteractionIntervention) error
+	SaveInteractionOutcome(outcome kernel.InteractionOutcome) error
+	SavePersonalAttunementPattern(pattern kernel.PersonalAttunementPattern) error
+	ListThreads() []kernel.Thread
+	ListInteractionBlocks(threadID string) []kernel.InteractionBlock
+	ListThreadDeltas(threadID string) []kernel.ThreadDelta
+	ListCurrentThreadStates(threadID string) []kernel.CurrentThreadState
+	ListAttunementPatterns(contextSignature string) []kernel.PersonalAttunementPattern
 	ListActiveGoals(at time.Time) []kernel.Goal
 	ListActivePermissions(at time.Time) []kernel.Permission
 	CurrentAttentionBudget(at time.Time) (kernel.AttentionBudget, bool)
@@ -240,14 +278,48 @@ type TemporalEvaluationPolicy interface {
 }
 
 // RuntimeService is the explicit composition root. It is not an HTTP handler.
+// ContinuityInput is a synthetic/local source-to-continuity request. The
+// supplied source remains provenance; it cannot select a Person or bypass the
+// server-resolved profile binding. No raw audio or external account read occurs.
+type ContinuityInput struct {
+	IdempotencyKey    string
+	Source            ConversationMessage
+	Block             kernel.InteractionBlock
+	Triggers          []kernel.SemanticTrigger
+	ProposedThread    *kernel.Thread
+	Deltas            []kernel.ThreadDelta
+	Signals           []kernel.ObservedInteractionSignal
+	Baseline          *kernel.PersonalInteractionBaseline
+	AttunementControl kernel.AttunementControlMode
+	ContextSignature  string
+}
+
+type ContinuityRuntimeResult struct {
+	PersonID            string
+	IdempotencyKey      string
+	BlockID             string
+	ThreadID            string
+	ThreadStateID       string
+	ContinuityLinkID    string
+	AttunementEpisodeID string
+	InterventionID      string
+	AdaptationID        string
+	Replayed            bool
+}
+
+// RuntimeService is the existing v0.3/v0.4 scheduling slice composition root.
 type RuntimeService struct {
-	Feature    Feature
-	Activation RuntimeActivation
-	Consent    DerivedMemoryConsentVerifier
-	Identity   IdentityResolver
-	Adapter    ConversationMessageAdapter
-	Repo       RuntimeRepository
-	Clock      kernel.Clock
-	Policy     TemporalEvaluationPolicy
-	Config     RuntimeConfig
+	Feature              Feature
+	Activation           RuntimeActivation
+	Consent              DerivedMemoryConsentVerifier
+	Identity             IdentityResolver
+	Adapter              ConversationMessageAdapter
+	Repo                 RuntimeRepository
+	Clock                kernel.Clock
+	Policy               TemporalEvaluationPolicy
+	Config               RuntimeConfig
+	BoundaryPolicy       kernel.InteractionBoundaryPolicy
+	ThreadResolver       kernel.SemanticThreadResolver
+	RetrievalDepthPolicy kernel.RetrievalDepthPolicy
+	AttunementPolicy     kernel.AttunementSafetyPolicy
 }
