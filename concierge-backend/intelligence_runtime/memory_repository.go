@@ -563,14 +563,10 @@ func (r *InMemoryRuntimeRepository) SaveAttentionAllocation(_ context.Context, a
 	return r.withAutoTransaction(allocation.PersonID, func(tx *memoryTransaction) error { return tx.SaveAttentionAllocation(allocation) })
 }
 func (r *InMemoryRuntimeRepository) SaveClaimLineage(_ context.Context, lineage kernel.ClaimLineage) error {
-	if lineage.PersonID == "" {
-		return ErrCrossPersonAccess
-	}
+	if lineage.PersonID == "" { return ErrCrossPersonAccess }
 	return r.withAutoTransaction(lineage.PersonID, func(tx *memoryTransaction) error {
 		claim, ok := tx.state.claims[lineage.ClaimID]
-		if !ok || claim.PersonID != lineage.PersonID {
-			return ErrCrossPersonAccess
-		}
+		if !ok || claim.PersonID != lineage.PersonID { return ErrCrossPersonAccess }
 		return saveRecord(tx.state.lineages, lineage.ClaimID, lineage)
 	})
 }

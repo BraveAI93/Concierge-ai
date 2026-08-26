@@ -1,4 +1,4 @@
-# Central Intelligence Runtime v0.4 — Disposable Staging Migration Package
+# Central Intelligence Runtime v0.4.1 — Disposable Staging Migration Package
 
 > **Target used for validation:** `ci_kernel_v04_test` on a local PostgreSQL 16.14 server bound to the sandbox-only Unix socket `/home/ubuntu/ci-v04-pgsocket` and local port `55432`. This is not Supabase and has no production network endpoint.
 
@@ -6,34 +6,54 @@
 
 | File | Purpose |
 |---|---|
-| `001_staging_up.sql` | Creates the isolated `ci_kernel_v04` schema, runtime role, canonical persistence tables, indexes, same-person composite references, and RLS policies. |
+| `001_staging_up.sql` | Creates the isolated `ci_kernel_v04` schema, separate runtime/provisioner roles, canonical persistence tables, person-scoped keys, forced RLS, and table-specific grants. |
 | `001_staging_down.sql` | Destructive staging-only rollback after backup/export and dependency review. |
-| `README.md` | Target, security, backup/restore, retention, and activation guidance. |
+| `README.md` | Target, identity authority, tenancy, RLS, least-privilege, backup/restore, retention, and activation guidance. |
 
-## Tables aligned to the real v0.4 repository
+## Repository Tables and Tenant-Safe Keys
 
-The repository uses the following schema objects: `people`, `worlds`, `person_binding_subjects`, `person_profile_links`, `runtime_sources`, `records`, `memory_event_links`, `attention_allocations`, and `runtime_replays`.
+The repository uses `people`, `worlds`, `person_binding_subjects`, `person_profile_links`, `runtime_sources`, `records`, `memory_event_links`, `attention_allocations`, and `runtime_replays`. `records` contains complete JSONB payloads for v0.2/v0.3 canonical Event, Evidence, Memory, Claim, Goal, Constraint, PendingIntent, OpenLoop, AttentionBudget, Opportunity, Decision, Permission, ActionProposal, ActionGate, Outcome, SelfAudit, and ClaimLineage values.
 
-`records` contains full JSONB payloads for v0.2/v0.3 canonical Event, Evidence, Memory, Claim, Goal, Constraint, PendingIntent, OpenLoop, AttentionBudget, Opportunity, Decision, Permission, ActionProposal, ActionGate, Outcome, SelfAudit, and ClaimLineage values. The relational person ID, kind, record ID, source key, profile binding, replay key, and composite references preserve tenant isolation and deterministic access patterns while retaining full canonical Go payloads.
+| Table | Identifier boundary in v0.4.1 |
+|---|---|
+| `person_binding_subjects` | `stable_subject` remains globally unique because it is a canonical immutable server identity. |
+| `person_profile_links` | `source_profile_id` remains globally unique because an internal source profile maps to exactly one Person. |
+| `runtime_sources` | Primary key is `(person_id, id)`; unique source message identity is `(person_id, message_id)`. |
+| `records` | Primary key is `(record_kind, person_id, id)`. |
+| `memory_event_links` | Primary key and both foreign references include `person_id`. |
+| `attention_allocations` | Primary key is `(person_id, allocation_id)`. |
+| `runtime_replays` | Primary key is `(person_id, idempotency_key)`. |
 
-## Transaction and integrity model
+A logical source, canonical record, allocation, or replay identifier belonging to one Person therefore does not reserve, reveal, or collide with the same logical identifier in another Person's world.
 
-The repository begins a database transaction for each runtime operation, sets a local canonical-person context, acquires an advisory lock on the idempotency key, checks person-scoped parent references, writes append-preserving records, and commits only when all writes succeed. A unique `runtime_replays.idempotency_key` is the durable replay serialization point. Composite foreign keys tie memory-event links and attention allocation budget references to the same `person_id` in `records`.
+## Identity Authority and Provisioning
 
-Future production hardening should add a reviewed stored procedure or trigger layer for every graph edge represented in JSONB. The v0.4 repository already performs the required checks at the persistence boundary; the schema enforces the most critical relational link edges.
+`ci_kernel_runtime` is the ordinary ingestion/read role. It can resolve an existing stable-subject binding and read linked internal profile IDs, but it has no INSERT, UPDATE, or DELETE grant or RLS policy on `people`, `person_binding_subjects`, or `person_profile_links`.
 
-## RLS and existing security boundaries
+`ci_kernel_identity_provisioner` is the separate high-trust identity-management role. `PostgresIdentityProvisioner` uses this boundary for **initial INSERT-only** creation of Person, PersonalWorld, stable-subject binding, and internal source-profile links. It has no UPDATE or DELETE authority. Consequently, a stable subject cannot be rebound, and an existing profile cannot be attached to a different Person, through normal runtime or provisioner operations. Any future rebinding/deletion workflow must be separately designed, reviewed, audited, and authorized.
 
-RLS is enabled and forced for every `ci_kernel_v04` table. No policy is created for `anon`, `PUBLIC`, or a broad client-facing authenticated role. Only the no-login internal `ci_kernel_runtime` role receives policies, and each policy requires transaction-local person and stable-subject context.
+The local migration executor receives membership to both no-login roles only to exercise the boundary in disposable tests. A real staging or production deployment must use distinct reviewed backend principals and must never grant the provisioner role to ordinary runtime credentials.
 
-The migration does not read, join, or trust the existing `profiles`, `feature_flags`, or `audit_events` tables. Public browser slugs are not identity inputs. Feature activation uses an application-side server activation/kill-switch port rather than the existing insecure feature-flag table.
+## Transaction, Integrity, and Replay Model
 
-## Backup, restore, retention, and deletion
+The runtime starts a transaction, sets canonical person and stable-subject context locally, acquires an advisory lock on the person-scoped idempotency key, checks same-person parent references, writes append-preserving records, and commits only when all writes succeed. The advisory lock serializes duplicate work; replay records need only read/insert authority and do not use `FOR UPDATE`.
 
-Before any staging apply, take a database/schema export and record the target database identity. Test restore separately before considering a controlled activation. Conversation content, evidence provenance, derived memory, and audit data may be personal data; retention, deletion, consent, subject-access, legal-hold, encryption/key management, and backup-restoration rules require approval from the parallel Trust/Data Boundary effort before any non-disposable use.
+Composite foreign keys tie memory-event links and attention allocation budget references to the same `person_id` in `records`. The repository performs corresponding person-bound checks before writes. Future production hardening should add a reviewed stored-procedure or trigger layer for every graph edge represented in JSONB.
+
+## RLS, Functions, and Least Privilege
+
+RLS is enabled and forced for every `ci_kernel_v04` table. There are no policies for `anon`, `PUBLIC`, or any broad client-facing role. Runtime policies are split into the required SELECT, INSERT, and World compatibility UPDATE operations; provisioner policies are INSERT-only for high-trust identity tables.
+
+`PUBLIC` is explicitly revoked from the schema, every table, and every schema function. The runtime receives schema usage, execution of only the two context functions, SELECT on required runtime tables, INSERT on normal runtime-write tables, and UPDATE only on `worlds`. It receives no DELETE privilege. The provisioner receives only schema usage and INSERT on the four initial identity tables.
+
+The migration does not read, join, or trust existing `profiles`, `feature_flags`, or `audit_events` tables. Public browser slugs are not identity inputs. Feature activation remains an application-side server activation/kill-switch port independent of legacy feature flags.
+
+## Backup, Restore, Retention, and Deletion
+
+Before any staging apply, take a database/schema export, record the target database identity, and test restore separately. Conversation content, evidence provenance, derived memory, and audit data may be personal data; retention, deletion, subject-access, legal-hold, encryption/key management, and backup-restoration requirements require the parallel Trust/Data Boundary approval before non-disposable use.
 
 `001_staging_down.sql` drops the complete schema and is only appropriate for disposable staging after the above checks. It is not a production rollback plan.
 
-## Production exclusions
+## Production Exclusions
 
-Do not use this package against production Supabase. The remaining prerequisites are durable server-session-to-stable-subject migration/backfill, reviewed internal role management, production RLS policy validation, privacy/consent policy integration, observability, backup/restore rehearsal, concurrency/load testing, controlled feature ownership, and approved HTTP composition. v0.4 does not activate an HTTP route, UI, action executor, push, merge, or deployment.
+Do not use this package against production Supabase. Remaining prerequisites include durable server-session-to-stable-subject migration/backfill, separate reviewed database principals and secret distribution, production RLS/adversarial validation, P0 consent integration, privacy/retention governance, observability, backup/restore rehearsal, load testing, controlled feature ownership, and approved HTTP composition. v0.4.1 does not activate an HTTP route, UI, action executor, push, merge, or deployment.

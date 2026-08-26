@@ -14,6 +14,12 @@ BEGIN
   REVOKE ci_kernel_runtime FROM CURRENT_USER;
 EXCEPTION WHEN undefined_object THEN NULL;
 END $$;
+DO $$
+BEGIN
+  REVOKE ci_kernel_identity_provisioner FROM CURRENT_USER;
+EXCEPTION WHEN undefined_object THEN NULL;
+END $$;
+DROP ROLE IF EXISTS ci_kernel_identity_provisioner;
 DROP ROLE IF EXISTS ci_kernel_runtime;
 
 COMMIT;

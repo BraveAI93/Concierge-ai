@@ -194,7 +194,7 @@ func TestV04PostgresCrossPersonAndProfileBoundary(t *testing.T) {
 	now := time.Date(2026, time.August, 21, 9, 0, 0, 0, time.UTC)
 	service, repo, principalA := postgresRuntimeFixture(t, now)
 	bindingB := testBinding("owner-subject-b", "profile-internal-b", "person-b", now)
-	if err := repo.SeedBinding(context.Background(), bindingB); err != nil {
+	if err := (PostgresIdentityProvisioner{Repository: repo}).Provision(context.Background(), bindingB); err != nil {
 		t.Fatalf("seed person B: %v", err)
 	}
 	if _, err := repo.ReadState(context.Background(), "person-b", "person-a"); !errors.Is(err, ErrCrossPersonAccess) {
@@ -231,7 +231,7 @@ func TestV04PostgresCrossPersonAndProfileBoundary(t *testing.T) {
 	if err := rlsTx.QueryRow("SELECT count(*) FROM ci_kernel_v04.records WHERE person_id='person-a'").Scan(&visible); err != nil || visible != 0 {
 		t.Fatalf("RLS must hide person A records from person B, visible=%d err=%v", visible, err)
 	}
-	if err := repo.SeedBinding(context.Background(), PersonBinding{StableSubjectID: "owner-subject-linked", SourceProfileID: "profile-primary-linked", AllowedSourceProfileIDs: []string{"profile-linked-alt"}, Person: kernel.Person{ID: "person-linked", DisplayName: "Linked", WorldID: "world-linked", CreatedAt: now}, World: kernel.PersonalWorld{ID: "world-linked", PersonID: "person-linked", UpdatedAt: now}}); err != nil {
+	if err := (PostgresIdentityProvisioner{Repository: repo}).Provision(context.Background(), PersonBinding{StableSubjectID: "owner-subject-linked", SourceProfileID: "profile-primary-linked", AllowedSourceProfileIDs: []string{"profile-linked-alt"}, Person: kernel.Person{ID: "person-linked", DisplayName: "Linked", WorldID: "world-linked", CreatedAt: now}, World: kernel.PersonalWorld{ID: "world-linked", PersonID: "person-linked", UpdatedAt: now}}); err != nil {
 		t.Fatalf("seed linked profile binding: %v", err)
 	}
 	linked, err := (PostgresIdentityResolver{Repository: repo}).Resolve(context.Background(), AuthenticatedPrincipal{StableSubjectID: "owner-subject-linked"})
@@ -267,7 +267,7 @@ func postgresRuntimeFixture(t *testing.T, now time.Time) (RuntimeService, *Postg
 	repo := openPostgresRepository(t)
 	resetPostgresSchema(t, repo)
 	binding := testBinding("owner-subject-a", "profile-internal-a", "person-a", now)
-	if err := repo.SeedBinding(context.Background(), binding); err != nil {
+	if err := (PostgresIdentityProvisioner{Repository: repo}).Provision(context.Background(), binding); err != nil {
 		t.Fatalf("seed binding: %v", err)
 	}
 	goal := kernel.Goal{ID: "goal-relationship", PersonID: "person-a", Title: "Maintain responsive client relationships", SubjectiveImportance: 0.6, Status: kernel.GoalActive, Temporal: testTemporal(now), CreatedAt: now}
@@ -395,5 +395,199 @@ func TestV04PostgresRepositoryRejectsUnsafeTargetBeforeConnecting(t *testing.T) 
 	_, err := OpenPostgresRuntimeRepository(context.Background(), "postgresql://example.invalid/production")
 	if !errors.Is(err, ErrUnsafePersistenceTarget) {
 		t.Fatalf("expected unsafe target rejection before connection, got %v", err)
+	}
+}
+
+func TestV041IdentityBindingsRequireSeparateProvisioner(t *testing.T) {
+	now := time.Date(2026, time.August, 22, 9, 0, 0, 0, time.UTC)
+	service, repo, principalA := postgresRuntimeFixture(t, now)
+	provisioner := PostgresIdentityProvisioner{Repository: repo}
+	bindingB := testBinding("owner-subject-b", "profile-internal-b", "person-b", now)
+	if err := provisioner.Provision(context.Background(), bindingB); err != nil {
+		t.Fatalf("legitimate separately-authorized provisioning of person B: %v", err)
+	}
+	if err := repo.SeedBinding(context.Background(), testBinding("runtime-seed-attempt", "profile-runtime-seed", "person-runtime-seed", now)); !errors.Is(err, ErrIdentityProvisioningRequired) {
+		t.Fatalf("ordinary repository binding seed must fail closed: %v", err)
+	}
+
+	// The runtime role cannot rebind A's subject to B, even when it supplies A's
+	// own subject context. It has neither UPDATE grant nor UPDATE policy.
+	tx, err := repo.begin(context.Background(), "person-a", "owner-subject-a")
+	if err != nil {
+		t.Fatalf("begin runtime rebind attempt: %v", err)
+	}
+	if _, err := tx.Exec("UPDATE ci_kernel_v04.person_binding_subjects SET person_id='person-b' WHERE stable_subject='owner-subject-a'"); err == nil {
+		t.Fatal("runtime role must not rebind stable subject A to person B")
+	}
+	tx.Rollback()
+
+	// The runtime role cannot create a new subject binding or attach B's profile
+	// to A. These are high-trust provisioner-only relations.
+	tx, err = repo.begin(context.Background(), "person-a", "owner-subject-a")
+	if err != nil {
+		t.Fatalf("begin runtime binding insert attempt: %v", err)
+	}
+	if _, err := tx.Exec("INSERT INTO ci_kernel_v04.person_binding_subjects(stable_subject,person_id) VALUES('runtime-injected-subject','person-a')"); err == nil {
+		t.Fatal("runtime role must not create identity bindings")
+	}
+	tx.Rollback()
+	tx, err = repo.begin(context.Background(), "person-a", "owner-subject-a")
+	if err != nil {
+		t.Fatalf("begin runtime profile attach attempt: %v", err)
+	}
+	if _, err := tx.Exec("INSERT INTO ci_kernel_v04.person_profile_links(person_id,source_profile_id,is_primary) VALUES('person-a','profile-internal-b',false)"); err == nil {
+		t.Fatal("runtime role must not attach another person's profile")
+	}
+	tx.Rollback()
+	tx, err = repo.begin(context.Background(), "person-a", "owner-subject-a")
+	if err != nil {
+		t.Fatalf("begin runtime binding delete attempt: %v", err)
+	}
+	if _, err := tx.Exec("DELETE FROM ci_kernel_v04.person_binding_subjects WHERE stable_subject='owner-subject-a'"); err == nil {
+		t.Fatal("runtime role must not delete identity bindings")
+	}
+	tx.Rollback()
+
+	// Provisioning also cannot rebind: a duplicate immutable stable subject rolls
+	// back the attempted new Person rather than changing the existing mapping.
+	bindingC := testBinding("owner-subject-a", "profile-internal-c", "person-c", now)
+	if err := provisioner.Provision(context.Background(), bindingC); !errors.Is(err, ErrDuplicateRuntimeRecord) {
+		t.Fatalf("provisioner must reject stable-subject rebinding: %v", err)
+	}
+	bindingA, err := (PostgresIdentityResolver{Repository: repo}).Resolve(context.Background(), principalA)
+	if err != nil || bindingA.Person.ID != "person-a" {
+		t.Fatalf("subject A must remain bound to person A: binding=%+v err=%v", bindingA, err)
+	}
+	bindingResolvedB, err := (PostgresIdentityResolver{Repository: repo}).Resolve(context.Background(), AuthenticatedPrincipal{StableSubjectID: "owner-subject-b"})
+	if err != nil || bindingResolvedB.Person.ID != "person-b" {
+		t.Fatalf("provisioned subject B must resolve to person B: binding=%+v err=%v", bindingResolvedB, err)
+	}
+
+	var before, after int
+	if err := repo.db.QueryRow("SELECT count(*) FROM ci_kernel_v04.person_binding_subjects").Scan(&before); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.IngestConversationMessage(context.Background(), principalA, schedulingSource(now, "profile-internal-a", "conversation-no-binding-write", "message-no-binding-write")); err != nil {
+		t.Fatalf("ordinary ingestion: %v", err)
+	}
+	if err := repo.db.QueryRow("SELECT count(*) FROM ci_kernel_v04.person_binding_subjects").Scan(&after); err != nil || before != after {
+		t.Fatalf("ordinary ingestion must not create/delete bindings: before=%d after=%d err=%v", before, after, err)
+	}
+}
+
+func TestV041PersonScopedLogicalIdentifiersDoNotCollideAcrossTenants(t *testing.T) {
+	now := time.Date(2026, time.August, 22, 9, 0, 0, 0, time.UTC)
+	_, repo, _ := postgresRuntimeFixture(t, now)
+	provisioner := PostgresIdentityProvisioner{Repository: repo}
+	bindingB := testBinding("owner-subject-b", "profile-internal-b", "person-b", now)
+	if err := provisioner.Provision(context.Background(), bindingB); err != nil {
+		t.Fatalf("provision B: %v", err)
+	}
+
+	sharedSourceA := SourceRecord{ID: "logical-source", PersonID: "person-a", ProfileID: "profile-internal-a", ConversationID: "logical-conversation", MessageID: "logical-message", MessageRole: "user", Content: "Schedule a check-in", MessageAt: now, StoredAt: now}
+	sharedSourceB := sharedSourceA
+	sharedSourceB.PersonID = "person-b"
+	sharedSourceB.ProfileID = "profile-internal-b"
+	sharedEventA := kernel.Event{ID: "logical-event", PersonID: "person-a", Kind: "test", Summary: "A event", Temporal: testTemporal(now), CreatedAt: now}
+	sharedEventB := sharedEventA
+	sharedEventB.PersonID = "person-b"
+	sharedEventB.Summary = "B event"
+	sharedReplayA := RuntimeResult{PersonID: "person-a", IdempotencyKey: "logical-replay"}
+	sharedReplayB := RuntimeResult{PersonID: "person-b", IdempotencyKey: "logical-replay"}
+
+	if err := repo.RunInTransaction(context.Background(), "person-a", func(tx RuntimeTransaction) error {
+		if err := tx.StoreSource(sharedSourceA); err != nil {
+			return err
+		}
+		if err := tx.SaveEvent(sharedEventA); err != nil {
+			return err
+		}
+		return tx.StoreReplay(sharedReplayA)
+	}); err != nil {
+		t.Fatalf("store person A logical IDs: %v", err)
+	}
+	if err := repo.RunInTransaction(context.Background(), "person-b", func(tx RuntimeTransaction) error {
+		if err := tx.StoreSource(sharedSourceB); err != nil {
+			return err
+		}
+		if err := tx.SaveEvent(sharedEventB); err != nil {
+			return err
+		}
+		return tx.StoreReplay(sharedReplayB)
+	}); err != nil {
+		t.Fatalf("same logical IDs must be valid for person B: %v", err)
+	}
+	if err := repo.RunInTransaction(context.Background(), "person-a", func(tx RuntimeTransaction) error { return tx.StoreSource(sharedSourceA) }); !errors.Is(err, ErrDuplicateRuntimeRecord) {
+		t.Fatalf("same-person source duplicate must still reject: %v", err)
+	}
+
+	budgetA := kernel.AttentionBudget{ID: "logical-budget", PersonID: "person-a", WindowStart: now.Add(-time.Hour), WindowEnd: now.Add(time.Hour), AttentionCapacity: time.Minute, MaxCompetingItems: 1}
+	budgetB := budgetA
+	budgetB.PersonID = "person-b"
+	if err := repo.SeedAttentionBudget(context.Background(), budgetA); err != nil {
+		t.Fatalf("seed shared budget A: %v", err)
+	}
+	if err := repo.SeedAttentionBudget(context.Background(), budgetB); err != nil {
+		t.Fatalf("seed shared budget B: %v", err)
+	}
+	for _, personID := range []string{"person-a", "person-b"} {
+		tx, err := repo.begin(context.Background(), personID, "")
+		if err != nil {
+			t.Fatalf("begin allocation insert for %s: %v", personID, err)
+		}
+		if _, err := tx.Exec("INSERT INTO ci_kernel_v04.attention_allocations(person_id,allocation_id,budget_id,payload,evaluated_at) VALUES($1,'logical-allocation','logical-budget','{}'::jsonb,now())", personID); err != nil {
+			tx.Rollback()
+			t.Fatalf("same allocation ID must be valid for %s: %v", personID, err)
+		}
+		if err := tx.Commit(); err != nil {
+			t.Fatalf("commit allocation for %s: %v", personID, err)
+		}
+	}
+	var sourceCount, recordCount, replayCount, allocationCount int
+	if err := repo.db.QueryRow("SELECT count(*) FROM ci_kernel_v04.runtime_sources WHERE id='logical-source'").Scan(&sourceCount); err != nil || sourceCount != 2 {
+		t.Fatalf("expected two scoped sources, count=%d err=%v", sourceCount, err)
+	}
+	if err := repo.db.QueryRow("SELECT count(*) FROM ci_kernel_v04.records WHERE record_kind='event' AND id='logical-event'").Scan(&recordCount); err != nil || recordCount != 2 {
+		t.Fatalf("expected two scoped records, count=%d err=%v", recordCount, err)
+	}
+	if err := repo.db.QueryRow("SELECT count(*) FROM ci_kernel_v04.runtime_replays WHERE idempotency_key='logical-replay'").Scan(&replayCount); err != nil || replayCount != 2 {
+		t.Fatalf("expected two scoped replays, count=%d err=%v", replayCount, err)
+	}
+	if err := repo.db.QueryRow("SELECT count(*) FROM ci_kernel_v04.attention_allocations WHERE allocation_id='logical-allocation'").Scan(&allocationCount); err != nil || allocationCount != 2 {
+		t.Fatalf("expected two scoped allocations, count=%d err=%v", allocationCount, err)
+	}
+}
+
+func TestV041LeastPrivilegeGrantsAndFunctionRevokes(t *testing.T) {
+	now := time.Date(2026, time.August, 22, 9, 0, 0, 0, time.UTC)
+	_, repo, _ := postgresRuntimeFixture(t, now)
+	checks := []struct {
+		role, objectType, objectName, privilege string
+		allowed                                 bool
+	}{
+		{"ci_kernel_runtime", "table", "ci_kernel_v04.person_binding_subjects", "INSERT", false},
+		{"ci_kernel_runtime", "table", "ci_kernel_v04.person_binding_subjects", "UPDATE", false},
+		{"ci_kernel_runtime", "table", "ci_kernel_v04.person_binding_subjects", "DELETE", false},
+		{"ci_kernel_runtime", "table", "ci_kernel_v04.person_profile_links", "INSERT", false},
+		{"ci_kernel_runtime", "table", "ci_kernel_v04.records", "DELETE", false},
+		{"ci_kernel_runtime", "table", "ci_kernel_v04.runtime_replays", "UPDATE", false},
+		{"ci_kernel_runtime", "table", "ci_kernel_v04.runtime_replays", "INSERT", true},
+		{"ci_kernel_identity_provisioner", "table", "ci_kernel_v04.person_binding_subjects", "INSERT", true},
+		{"ci_kernel_identity_provisioner", "table", "ci_kernel_v04.person_binding_subjects", "UPDATE", false},
+		{"ci_kernel_identity_provisioner", "table", "ci_kernel_v04.person_profile_links", "DELETE", false},
+	}
+	for _, check := range checks {
+		var actual bool
+		if err := repo.db.QueryRow("SELECT has_table_privilege($1,$2,$3)", check.role, check.objectName, check.privilege).Scan(&actual); err != nil || actual != check.allowed {
+			t.Fatalf("grant mismatch role=%s object=%s privilege=%s got=%t want=%t err=%v", check.role, check.objectName, check.privilege, actual, check.allowed, err)
+		}
+	}
+	var publicExecute bool
+	if err := repo.db.QueryRow("SELECT has_function_privilege('public','ci_kernel_v04.current_person_id()','EXECUTE')").Scan(&publicExecute); err != nil || publicExecute {
+		t.Fatalf("PUBLIC must not execute kernel function, execute=%t err=%v", publicExecute, err)
+	}
+	var forced bool
+	if err := repo.db.QueryRow("SELECT relforcerowsecurity FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='ci_kernel_v04' AND c.relname='records'").Scan(&forced); err != nil || !forced {
+		t.Fatalf("records RLS must remain forced, forced=%t err=%v", forced, err)
 	}
 }

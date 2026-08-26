@@ -23,7 +23,8 @@ var (
 	ErrNoPermission            = errors.New("intelligence runtime: no matching action permission")
 	ErrInvalidRuntimeConfig    = errors.New("intelligence runtime: invalid runtime configuration")
 	ErrDuplicateRuntimeRecord  = errors.New("intelligence runtime: duplicate runtime record")
-	ErrUnsafePersistenceTarget = errors.New("intelligence runtime: persistence target is not an approved local staging database")
+	ErrUnsafePersistenceTarget       = errors.New("intelligence runtime: persistence target is not an approved local staging database")
+	ErrIdentityProvisioningRequired = errors.New("intelligence runtime: identity provisioning requires the separate provisioner boundary")
 )
 
 // Feature is the server-side activation boundary. The default constructor is

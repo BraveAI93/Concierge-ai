@@ -15,7 +15,10 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-const defaultRuntimeRole = "ci_kernel_runtime"
+const (
+	defaultRuntimeRole      = "ci_kernel_runtime"
+	identityProvisionerRole = "ci_kernel_identity_provisioner"
+)
 
 // PostgresRuntimeRepository is the staging-only, real PostgreSQL implementation
 // of the runtime and kernel persistence contracts. It has no Supabase-specific
@@ -70,7 +73,14 @@ func (r *PostgresRuntimeRepository) Close() error {
 }
 
 func (r *PostgresRuntimeRepository) begin(ctx context.Context, personID, stableSubject string) (*sql.Tx, error) {
-	if r == nil || r.db == nil || personID == "" {
+	return r.beginAsRole(ctx, r.role, personID, stableSubject)
+}
+
+func (r *PostgresRuntimeRepository) beginAsRole(ctx context.Context, role, personID, stableSubject string) (*sql.Tx, error) {
+	if r == nil || r.db == nil || role == "" {
+		return nil, ErrInvalidRuntimeConfig
+	}
+	if role == r.role && personID == "" {
 		return nil, ErrInvalidRuntimeConfig
 	}
 	if r.beginTxHook != nil {
@@ -80,7 +90,7 @@ func (r *PostgresRuntimeRepository) begin(ctx context.Context, personID, stableS
 	if err != nil {
 		return nil, err
 	}
-	if _, err = tx.ExecContext(ctx, "SET LOCAL ROLE "+r.role); err != nil {
+	if _, err = tx.ExecContext(ctx, "SET LOCAL ROLE "+role); err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -165,7 +175,7 @@ func (tx *postgresTransaction) insertRecord(kind, id, personID string, value any
 	if err != nil {
 		return err
 	}
-	_, err = tx.tx.ExecContext(tx.ctx, "INSERT INTO ci_kernel_v04.records(record_kind,id,person_id,payload) VALUES($1,$2,$3,$4::jsonb)", kind, id, personID, string(payload))
+	_, err = tx.tx.ExecContext(tx.ctx, "INSERT INTO ci_kernel_v04.records(record_kind,person_id,id,payload) VALUES($1,$2,$3,$4::jsonb)", kind, personID, id, string(payload))
 	if isUniqueViolation(err) {
 		return ErrDuplicateRuntimeRecord
 	}
@@ -188,7 +198,7 @@ func (tx *postgresTransaction) FindReplay(key string) (RuntimeResult, bool) {
 		return RuntimeResult{}, false
 	}
 	var payload []byte
-	err := tx.tx.QueryRowContext(tx.ctx, "SELECT payload FROM ci_kernel_v04.runtime_replays WHERE idempotency_key=$1 AND person_id=$2 FOR UPDATE", key, tx.personID).Scan(&payload)
+	err := tx.tx.QueryRowContext(tx.ctx, "SELECT payload FROM ci_kernel_v04.runtime_replays WHERE idempotency_key=$1 AND person_id=$2", key, tx.personID).Scan(&payload)
 	if errors.Is(err, sql.ErrNoRows) {
 		return RuntimeResult{}, false
 	}
@@ -210,7 +220,7 @@ func (tx *postgresTransaction) StoreReplay(result RuntimeResult) error {
 	if err != nil {
 		return err
 	}
-	_, err = tx.tx.ExecContext(tx.ctx, "INSERT INTO ci_kernel_v04.runtime_replays(idempotency_key,person_id,payload) VALUES($1,$2,$3::jsonb)", result.IdempotencyKey, result.PersonID, string(payload))
+	_, err = tx.tx.ExecContext(tx.ctx, "INSERT INTO ci_kernel_v04.runtime_replays(person_id,idempotency_key,payload) VALUES($1,$2,$3::jsonb)", result.PersonID, result.IdempotencyKey, string(payload))
 	if isUniqueViolation(err) {
 		return ErrDuplicateRuntimeRecord
 	}
@@ -225,8 +235,8 @@ func (tx *postgresTransaction) StoreSource(source SourceRecord) error {
 		return err
 	}
 	_, err = tx.tx.ExecContext(tx.ctx, `INSERT INTO ci_kernel_v04.runtime_sources
-		(id,person_id,source_profile_id,conversation_id,session_id,message_id,message_role,content,conversation_at,message_at,stored_at,payload)
-		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb)`, source.ID, source.PersonID, source.ProfileID, source.ConversationID, source.SessionID, source.MessageID, source.MessageRole, source.Content, nullableTime(source.ConversationAt), source.MessageAt, source.StoredAt, string(payload))
+		(person_id,id,source_profile_id,conversation_id,session_id,message_id,message_role,content,conversation_at,message_at,stored_at,payload)
+		VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12::jsonb)`, source.PersonID, source.ID, source.ProfileID, source.ConversationID, source.SessionID, source.MessageID, source.MessageRole, source.Content, nullableTime(source.ConversationAt), source.MessageAt, source.StoredAt, string(payload))
 	if isUniqueViolation(err) {
 		return ErrDuplicateRuntimeRecord
 	}
@@ -369,7 +379,7 @@ func (tx *postgresTransaction) SaveAttentionAllocation(value kernel.AttentionAll
 	}
 	sum := sha256.Sum256(payload)
 	allocationID := "allocation:" + value.BudgetID + ":" + hex.EncodeToString(sum[:8])
-	_, err = tx.tx.ExecContext(tx.ctx, "INSERT INTO ci_kernel_v04.attention_allocations(allocation_id,person_id,budget_id,payload,evaluated_at) VALUES($1,$2,$3,$4::jsonb,now())", allocationID, value.PersonID, value.BudgetID, string(payload))
+	_, err = tx.tx.ExecContext(tx.ctx, "INSERT INTO ci_kernel_v04.attention_allocations(person_id,allocation_id,budget_id,payload,evaluated_at) VALUES($1,$2,$3,$4::jsonb,now())", value.PersonID, allocationID, value.BudgetID, string(payload))
 	if isUniqueViolation(err) {
 		return ErrDuplicateRuntimeRecord
 	}
@@ -430,49 +440,6 @@ func (tx *postgresTransaction) CurrentAttentionBudget(at time.Time) (kernel.Atte
 	return kernel.AttentionBudget{}, false
 }
 
-// SeedBinding and companion seed methods are staging-only test setup helpers.
-// They use the same RLS-protected role and are not wired to legacy persistence.
-func (r *PostgresRuntimeRepository) SeedBinding(ctx context.Context, binding PersonBinding) error {
-	if r == nil || binding.Person.ID == "" || binding.World.ID == "" || binding.World.PersonID != binding.Person.ID || binding.StableSubjectID == "" || binding.SourceProfileID == "" {
-		return ErrInvalidRuntimeConfig
-	}
-	tx, err := r.begin(ctx, binding.Person.ID, binding.StableSubjectID)
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
-	personPayload, err := jsonPayload(binding.Person)
-	if err != nil {
-		return err
-	}
-	worldPayload, err := jsonPayload(binding.World)
-	if err != nil {
-		return err
-	}
-	if _, err = tx.ExecContext(ctx, "INSERT INTO ci_kernel_v04.people(id,payload) VALUES($1,$2::jsonb)", binding.Person.ID, string(personPayload)); isUniqueViolation(err) {
-		return ErrDuplicateRuntimeRecord
-	} else if err != nil {
-		return err
-	}
-	if _, err = tx.ExecContext(ctx, "INSERT INTO ci_kernel_v04.worlds(person_id,payload) VALUES($1,$2::jsonb)", binding.Person.ID, string(worldPayload)); err != nil {
-		return err
-	}
-	if _, err = tx.ExecContext(ctx, "INSERT INTO ci_kernel_v04.person_binding_subjects(stable_subject,person_id) VALUES($1,$2)", binding.StableSubjectID, binding.Person.ID); err != nil {
-		return err
-	}
-	profiles := append([]string{binding.SourceProfileID}, binding.AllowedSourceProfileIDs...)
-	seen := make(map[string]bool)
-	for index, profile := range profiles {
-		if profile == "" || seen[profile] {
-			continue
-		}
-		seen[profile] = true
-		if _, err = tx.ExecContext(ctx, "INSERT INTO ci_kernel_v04.person_profile_links(person_id,source_profile_id,is_primary) VALUES($1,$2,$3)", binding.Person.ID, profile, index == 0); err != nil {
-			return err
-		}
-	}
-	return tx.Commit()
-}
 func (r *PostgresRuntimeRepository) SeedGoal(ctx context.Context, value kernel.Goal) error {
 	return r.withAutoTransaction(ctx, value.PersonID, func(tx *postgresTransaction) error { return tx.SaveGoal(value) })
 }
