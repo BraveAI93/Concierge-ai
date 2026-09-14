@@ -213,11 +213,11 @@ export default function PrivacyPage() {
             <p>We use <strong>sessionStorage</strong> (your browser's temporary memory) only to:</p>
             <ul>
               <li>Remember that you have accepted this privacy notice (so you don't see it every message)</li>
-              <li>This data is automatically deleted when you close the browser tab</li>
-              <li>It never leaves your device and is never sent to our servers</li>
+              <li>The local record is deleted when you close the browser tab</li>
+              <li>When you accept, we also record that acceptance on our servers, so we can evidence consent</li>
             </ul>
             <div className="highlight">
-              <p>We use <strong>no persistent cookies</strong>. Nothing is stored after you close the tab. Nothing is shared with advertisers. Nothing is used to track you across websites.</p>
+              <p>We use <strong>no persistent cookies</strong>. Nothing is shared with advertisers. Nothing is used to track you across websites.</p>
             </div>
           </div>
 
