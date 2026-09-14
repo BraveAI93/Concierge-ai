@@ -67,7 +67,7 @@ export default function PrivacyPage() {
           <div className="brand">✦ Concierge AI · Brave by Bruno</div>
           <div className="page-title">Privacy & Legal</div>
           <div className="page-sub">We believe in full transparency about how your data is handled.<br/>Read this before using the AI Concierge.</div>
-          <div className="effective">Effective date: 1 June 2025 · Last updated: June 2025</div>
+          <div className="effective">Effective date: 1 June 2025 · Last updated: 14 September 2026</div>
         </div>
 
         <div className="tabs">
@@ -254,7 +254,7 @@ export default function PrivacyPage() {
 
           <div className="block">
             <div className="block-title"><span>2</span> Right to erasure ("Right to be forgotten")</div>
-            <p>You have the right to request deletion of your personal data. As conversations are session-only and not stored, closing the chat window effectively erases the conversation. For any other data held, contact us and we will action your request within 30 days.</p>
+            <p>You have the right to request deletion of your personal data, including your conversation messages, which are stored on our servers. Contact us and we will action your request within 30 days.</p>
           </div>
 
           <div className="block">
@@ -264,7 +264,7 @@ export default function PrivacyPage() {
 
           <div className="block">
             <div className="block-title"><span>4</span> Right to withdraw consent</div>
-            <p>You may withdraw your consent to data processing at any time by simply closing the chat and clearing your browser session storage. Withdrawal of consent does not affect the lawfulness of processing before withdrawal.</p>
+            <p>You may stop using the AI Concierge at any time. Clearing your browser session storage only removes the local record that you accepted this notice — it does not delete messages already stored on our servers. To withdraw consent for data already held, contact us and we will delete it. Withdrawal does not affect the lawfulness of processing before withdrawal.</p>
           </div>
 
           <div className="block">
@@ -291,7 +291,7 @@ export default function PrivacyPage() {
         </div>
 
         <div className="page-footer">
-          <p>© 2025 Bruno Aversa · Brave by Bruno · London, UK</p>
+          <p>© 2026 Bruno Aversa · Brave by Bruno · London, UK</p>
           <p style={{marginTop:4}}>Concierge AI is powered by Claude (Anthropic) · Compliant with UK GDPR & EU GDPR 2016/679</p>
           <a href="/" className="back-btn">← Back to Bruno's page</a>
         </div>
